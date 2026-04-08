@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="38 145 440 118" width="440" height="118">
+  <rect x="38" y="145" width="118" height="118" rx="25" fill="#8ec1f2"/>
+  
+  <path d="M63 175 L97 245 L131 175 H115 L97 215 L79 175 Z" fill="#1c1c2e"/>
+  
+  <text x="185" y="225" font-family="Arial, sans-serif" font-size="95" fill="#8ec1f2" font-weight="400">Verisal</text>
+  
+  <text x="186" y="255" font-family="Arial, sans-serif" font-size="18" fill="#7a8ba3" letter-spacing="6">PAYROLL ANALYSIS</text>
+</svg>

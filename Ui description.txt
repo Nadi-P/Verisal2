@@ -1,0 +1,19 @@
+I want you now to give all the code for the App UI. include the side menu with the dropdowns, make this sidemenu collapsable to right, so it closes and opens when clicking the button,
+I want the top status bar to display the company name, the range of dates of the data (both can be found in the backend stored staticly. as well as the currently displayed report.
+
+the UI main component is the table, which is meant to display the different reports, which are tables. make the table under the following rules.
+- the headers of each column will contain 2 buttons - sort which when pressed sends a packet to the backend to sort the rows based on that column from smallest to greatest, after that when pressed again, sort from greatest to smallest and repeat, next to the sort there will be a filter button, which when pressed will open a not very big scrollable menu, displaying all the values in that column in checkboxes, which the user can choose to tick and untick to show the corresponding value, that menu will also need a select all theckbox, which selects and unselects all the checkboxes when selected., it will also need an apply and cancel buttons, apply would send the packetwith the filters  and also take into account the sort type the user perviously selected. in the table, only if a text contains hebrew chars, make the text rtl else make it ltr, make the columns sizes dynamic based on the header/longest term in the column. and if there is a decimal number, cut it after 2 digigts after the decimal point.
+in the table, I want to be able to select cells, just like in excel, and I want you to highlight the selected cells in a frame and have me selecting and deselcting cells using vtrl button and the mouse clicks. just like in excel, I also want to be able to move, and resize my sleection using the arrows the shift and conteols, just like in excel.. also enable sticky columns which are just like excel, freeze pane feature.
+
+a bottom status bar which contains a zoom in and zoom out range bar, which controls the zoom of the table using mullti[lication and editing of the css, not using transform scale: for better acuuracy. at the 2 ends of the zoom in and zoom out bar there is a plus and minus which are dictating which side zooms in and which zooms out. the bottom satus bar also contains some aggregations about the currently selected cells in the table: if 1 cells is selected, show the column name and the value
+if 2 or cells selected, show the sum, the average and theratio of the smaller one out of the bigger one in % up to the 2 decimal places. all of these are under the condition that the two values are numeric. if its 3+ cells, show the sum, the average, and the cells count.
+
+lastly I want a side menu to the left of the screen that doesnt go over the status bars, but rather just on the table, and it shows a list of all the columns in the currently displayed report, , with a checkbox for viewing, and a pin optionwhich freezes the column and puts its back to the start after the the most recent freezed column, the checkbox just detremines whether the columns is displayed at all, or ignored, and at the bottom, have an apply and cancel button, which will either send the packet, and close the menu, or just close the menu.
+
+now code wise. I want a seperate jsx, js, and css file for every component.
+
+the jsx is simply a shell of the dom elements, powered by all the logic that is written in the js file, and styled by the respective css file. you are more than welcome to recycle the code I have already written
+
+okay than.
+
+these are the current files. I want you to write me every new file and rewrite the existing ones, to match the flow I presented to you. can you that please? do you need to do it in parts?

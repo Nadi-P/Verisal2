@@ -1,0 +1,1 @@
+python -m uvicorn Processing.main:app --reload

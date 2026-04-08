@@ -1,0 +1,72 @@
+.top-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1.5rem;
+  background-color: var(--sidebar-bg);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  z-index: 20;
+  gap: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.company-name {
+  color: #ffffff;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.date-range {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-family: 'Consolas', 'Courier New', monospace;
+  white-space: nowrap;
+}
+
+.current-report {
+  color: var(--accent-blue);
+  font-size: 0.85rem;
+  font-weight: 500;
+  opacity: 0.85;
+  white-space: nowrap;
+  margin-top: 0.25rem;
+}
+
+.columns-panel-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: inherit;
+  transition: all var(--transition-speed) ease;
+  white-space: nowrap;
+  margin-right: auto; /* push to far left in RTL */
+}
+
+.columns-panel-toggle:hover {
+  background: var(--hover-bg);
+  color: var(--text-main);
+  border-color: var(--text-muted);
+}
+
+.columns-panel-toggle.active {
+  background: var(--accent-blue-dim);
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
+}

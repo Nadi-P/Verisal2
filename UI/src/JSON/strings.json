@@ -1,0 +1,55 @@
+{
+    "sideMenuSourceReportDropdownHeader": "דוחות מערכת",
+    "sideMenuTemplatesDropdownHeader": "תבניות פורמטים",
+    "sideMenuParameterDropdownHeader": "פרמטרים",
+    "sideMenuNewTemplateButtonTitle": "צור תבנית חדשה",
+    "sideMenuNewParameterButtonTitle": "צור פרמטר חדש",
+    "sideMenuHelpButtonTitle": "עזרה",
+
+
+    
+    "sideMenuSourceReportDropdownNames": {
+        "center": {
+            "display_title" : "מרכז שכר",
+            "file_name" : "center"
+        },
+        "providents": {
+            "display_title" : "קופות גמל",
+            "file_name" : "providents"
+        },
+        "components": {
+            "display_title" : "רכיבי שכר",
+            "file_name" : "components"
+        },
+        "income": {
+            "display_title" : "הכנסות זקופות",
+            "file_name" : "income"
+        },
+        "absences": {
+            "display_title" : "היעדרויות",
+            "file_name" : "absences"
+        },
+        "deductions": {
+            "display_title" : "ניכויי רשות",
+            "file_name" : "deductions"
+        },
+        "costing": {
+            "display_title" : "דוח תמחיר",
+            "file_name" : "costing"
+        }
+    },
+    "templatesNames": {
+        "social_analysis": {
+            "display_title" : "אנליזה סוציאליות",
+            "file_name" : "social_analysis"
+        },
+        "reports_against_center": {
+            "display_title" : "דוחות מול מרכז שכר",
+            "file_name" : "reports_against_center"
+        },
+        "months_comparison": {
+            "display_title" : "השוואת חודשים",
+            "file_name" : "months_comparison"
+        }
+    }
+}
