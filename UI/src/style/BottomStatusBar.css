@@ -38,7 +38,9 @@
 
 .zoom-slider {
   width: 120px;
+  -webkit-appearance: none;
   accent-color: var(--accent-blue);
+  background: transparent;
   cursor: pointer;
 }
 
@@ -81,4 +83,57 @@
 
 .stat-divider {
   color: var(--border-color);
+}
+
+/* --------------------------------- */
+/* --- The Track --- */
+
+/* Chrome, Safari, Edge, Opera */
+.zoom-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 2px;
+  background: #b5b5b5; /* Excel light gray track */
+  border-radius: 1px;
+}
+
+/* Firefox */
+.zoom-slider::-moz-range-track {
+  width: 100%;
+  height: 2px;
+  background: #b5b5b5;
+  border-radius: 1px;
+}
+
+/* --- The Thumb (The "Dragger") --- */
+
+/* Chrome, Safari, Edge, Opera */
+.zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 14px;
+  width: 8px;
+  background-color: #666; /* Dark gray Excel thumb */
+  border: 1px solid #ffffff;
+  border-radius: 1px; /* Small square-ish look */
+  margin-top: -6px; /* Centers thumb on the 2px track: (14/2 - 2/2) */
+  box-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+
+/* Firefox */
+.zoom-slider::-moz-range-thumb {
+  height: 14px;
+  width: 8px;
+  background-color: #666;
+  border: 1px solid #ffffff;
+  border-radius: 1px;
+  box-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+
+/* --- Focus States --- */
+.zoom-slider:focus {
+  outline: none;
+}
+
+.zoom-slider:active::-webkit-slider-thumb {
+  background-color: #217346; /* Excel Green when sliding */
 }

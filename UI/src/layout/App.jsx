@@ -47,7 +47,6 @@ function App() {
         />
 
         <div className="app-middle">      
-
           <div className="table-area">
             <AuditTable
               rowData={filteredData}

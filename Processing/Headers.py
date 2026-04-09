@@ -294,6 +294,31 @@ class Headers:
             er_prov_pct = r"גמל מעסיק %"
             capped_val = r"בסיס קהל נגזר"
 
+    class MonthsComparison:
+        work_year = r"שנת עבודה"
+        work_month = r"חודש עבודה"
+        employee_id = r"מספר עובד"
+        employee_name = r"שם עובד"
+        category = r"סיווג"
+        check = r"בדיקה"
+        current_month = r"נוכחי"
+        previous_month = r"קודם"
+        offset = r"סטייה"
+        offset_ratio = r"יחס סטייה"
+        offset_pct = r"אחוז סטייה"
+        notes = r"הערות"
+    
+    class ReportsAgainstCenter:
+        employee_id = r"מספר עובד"
+        employee_name = r"שם עובד"
+        month = r"חודש"
+        check = r"בדיקה"
+        center_input = r"קלט (מרכז שכר)"
+        external_reports_output = r"פלט (דוחות חיצוניים)"
+        offset = r"הפרש"
+        status = r"סטטוס"
+
+        
     class AggregatedFiles:
         class ProvidentsAGG:
             employee_month_key = r'מפתח_עובד_חודש'

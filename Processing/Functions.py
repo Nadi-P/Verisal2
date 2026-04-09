@@ -287,6 +287,7 @@ class Functions:
         Files.reportsAgainstCenterDF = Functions.get_reports_against_center()
 
         social_h = Headers.SocialAnalysis.SocialAnalysisFile
+        comparison_h = Headers.MonthsComparison
         Files.socialAnalysisCheckupColumns = {
             social_h.total_sum : lambda val : val > 0,
             social_h.ee_prov_sum : lambda val : val > 0,
@@ -298,8 +299,11 @@ class Functions:
             social_h.er_prov_pct : lambda val : val > 0,
             social_h.capped_val : lambda val : val > 0,
         }
-        Files.socialAnalysisCheckupColumns = {
-            
+        Files.monthsComparisonCheckupColumns = {
+            comparison_h.offset: lambda val : val > 0,
+        }
+        Files.reportsAgainstCenterCheckupColumns = {
+
         }
 
 
@@ -697,8 +701,6 @@ class Functions:
             components_h.employee_id,
             components_h.social_total
         ]].copy()
-        print(len(main_df))
-        Functions.Querying.query_employee_rows(main_df)
         # 3. מיזוג נתוני הקופות לתוך בסיס השכר (Left Merge)
         # מי שאין לו נתונים בקופות יקבל NaN, אותו נהפוך ל-0 מיד אחרי
         main_df = main_df.merge(
@@ -712,7 +714,6 @@ class Functions:
             on=Functions.join_key, 
             how='left'
         ).fillna(0) # קריטי: הופך חוסר נתונים בקופות ל-0
-        print(len(main_df))
 
         # 4. מיזוג נתוני המרכז (שם ותקרה) לפי מספר עובד
         main_df = main_df.merge(
@@ -721,7 +722,6 @@ class Functions:
             right_on=center_h.employee_id, 
             how='left'
         )
-        print(len(main_df))
 
         # א. יצירת עמודת שם עובד (טיפול במקרה שהעובד לא נמצא במרכז)
         main_df[components_h.emloyee_name] = main_df[center_h.employee_name].fillna("לא נמצא במרכז")
@@ -772,6 +772,7 @@ class Functions:
     
     def get_months_comparison():
         center_h = Headers.InputFiles.Center
+        comparison_h = Headers.MonthsComparison
         source_df = Functions.run_payroll_audit()
 
         max_year = source_df[center_h.work_year].max()
@@ -837,28 +838,28 @@ class Functions:
                 prev_val = row[col_name + '_prev'] if col_name + '_prev' in row and pd.notnull(row[col_name + '_prev']) else 0
                 
                 analysis_rows.append({
-                    "מספר עובד": row[center_h.employee_id],
-                    "שם עובד": row["מרכזשכר" + "_" + center_h.employee_name],
-                    "שנת עבודה": row[center_h.work_year],
-                    "חודש עבודה": row[center_h.work_month],
-                    "בדיקה": item['בדיקה'],
-                    "סיווג": item['סיווג'],
-                    "נוכחי": curr_val,
-                    "קודם": prev_val
+                    comparison_h.employee_id: row[center_h.employee_id],
+                    comparison_h.employee_name: row["מרכזשכר" + "_" + center_h.employee_name],
+                    comparison_h.work_year: row[center_h.work_year],
+                    comparison_h.work_month: row[center_h.work_month],
+                    comparison_h.check: item['בדיקה'],
+                    comparison_h.category: item['סיווג'],
+                    comparison_h.current_month: curr_val,
+                    comparison_h.previous_month: prev_val
                 })
 
         final_df = pd.DataFrame(analysis_rows)
 
         # 6. חישוב סטייה ואחוזים (AddCalc, AddPct)
-        final_df['סטייה'] = final_df['נוכחי'] - final_df['קודם']
-        final_df['יחס סטייה'] = np.where(
-            final_df['קודם'] != 0, 
-            final_df['סטייה'] / final_df['קודם'], 
+        final_df[comparison_h.offset] = final_df[comparison_h.current_month] - final_df[comparison_h.previous_month]
+        final_df[comparison_h.offset_ratio] = np.where(
+            final_df[comparison_h.previous_month] != 0, 
+            final_df[comparison_h.offset] / final_df[comparison_h.previous_month], 
             0
         )
-        final_df["אחוז סטייה"] = final_df["יחס סטייה"].apply(lambda x: f"{x * 100:.2f}%")
+        final_df[comparison_h.offset_pct] = final_df[comparison_h.offset_ratio].apply(lambda x: f"{x * 100:.2f}%")
         
-        final_df['הערות'] = ""
+        final_df[comparison_h.notes] = ""
 
         return final_df
 
@@ -868,7 +869,7 @@ class Functions:
         inc_h = Headers.AggregatedFiles.IncomeAGG
         abs_h = Headers.AggregatedFiles.AbsencesAGG
         prov_h = Headers.AggregatedFiles.ProvidentsAGG
-        cfa = Headers.AggregatedFiles.ProvidentsAGG 
+        fac_h = Headers.ReportsAgainstCenter
 
         # 1. Run Aggregations from the Functions module
         centerAgg = Functions.Aggregations.aggregate_center(Files.centerDF)
@@ -934,25 +935,25 @@ class Functions:
             for name, input_val, output_val in checks:
                 diff = input_val - output_val
                 results.append({
-                    "מספר עובד": row[c_h.employee_id],
-                    "שם העובד": row[c_h.employee_name],
-                    "חודש": Files.current_month,
-                    "בדיקה": name,
-                    "קלט (מרכז שכר)": input_val,
-                    "פלט (דוחות חיצוניים)": output_val,
-                    "הפרש": diff,
-                    "סטטוס": "תקין" if abs(diff) < 0.1 else "הפרש בבדיקה"
+                    fac_h.employee_id: row[c_h.employee_id],
+                    fac_h.employee_name: row[c_h.employee_name],
+                    fac_h.month: Files.current_month,
+                    fac_h.check: name,
+                    fac_h.center_input: input_val,
+                    fac_h.external_reports_output: output_val,
+                    fac_h.offset: diff,
+                    fac_h.status: "תקין" if abs(diff) < 0.1 else "הפרש בבדיקה"
                 })
 
             results.append({
-                "מספר עובד": row[c_h.employee_id],
-                "שם העובד": row[c_h.employee_name],
-                "חודש": Files.current_month,
-                "בדיקה": '6. קה"ל (זכאות)',
-                "קלט (מרכז שכר)": kahal_eligible,
-                "פלט (דוחות חיצוניים)": kahal_sum,
-                "הפרש": 0,
-                "סטטוס": kahal_stat_text
+                fac_h.employee_id: row[c_h.employee_id],
+                fac_h.employee_name: row[c_h.employee_name],
+                fac_h.month: Files.current_month,
+                fac_h.check: '6. קה"ל (זכאות)',
+                fac_h.center_input: kahal_eligible,
+                fac_h.external_reports_output: kahal_sum,
+                fac_h.offset: 0,
+                fac_h.status: kahal_stat_text
             })
 
         return pd.DataFrame(results)
