@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 
-export function useSideMenu(setTableData, setIsLoading, setMetadata, setColumns) {
+export function useSideMenu(setTableData, setIsLoading, setMetadata, setColumns, setCheckupData) {
+
   const [sharedSelectedItem, setSharedSelectedItem] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
 
@@ -28,6 +29,7 @@ export function useSideMenu(setTableData, setIsLoading, setMetadata, setColumns)
         // Build columns array from the first row keys
         if (result.data.length > 0) {
           const keys = Object.keys(result.data[0]);
+          setCheckupData(result.checkup || {});
           setColumns(keys.map((k) => ({ id: k, visible: true, pinned: false })));
         } else {
           setColumns([]);
@@ -38,7 +40,7 @@ export function useSideMenu(setTableData, setIsLoading, setMetadata, setColumns)
     } finally {
       setIsLoading(false);
     }
-  }, [setTableData, setIsLoading, setMetadata, setColumns]);
+  }, [setTableData, setIsLoading, setMetadata, setColumns, setCheckupData]);
 
   return { sharedSelectedItem, openDropdown, toggleDropdown, handleSelect };
 }

@@ -6,7 +6,8 @@ export function useAuditTableLogic({
   rowData, allRowData,
   visibleColumns, pinnedColumns,
   sortState, filterState,
-  onSortFilter, zoom, onSelectionStats
+  onSortFilter, zoom, onSelectionStats,
+  checkupData
 }) {
   const tableContainerRef = useRef(null);
 
@@ -314,6 +315,15 @@ export function useAuditTableLogic({
     };
   }, [zoom]);
 
+  const getCellCheckupColor = useCallback((row, col) => {
+    const colChecks = checkupData[col];
+    if (!colChecks) return null;
+    // Find this row's index in the original data
+    const rowIndex = rowData.indexOf(row);
+    if (rowIndex === -1 || rowIndex >= colChecks.length) return null;
+    return colChecks[rowIndex] ? 'checkup-pass' : 'checkup-fail';
+  }, [checkupData, rowData]);
+
   return {
     tableContainerRef,
     displayColumns,
@@ -337,5 +347,6 @@ export function useAuditTableLogic({
     getTextDirection,
     getCellStyle,
     getHeaderStyle,
+    getCellCheckupColor,
   };
 }

@@ -7,7 +7,8 @@ function AuditTable({
   rowData, allRowData, isLoading,
   visibleColumns, pinnedColumns,
   sortState, filterState,
-  onSortFilter, zoom, onSelectionStats
+  onSortFilter, zoom, onSelectionStats,
+  checkupData
 }) {
   const {
     tableContainerRef,
@@ -36,11 +37,13 @@ function AuditTable({
     // Zoom
     getCellStyle,
     getHeaderStyle,
+    getCellCheckupColor,
   } = useAuditTableLogic({
     rowData, allRowData,
     visibleColumns, pinnedColumns,
     sortState, filterState,
-    onSortFilter, zoom, onSelectionStats
+    onSortFilter, zoom, onSelectionStats,
+    checkupData
   });
 
   if (isLoading) {
@@ -113,6 +116,7 @@ function AuditTable({
                 const borderClasses = selectionBorderClass(rowIndex, colIndex);
                 const pinned = isPinned(col);
                 const stickyOffset = getStickyOffset(col);
+                const checkupClass = getCellCheckupColor(row, col) || '';
                 const value = row[col];
                 const formatted = formatCellValue(value);
                 const dir = getTextDirection(formatted);
@@ -120,7 +124,7 @@ function AuditTable({
                 return (
                   <td
                     key={col}
-                    className={`table-cell ${selected ? 'selected' : ''} ${borderClasses} ${pinned ? 'pinned' : ''}`}
+                    className={`table-cell ${checkupClass} table-cell ${selected ? 'selected' : ''} ${borderClasses} ${pinned ? 'pinned' : ''}`}
                     style={{
                       ...getCellStyle(),
                       direction: dir,

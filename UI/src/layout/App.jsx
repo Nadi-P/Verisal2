@@ -22,6 +22,7 @@ function App() {
     filterState, setFilterState,
     selectionStats,
     setSelectionStats,
+    checkupData, setCheckupData,
     handleColumnsApply,
     handleSortFilter,
     currentReportTitle
@@ -36,6 +37,7 @@ function App() {
         setIsLoading={setIsLoading}
         setMetadata={setMetadata}
         setColumns={setColumns}
+        setCheckupData={setCheckupData}
       />
 
       <div className="main-content">
@@ -59,6 +61,7 @@ function App() {
               onSortFilter={handleSortFilter}
               zoom={zoom}
               onSelectionStats={setSelectionStats}
+              checkupData={checkupData}
             />
           </div>
 

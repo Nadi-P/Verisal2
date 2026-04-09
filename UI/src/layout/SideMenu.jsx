@@ -9,13 +9,13 @@ import templateIcon from '../assets/icon-template-fill.png';
 import helpIcon from '../assets/icon-help-fill.png';
 import '../style/SideMenu.css';
 
-function SideMenu({ isOpen, onToggle, setTableData, setIsLoading, setMetadata, setColumns }) {
+function SideMenu({ isOpen, onToggle, setTableData, setIsLoading, setMetadata, setColumns, setCheckupData }) {
   const {
     sharedSelectedItem,
     openDropdown,
     toggleDropdown,
     handleSelect,
-  } = useSideMenu(setTableData, setIsLoading, setMetadata, setColumns);
+  } = useSideMenu(setTableData, setIsLoading, setMetadata, setColumns, setCheckupData);
 
   return (
     <>

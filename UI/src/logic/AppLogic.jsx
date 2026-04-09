@@ -12,6 +12,7 @@ export function useAppState() {
   const [sideMenuOpen, setSideMenuOpen] = useState(true);
   const [columnsPanelOpen, setColumnsPanelOpen] = useState(false);
   const [selectionStats, setSelectionStats] = useState(null);
+  const [checkupData, setCheckupData] = useState({});
 
   // columns: array of { id, visible, pinned }
   const [columns, setColumns] = useState([]);
@@ -93,6 +94,7 @@ export function useAppState() {
     sortState, setSortState,
     filterState, setFilterState,
     selectionStats, setSelectionStats,
+    checkupData, setCheckupData,
     handleColumnsApply,
     handleSortFilter,
     currentReportTitle,

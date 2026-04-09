@@ -137,11 +137,27 @@
 }
 
 /* Row hover */
-.audit-table tbody tr:hover .table-cell:not(.selected) {
+.audit-table tbody tr:hover .table-cell:not(.selected, .checkup-fail, .checkup-pass) {
   background: hsla(0, 0%, 100%, 0.025);
 }
 
 /* Alternating rows */
-.audit-table tbody tr:nth-child(even) .table-cell:not(.selected):not(.pinned) {
+.audit-table tbody tr:nth-child(even) .table-cell:not(.selected, .checkup-fail, .checkup-pass):not(.pinned) {
   background: hsla(0, 0%, 100%, 0.015);
+}
+
+.table-cell.checkup-pass {
+  background: hsla(140, 70%, 35%, 0.25);
+}
+
+.table-cell.checkup-fail {
+  background: hsla(0, 70%, 40%, 0.25);
+}
+
+.table-cell.checkup-pass.selected, .audit-table tbody tr:hover .table-cell.checkup-pass {
+  background: hsla(140, 70%, 35%, 0.4);
+}
+
+.table-cell.checkup-fail.selected, .audit-table tbody tr:hover .table-cell.checkup-fail{
+  background: hsla(0, 70%, 40%, 0.4);
 }

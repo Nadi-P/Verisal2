@@ -288,6 +288,7 @@ class Functions:
 
         social_h = Headers.SocialAnalysis.SocialAnalysisFile
         comparison_h = Headers.MonthsComparison
+        rac_h = Headers.ReportsAgainstCenter
         Files.socialAnalysisCheckupColumns = {
             social_h.total_sum : lambda val : val > 0,
             social_h.ee_prov_sum : lambda val : val > 0,
@@ -303,9 +304,8 @@ class Functions:
             comparison_h.offset: lambda val : val > 0,
         }
         Files.reportsAgainstCenterCheckupColumns = {
-
+            rac_h.offset: lambda val : val == 0,
         }
-
 
     def extract_data_from_files(requiredDataName):
         centerFileName = Files.controlFiles.get("center")
