@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 
 const HEBREW_REGEX = /[\u0590-\u05FF]/;
 
@@ -9,6 +9,17 @@ export function useAuditTableLogic({
   onSortFilter, zoom, onSelectionStats,
   checkupData
 }) {
+  // Refs to pinned header cells so we can measure their real widths.
+  const pinnedHeaderRefs = useRef({});
+  const [pinnedWidths, setPinnedWidths] = useState({});
+
+  const setPinnedHeaderRef = useCallback((col) => (el) => {
+    if (el) {
+      pinnedHeaderRefs.current[col] = el;
+    } else {
+      delete pinnedHeaderRefs.current[col];
+    }
+  }, []);
   const tableContainerRef = useRef(null);
 
   // Selection state: array of { r, c } for multi-select, plus anchor/end for range
@@ -23,30 +34,68 @@ export function useAuditTableLogic({
   });
 
   // ======== COLUMNS ========
+  // Display order = [pinned columns in original order] + [unpinned columns in original order].
+  // `visibleColumns` is never physically reordered, so unpinning a column
+  // naturally drops it back into its original slot.
   const displayColumns = useMemo(() => {
-    if (visibleColumns.length > 0) return visibleColumns;
-    if (!rowData || rowData.length === 0) return [];
-    return Object.keys(rowData[0]);
-  }, [visibleColumns, rowData]);
+    let base;
+    if (visibleColumns.length > 0) {
+      base = visibleColumns;
+    } else if (rowData && rowData.length > 0) {
+      base = Object.keys(rowData[0]);
+    } else {
+      return [];
+    }
+    const pinnedSet = new Set(pinnedColumns);
+    const pinnedInOrder = base.filter(c => pinnedSet.has(c));
+    const unpinnedInOrder = base.filter(c => !pinnedSet.has(c));
+    return [...pinnedInOrder, ...unpinnedInOrder];
+  }, [visibleColumns, rowData, pinnedColumns]);
 
   const displayRows = rowData;
 
   // ======== PINNED / STICKY ========
   const isPinned = useCallback((colId) => pinnedColumns.includes(colId), [pinnedColumns]);
 
-  // Calculate cumulative sticky offset for pinned columns (right-to-left)
+  // Measure real widths of pinned header cells AFTER render so sticky offsets
+  // match actual rendered column widths (no more overlap on scroll).
+  useLayoutEffect(() => {
+    const next = {};
+    for (const col of pinnedColumns) {
+      const el = pinnedHeaderRefs.current[col];
+      if (el) {
+        next[col] = el.getBoundingClientRect().width;
+      }
+    }
+    // Only update state if widths actually changed (avoid render loops).
+    const prevKeys = Object.keys(pinnedWidths);
+    const nextKeys = Object.keys(next);
+    let changed = prevKeys.length !== nextKeys.length;
+    if (!changed) {
+      for (const k of nextKeys) {
+        if (Math.abs((pinnedWidths[k] ?? 0) - (next[k] ?? 0)) > 0.5) {
+          changed = true;
+          break;
+        }
+      }
+    }
+    if (changed) setPinnedWidths(next);
+  }, [displayColumns, pinnedColumns, zoom, rowData, pinnedWidths]);
+
+  // Calculate cumulative sticky offset for pinned columns (right-to-left).
+  // Uses real measured widths when available; falls back to a reasonable
+  // estimate before the first measurement pass completes.
   const pinnedOffsets = useMemo(() => {
     const offsets = {};
     let cumulative = 0;
-    // Pin order = order in displayColumns that are pinned
     const pinnedInOrder = displayColumns.filter(c => pinnedColumns.includes(c));
     for (const col of pinnedInOrder) {
       offsets[col] = cumulative;
-      // Estimate width — we'll use a base of 120px scaled by zoom
-      cumulative += Math.max(80, 120) * (zoom / 100);
+      const w = pinnedWidths[col];
+      cumulative += (w && w > 0) ? w : (150 * (zoom / 100));
     }
     return offsets;
-  }, [displayColumns, pinnedColumns, zoom]);
+  }, [displayColumns, pinnedColumns, pinnedWidths, zoom]);
 
   const getStickyOffset = useCallback((colId) => {
     return pinnedOffsets[colId] ?? 0;
@@ -324,6 +373,16 @@ export function useAuditTableLogic({
     return colChecks[rowIndex] ? 'checkup-pass' : 'checkup-fail';
   }, [checkupData, rowData]);
 
+  // ======== COLUMN HIGHLIGHT (filter / sort) ========
+  const isColumnFiltered = useCallback((colId) => {
+    const s = filterState[colId];
+    return !!(s && s.size > 0);
+  }, [filterState]);
+
+  const isColumnSorted = useCallback((colId) => {
+    return sortState.columnId === colId && !!sortState.direction;
+  }, [sortState]);
+
   return {
     tableContainerRef,
     displayColumns,
@@ -348,5 +407,8 @@ export function useAuditTableLogic({
     getCellStyle,
     getHeaderStyle,
     getCellCheckupColor,
+    isColumnFiltered,
+    isColumnSorted,
+    setPinnedHeaderRef,
   };
 }

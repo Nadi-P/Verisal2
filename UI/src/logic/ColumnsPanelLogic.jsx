@@ -30,10 +30,11 @@ export function useColumnsPanel(columns, onApply, onCancel) {
   }, []);
 
   const handleApply = useCallback(() => {
-    // Reorder: pinned columns first (in their pin order), then the rest in original order
-    const pinned = localColumns.filter(c => c.pinned);
-    const unpinned = localColumns.filter(c => !c.pinned);
-    onApply([...pinned, ...unpinned]);
+    // Do NOT reorder: preserve the original column order forever.
+    // Pinning is just a flag — the AuditTable computes the display order
+    // (pinned first, then unpinned, both in original order). This way
+    // unpinning naturally returns a column to its original slot.
+    onApply(localColumns);
   }, [localColumns, onApply]);
 
   const handleCancel = useCallback(() => {

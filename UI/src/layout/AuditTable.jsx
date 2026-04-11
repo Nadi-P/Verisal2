@@ -38,6 +38,10 @@ function AuditTable({
     getCellStyle,
     getHeaderStyle,
     getCellCheckupColor,
+    // Column highlights / pin measurement
+    isColumnFiltered,
+    isColumnSorted,
+    setPinnedHeaderRef,
   } = useAuditTableLogic({
     rowData, allRowData,
     visibleColumns, pinnedColumns,
@@ -73,10 +77,15 @@ function AuditTable({
             {displayColumns.map((col, colIndex) => {
               const pinned = isPinned(col);
               const stickyOffset = getStickyOffset(col);
+              const filtered = isColumnFiltered(col);
+              const sorted = isColumnSorted(col);
+              const headerClass =
+                `table-header-cell${pinned ? ' pinned' : ''}${filtered ? ' filtered' : ''}${sorted ? ' sorted' : ''}`;
               return (
                 <th
                   key={col}
-                  className={`table-header-cell ${pinned ? 'pinned' : ''}`}
+                  ref={pinned ? setPinnedHeaderRef(col) : null}
+                  className={headerClass}
                   style={{
                     ...getHeaderStyle(),
                     ...(pinned ? { position: 'sticky', right: stickyOffset, zIndex: 12 } : {}),
@@ -86,14 +95,14 @@ function AuditTable({
                     <span className="header-text" title={col}>{col}</span>
                     <div className="header-actions">
                       <button
-                        className="header-btn sort-btn"
+                        className={`header-btn sort-btn${sorted ? ' active' : ''}`}
                         onClick={() => handleSort(col)}
                         title="מיין"
                       >
                         {getSortIcon(col)}
                       </button>
                       <button
-                        className="header-btn filter-btn"
+                        className={`header-btn filter-btn${filtered ? ' active' : ''}`}
                         onClick={(e) => openFilterMenu(col, e)}
                         title="סנן"
                       >
@@ -117,6 +126,8 @@ function AuditTable({
                 const pinned = isPinned(col);
                 const stickyOffset = getStickyOffset(col);
                 const checkupClass = getCellCheckupColor(row, col) || '';
+                const filteredCol = isColumnFiltered(col) ? 'filtered-col' : '';
+                const sortedCol = isColumnSorted(col) ? 'sorted-col' : '';
                 const value = row[col];
                 const formatted = formatCellValue(value);
                 const dir = getTextDirection(formatted);
@@ -124,7 +135,7 @@ function AuditTable({
                 return (
                   <td
                     key={col}
-                    className={`table-cell ${checkupClass} ${selected ? 'selected' : ''} ${borderClasses} ${pinned ? 'pinned' : ''}`}
+                    className={`table-cell ${checkupClass} ${selected ? 'selected' : ''} ${borderClasses} ${pinned ? 'pinned' : ''} ${filteredCol} ${sortedCol}`}
                     style={{
                       ...getCellStyle(),
                       direction: dir,

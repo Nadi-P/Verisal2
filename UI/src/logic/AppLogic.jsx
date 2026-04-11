@@ -60,10 +60,13 @@ export function useAppState() {
 
   const filteredData = useMemo(() => {
     let data = [...rowData];
+    // filterState[colId] is an EXCLUDED set: values the user chose to hide.
+    // Rows are kept when their value is NOT in the excluded set.
+    // Values that never appeared in the filter dialog are kept by default.
     Object.keys(filterState).forEach(colId => {
-      const allowedSet = filterState[colId];
-      if (allowedSet && allowedSet.size > 0) {
-        data = data.filter(row => allowedSet.has(String(row[colId])));
+      const excludedSet = filterState[colId];
+      if (excludedSet && excludedSet.size > 0) {
+        data = data.filter(row => !excludedSet.has(String(row[colId])));
       }
     });
 
@@ -87,7 +90,22 @@ export function useAppState() {
 
   const handleSortFilter = useCallback(({ sort, filter }) => {
     if (sort !== undefined) setSortState(sort);
-    if (filter !== undefined) setFilterState(prev => ({ ...prev, ...filter }));
+    if (filter !== undefined) {
+      // If the incoming excluded set for a column is empty, delete the key
+      // entirely so "no active filter" and "empty set" are the same state —
+      // which matters for the column-highlight logic.
+      setFilterState(prev => {
+        const next = { ...prev };
+        Object.entries(filter).forEach(([colId, set]) => {
+          if (!set || set.size === 0) {
+            delete next[colId];
+          } else {
+            next[colId] = set;
+          }
+        });
+        return next;
+      });
+    }
   }, []);
 
   return {

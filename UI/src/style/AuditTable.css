@@ -55,6 +55,31 @@
 
 .table-header-cell.pinned {
   background: hsl(225, 8%, 10%);
+  /* Fixed width so cumulative sticky offsets are predictable across many
+     pinned columns. Widths are also measured at runtime — this value is the
+     floor before layout and the default when the measurement pass hasn't run. */
+  min-width: 150px;
+}
+
+/* Column highlight — active filter on this column (any report) */
+.table-header-cell.filtered {
+  box-shadow: inset 0 -2px 0 0 var(--accent-blue);
+}
+
+/* Column highlight — active sort on this column */
+.table-header-cell.sorted {
+  color: var(--accent-blue);
+}
+
+.table-header-cell.filtered .filter-btn,
+.table-header-cell.sorted .sort-btn {
+  opacity: 1;
+  color: var(--accent-blue);
+}
+
+.header-btn.active {
+  opacity: 1 !important;
+  color: var(--accent-blue);
 }
 
 .header-content {
@@ -115,6 +140,9 @@
 
 .table-cell.pinned {
   background: var(--cell-bg-pinned);
+  /* Match the pinned header width so column boundaries stay aligned while
+     scrolling horizontally and the sticky offsets stay correct. */
+  min-width: 150px;
 }
 
 .table-cell.selected {
@@ -159,4 +187,30 @@
 
 .table-cell.checkup-fail.selected, .audit-table tbody tr:hover .table-cell.checkup-fail{
   background: hsla(0, 70%, 40%, 0.4);
+}
+
+/* Subtle tint on every cell belonging to a filtered column */
+.table-cell.filtered-col:not(.selected):not(.checkup-pass):not(.checkup-fail):not(.pinned) {
+  background: hsla(217, 89%, 61%, 0.05);
+}
+
+/* Pinned cells MUST be fully opaque — otherwise unpinned cells scrolling
+   underneath them visibly bleed through. Override the semi-transparent
+   checkup variants for pinned cells only. */
+.table-cell.pinned.checkup-pass {
+  background: hsl(140, 35%, 18%);
+}
+
+.table-cell.pinned.checkup-fail {
+  background: hsl(0, 35%, 22%);
+}
+
+.table-cell.pinned.checkup-pass.selected,
+.audit-table tbody tr:hover .table-cell.pinned.checkup-pass {
+  background: hsl(140, 40%, 24%);
+}
+
+.table-cell.pinned.checkup-fail.selected,
+.audit-table tbody tr:hover .table-cell.pinned.checkup-fail {
+  background: hsl(0, 40%, 28%);
 }
