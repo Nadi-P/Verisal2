@@ -1,86 +1,37 @@
-import React from 'react';
-import SideMenu from './SideMenu.jsx';
-import TopStatusBar from './TopStatusBar.jsx';
-import BottomStatusBar from './BottomStatusBar.jsx';
-import AuditTable from './AuditTable.jsx';
-import ColumnsPanel from './ColumnsPanel.jsx';
-import { useAppState } from '../logic/AppLogic.jsx';
+import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './Login';
+import Dashboard from './Dashboard';
 
 function App() {
-  const {
-    rowData, setRowData,
-    filteredData,
-    isLoading, setIsLoading,
-    metadata, setMetadata,
-    zoom, setZoom,
-    sideMenuOpen, setSideMenuOpen,
-    columnsPanelOpen, setColumnsPanelOpen,
-    columns, setColumns,
-    visibleColumns,
-    pinnedColumns,
-    sortState, setSortState,
-    filterState, setFilterState,
-    selectionStats,
-    setSelectionStats,
-    checkupData, setCheckupData,
-    handleColumnsApply,
-    handleSortFilter,
-    currentReportTitle
-  } = useAppState();
+  // In-memory state: resets when the app process ends
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+  };
 
   return (
-    <div className="app-container">
-      <SideMenu
-        isOpen={sideMenuOpen}
-        onToggle={() => setSideMenuOpen(prev => !prev)}
-        setTableData={setRowData}
-        setIsLoading={setIsLoading}
-        setMetadata={setMetadata}
-        setColumns={setColumns}
-        setCheckupData={setCheckupData}
-      />
-
-      <div className="main-content">
-        <TopStatusBar
-          metadata={metadata}
-          currentReport={currentReportTitle}
-          columnsPanelOpen={columnsPanelOpen}
-          onToggleColumnsPanel={() => setColumnsPanelOpen(prev => !prev)}
+    <BrowserRouter>
+      <Routes>
+        <Route 
+          path="/login" 
+          element={
+            isAuthenticated ? 
+            <Navigate to="/" /> : 
+            <LoginPage onLoginSuccess={handleLoginSuccess} />
+          } 
         />
-
-        <div className="app-middle">      
-          <div className="table-area">
-            <AuditTable
-              rowData={filteredData}
-              allRowData={rowData}
-              isLoading={isLoading}
-              visibleColumns={visibleColumns}
-              pinnedColumns={pinnedColumns}
-              sortState={sortState}
-              filterState={filterState}
-              onSortFilter={handleSortFilter}
-              zoom={zoom}
-              onSelectionStats={setSelectionStats}
-              checkupData={checkupData}
-            />
-          </div>
-
-          <ColumnsPanel
-            isOpen={columnsPanelOpen}
-            columns={columns}
-            onApply={handleColumnsApply}
-            onCancel={() => setColumnsPanelOpen(false)}
-          />
-        </div>
-
-        <BottomStatusBar
-          zoom={zoom}
-          setZoom={setZoom}
-          selectionStats={selectionStats}
+        <Route 
+          path="/" 
+          element={
+            isAuthenticated ? 
+            <Dashboard /> : 
+            <Navigate to="/login" />
+          } 
         />
-      </div>
-    </div>
-
+      </Routes>
+    </BrowserRouter>
   );
 }
 

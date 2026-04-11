@@ -115,7 +115,6 @@
 
 .table-cell.pinned {
   background: var(--cell-bg-pinned);
-  box-shadow: -2px 0 6px rgba(0, 0, 0, 0.3);
 }
 
 .table-cell.selected {

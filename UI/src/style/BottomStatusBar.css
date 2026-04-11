@@ -112,7 +112,7 @@
   appearance: none;
   height: 14px;
   width: 8px;
-  background-color: #666; /* Dark gray Excel thumb */
+  background-color: #ffffff; /* Dark gray Excel thumb */
   border: 1px solid #ffffff;
   border-radius: 1px; /* Small square-ish look */
   margin-top: -6px; /* Centers thumb on the 2px track: (14/2 - 2/2) */
@@ -135,5 +135,5 @@
 }
 
 .zoom-slider:active::-webkit-slider-thumb {
-  background-color: #217346; /* Excel Green when sliding */
+  background-color: #ffffff; /* Excel Green when sliding */
 }

@@ -770,34 +770,34 @@ class Functions:
 
         return main_df[headersList]
     
-    def get_months_comparison():
+    def get_months_comparison(input_months1=None, input_year1=None, input_months2=None, input_year2=None):
         center_h = Headers.InputFiles.Center
         comparison_h = Headers.MonthsComparison
         source_df = Functions.run_payroll_audit()
 
-        max_year = source_df[center_h.work_year].max()
-        max_month = source_df[source_df[center_h.work_year] == max_year][center_h.work_month].max()
+        month1 = Files.max_month
+        year1 = Files.max_year
+        month2 = Files.min_month
+        year2 = Files.min_year
 
-        if max_month == 1:
-            prev_month, prev_year = 12, max_year - 1
-        else:
-            prev_month, prev_year = max_month - 1, max_year
+        if input_months1 and input_months2 and input_year1 and input_year2:
+            year1, year2 = input_year1, input_year2
+            month1, month2 = input_months1, input_months2
 
-        # 2. יצירת טבלאות (CurrTable, PrevTable)
         curr_table = source_df[
-            (source_df[center_h.work_month] == max_month) & 
-            (source_df[center_h.work_year] == max_year)
+            (source_df[center_h.work_month] == month1) & 
+            (source_df[center_h.work_year] == year1)
         ].copy()
         
         prev_table = source_df[
-            (source_df[center_h.work_month] == prev_month) & 
-            (source_df[center_h.work_year] == prev_year)
+            (source_df[center_h.work_month] == month2) & 
+            (source_df[center_h.work_year] == year2)
         ].copy()
 
         def create_lookup_key(key):
             split_pattern = Functions.key_regex
             parts = re.split(split_pattern, key)
-            return f"{parts[1]}-{prev_month}-{str(prev_year)}"
+            return f"{parts[1]}-{month2}-{str(year2)}"
 
         curr_table['LookupPrev'] = curr_table[Functions.join_key].apply(create_lookup_key)
 
@@ -829,7 +829,8 @@ class Functions:
         ]
 
         analysis_rows = []
-        
+        month1_str = f"{month1:02d}/{year1}"
+        month2_str = f"{month2:02d}/{year2}"
         # לכל עובד ב-Joined, אנחנו מייצרים 12 שורות (אחת לכל בדיקה)
         for _, row in joined.iterrows():
             for item in check_list:
@@ -844,23 +845,20 @@ class Functions:
                     comparison_h.work_month: row[center_h.work_month],
                     comparison_h.check: item['בדיקה'],
                     comparison_h.category: item['סיווג'],
-                    comparison_h.current_month: curr_val,
-                    comparison_h.previous_month: prev_val
+                    month1_str: curr_val,
+                    month2_str: prev_val
                 })
 
         final_df = pd.DataFrame(analysis_rows)
 
         # 6. חישוב סטייה ואחוזים (AddCalc, AddPct)
-        final_df[comparison_h.offset] = final_df[comparison_h.current_month] - final_df[comparison_h.previous_month]
+        final_df[comparison_h.offset] = final_df[month1_str] - final_df[month2_str]
         final_df[comparison_h.offset_ratio] = np.where(
-            final_df[comparison_h.previous_month] != 0, 
-            final_df[comparison_h.offset] / final_df[comparison_h.previous_month], 
+            final_df[month2_str] != 0, 
+            final_df[comparison_h.offset] / final_df[month2_str], 
             0
         )
         final_df[comparison_h.offset_pct] = final_df[comparison_h.offset_ratio].apply(lambda x: f"{x * 100:.2f}%")
-        
-        final_df[comparison_h.notes] = ""
-
         return final_df
 
     def get_reports_against_center():

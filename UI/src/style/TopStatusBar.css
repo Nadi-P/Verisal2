@@ -8,15 +8,82 @@
   flex-shrink: 0;
   z-index: 20;
   gap: 16px;
-  border-bottom: 1px solid var(--border-color);
 }
 
 .top-bar-right {
   display: flex;
-  align-items: baseline;
-  gap: 14px;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 30px; /* Space between title and comparison tools */
 }
+
+.title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.main-meta {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+}
+
+.comparison-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--bg-dark);
+  padding: 6px 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.input-pair {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-pair label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.mini-input {
+  width: 35px;
+  background: var(--hover-bg);
+  border: 1px solid var(--border-color);
+  color: white;
+  padding: 4px;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.mini-input.year {
+  width: 55px;
+}
+
+.apply-comparison-btn {
+  background: var(--accent-blue);
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.apply-comparison-btn:disabled {
+  background: var(--hover-bg);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/*  --------------*/
 
 .company-name {
   color: #ffffff;

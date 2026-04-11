@@ -24,6 +24,10 @@ export function useSideMenu(setTableData, setIsLoading, setMetadata, setColumns,
           companyName: result.metadata.company_name,
           dateRange: `${result.metadata.min_month}/${result.metadata.min_year} - ${result.metadata.max_month}/${result.metadata.max_year}`,
           reportTitle: itemData.display_title,
+          minMonth: result.metadata.min_month,
+          minYear: result.metadata.min_year,
+          maxMonth: result.metadata.max_month,
+          maxYear: result.metadata.max_year
         });
 
         // Build columns array from the first row keys

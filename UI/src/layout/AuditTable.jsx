@@ -124,7 +124,7 @@ function AuditTable({
                 return (
                   <td
                     key={col}
-                    className={`table-cell ${checkupClass} table-cell ${selected ? 'selected' : ''} ${borderClasses} ${pinned ? 'pinned' : ''}`}
+                    className={`table-cell ${checkupClass} ${selected ? 'selected' : ''} ${borderClasses} ${pinned ? 'pinned' : ''}`}
                     style={{
                       ...getCellStyle(),
                       direction: dir,

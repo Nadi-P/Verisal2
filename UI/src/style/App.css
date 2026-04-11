@@ -14,7 +14,21 @@
   --selection-bg: hsla(217, 89%, 61%, 0.14);
   --selection-border: hsl(217, 89%, 61%);
   --panel-bg: hsl(220, 5%, 11%);
+  --checkup-pass: hsla(140, 70%, 35%, 0.25);
+  --checkup-fail: hsla(0, 70%, 40%, 0.25);
+  --checkup-pass-highlight: hsla(140, 70%, 35%, 0.4);
+  --checkup-fail-highlight: hsla(0, 70%, 40%, 0.4);
   --transition-speed: 0.25s;
+}
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 * {
@@ -75,4 +89,26 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background-color: hsl(0, 0%, 35%);
+}
+
+/* Animations */
+.sidebar, .sidebar-toggle-btn, .top-status-bar, .bottom-status-bar, .app-middle {
+  animation: fadeInSlide 0.25s linear forwards;
+  opacity: 0;
+}
+
+.sidebar {
+  animation-delay: 0s;
+}
+.sidebar-toggle-btn {
+  animation-delay: 0.1s;
+}
+.top-status-bar {
+  animation-delay: 0.35s;
+}
+.bottom-status-bar {
+  animation-delay: 0.6s;
+}
+.app-middle {
+  animation-delay: 0.85s;
 }
