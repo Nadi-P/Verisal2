@@ -31,7 +31,7 @@ export function useLoginLogic(onLoginSuccess) {
         } else {
           console.error("onLoginSuccess is not a function. Check App.jsx and Login.jsx wiring.");
         }
-      }, 500); 
+      }, 3000); 
     } else {
       setError('the user info that has been entered is not registered');
     }

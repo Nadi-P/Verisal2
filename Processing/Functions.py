@@ -841,8 +841,6 @@ class Functions:
                 analysis_rows.append({
                     comparison_h.employee_id: row[center_h.employee_id],
                     comparison_h.employee_name: row["מרכזשכר" + "_" + center_h.employee_name],
-                    comparison_h.work_year: row[center_h.work_year],
-                    comparison_h.work_month: row[center_h.work_month],
                     comparison_h.check: item['בדיקה'],
                     comparison_h.category: item['סיווג'],
                     month1_str: curr_val,
@@ -851,14 +849,16 @@ class Functions:
 
         final_df = pd.DataFrame(analysis_rows)
 
-        # 6. חישוב סטייה ואחוזים (AddCalc, AddPct)
         final_df[comparison_h.offset] = final_df[month1_str] - final_df[month2_str]
-        final_df[comparison_h.offset_ratio] = np.where(
-            final_df[month2_str] != 0, 
-            final_df[comparison_h.offset] / final_df[month2_str], 
+        # 6. חישוב סטייה ואחוזים (AddCalc, AddPct)
+        final_df[comparison_h.offset_pct] = np.where(
+            final_df[month2_str] != 0,
+            (final_df[comparison_h.offset] / final_df[month2_str] * 100),
             0
         )
-        final_df[comparison_h.offset_pct] = final_df[comparison_h.offset_ratio].apply(lambda x: f"{x * 100:.2f}%")
+
+        # Format as a string with the % symbol
+        final_df[comparison_h.offset_pct] = final_df[comparison_h.offset_pct].apply(lambda x: f"{x:.2f}%")
         return final_df
 
     def get_reports_against_center():

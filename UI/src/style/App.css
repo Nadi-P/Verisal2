@@ -20,16 +20,6 @@
   --checkup-fail-highlight: hsla(0, 70%, 40%, 0.4);
   --transition-speed: 0.25s;
 }
-@keyframes fadeInSlide {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 * {
   box-sizing: border-box;
@@ -92,6 +82,17 @@ body {
 }
 
 /* Animations */
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .sidebar, .sidebar-toggle-btn, .top-status-bar, .bottom-status-bar, .app-middle {
   animation: fadeInSlide 0.25s linear forwards;
   opacity: 0;
