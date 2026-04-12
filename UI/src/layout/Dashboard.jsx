@@ -25,11 +25,18 @@ function Dashboard() {
     checkupData, setCheckupData,
     handleColumnsApply,
     handleSortFilter,
+    clearAllFilters,
+    hasActiveFilters,
     currentReportTitle,
     // Comparison props from global state
     compData, setCompData,
     handleRunComparison
   } = useAppState();
+
+  // Placeholder — wiring up the export logic is a separate task.
+  const handleExportExcel = () => {
+    // TODO: implement Excel export
+  };
 
   return (
     <div className="app-container">
@@ -54,6 +61,10 @@ function Dashboard() {
           compData={compData}
           setCompData={setCompData}
           onRunComparison={handleRunComparison}
+          // Filter + export actions
+          onClearFilters={clearAllFilters}
+          hasActiveFilters={hasActiveFilters}
+          onExportExcel={handleExportExcel}
         />
 
         <div className="app-middle">      

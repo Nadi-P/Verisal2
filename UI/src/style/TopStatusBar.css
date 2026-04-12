@@ -109,7 +109,16 @@
   margin-top: 0.25rem;
 }
 
-.columns-panel-toggle {
+/* Container for the right-aligned (RTL: visually left) action buttons */
+.top-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto; /* push to far left in RTL */
+}
+
+/* Shared base for all top bar action buttons — clean, theme-matching */
+.top-bar-btn {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -123,17 +132,45 @@
   font-family: inherit;
   transition: all var(--transition-speed) ease;
   white-space: nowrap;
-  margin-right: auto; /* push to far left in RTL */
 }
 
-.columns-panel-toggle:hover {
+.top-bar-btn:hover:not(:disabled) {
   background: var(--hover-bg);
   color: var(--text-main);
   border-color: var(--text-muted);
 }
 
+.top-bar-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Columns toggle — active state picks up the accent blue */
 .columns-panel-toggle.active {
   background: var(--accent-blue-dim);
   color: var(--accent-blue);
   border-color: var(--accent-blue);
+}
+
+/* Clear filters button — same neutral shape as columns button */
+.clear-filters-btn:hover:not(:disabled) {
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
+}
+
+/* Export to Excel — green themed button */
+.export-excel-btn {
+  background: hsl(145, 55%, 30%);
+  color: #fff;
+  border-color: hsl(145, 55%, 35%);
+}
+
+.export-excel-btn:hover:not(:disabled) {
+  background: hsl(145, 60%, 36%);
+  border-color: hsl(145, 60%, 42%);
+  color: #fff;
+}
+
+.export-excel-btn svg {
+  stroke: #fff;
 }

@@ -46,11 +46,17 @@
 .table-header-cell {
   background: var(--header-bg);
   color: var(--text-muted);
-  white-space: nowrap;
+  /* Allow wrapping so a long header can break onto two lines instead of
+     forcing the whole column wider than its data. Only breaks at whitespace —
+     `word-break: normal` + `overflow-wrap: normal` means words are never cut. */
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
   user-select: none;
   text-align: right;
   position: relative;
   font-weight: 500;
+  vertical-align: middle;
 }
 
 .table-header-cell.pinned {
@@ -90,8 +96,19 @@
 
 .header-text {
   flex: 1;
+  /* Wrap the header text to at most two lines, breaking on whitespace only.
+     If the header is too long for two lines, the excess is ellipsized rather
+     than cut inside a word. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  line-height: 1.2;
 }
 
 .header-actions {

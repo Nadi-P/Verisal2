@@ -1,5 +1,0 @@
-Todos:
-- an excel export button - currently doesnt work
-- folder selection button on the side menu
-- check if the windows account that is registered on the computer is in perrylion domain
-- fix pinning columns

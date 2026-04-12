@@ -6,6 +6,7 @@ function FilterMenu({ columnId, allValues, currentFilter, onApply, onCancel, pos
   const {
     checked,
     allChecked,
+    hasAnyChecked,
     handleToggle,
     handleSelectAll,
     handleApply,
@@ -44,7 +45,14 @@ function FilterMenu({ columnId, allValues, currentFilter, onApply, onCancel, pos
           ))}
         </div>
         <div className="filter-menu-footer">
-          <button className="filter-btn apply" onClick={handleApply}>החל</button>
+          <button
+            className="filter-btn apply"
+            onClick={handleApply}
+            disabled={!hasAnyChecked}
+            title={hasAnyChecked ? 'החל סינון' : 'יש לבחור לפחות ערך אחד'}
+          >
+            החל
+          </button>
           <button className="filter-btn cancel" onClick={onCancel}>ביטול</button>
         </div>
       </div>

@@ -88,6 +88,17 @@ export function useAppState() {
     setColumnsPanelOpen(false);
   }, []);
 
+  // Clear ALL active filters at once. Column highlights automatically
+  // disappear because isColumnFiltered checks filterState emptiness.
+  const clearAllFilters = useCallback(() => {
+    setFilterState({});
+  }, []);
+
+  const hasActiveFilters = useMemo(
+    () => Object.values(filterState).some(s => s && s.size > 0),
+    [filterState]
+  );
+
   const handleSortFilter = useCallback(({ sort, filter }) => {
     if (sort !== undefined) setSortState(sort);
     if (filter !== undefined) {
@@ -125,6 +136,8 @@ export function useAppState() {
     checkupData, setCheckupData,
     handleColumnsApply,
     handleSortFilter,
+    clearAllFilters,
+    hasActiveFilters,
     currentReportTitle,
     // New persistent fields
     compData, setCompData,

@@ -25,6 +25,12 @@ export function useFilterMenu(allValues, currentFilter, onApply) {
     [checked]
   );
 
+  // At least one value must be kept — otherwise Apply is disabled.
+  const hasAnyChecked = useMemo(
+    () => checked.some(Boolean),
+    [checked]
+  );
+
   const handleToggle = useCallback((index) => {
     setChecked(prev => {
       const next = [...prev];
@@ -39,6 +45,8 @@ export function useFilterMenu(allValues, currentFilter, onApply) {
   }, [allChecked, allValues]);
 
   const handleApply = useCallback(() => {
+    // Safety guard — button should already be disabled in this case.
+    if (!checked.some(Boolean)) return;
     // Start from the existing excluded set so exclusions from OTHER reports
     // (values not present in allValues here) are preserved across reports.
     const excluded = new Set(currentFilter || []);
@@ -56,6 +64,7 @@ export function useFilterMenu(allValues, currentFilter, onApply) {
   return {
     checked,
     allChecked,
+    hasAnyChecked,
     handleToggle,
     handleSelectAll,
     handleApply,

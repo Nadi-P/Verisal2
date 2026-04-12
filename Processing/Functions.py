@@ -290,15 +290,8 @@ class Functions:
         comparison_h = Headers.MonthsComparison
         rac_h = Headers.ReportsAgainstCenter
         Files.socialAnalysisCheckupColumns = {
-            social_h.total_sum : lambda val : val > 0,
-            social_h.ee_prov_sum : lambda val : val > 0,
-            social_h.er_prov_sum : lambda val : val > 0,
-            social_h.er_sev_sum : lambda val : val > 0,
-            social_h.ee_edu_sum : lambda val : val > 0,
-            social_h.er_edu_sum : lambda val : val > 0,
             social_h.ee_prov_pct : lambda val : val > 0,
             social_h.er_prov_pct : lambda val : val > 0,
-            social_h.capped_val : lambda val : val > 0,
         }
         Files.monthsComparisonCheckupColumns = {
             comparison_h.offset: lambda val : val > 0,

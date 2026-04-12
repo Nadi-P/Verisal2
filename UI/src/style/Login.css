@@ -6,6 +6,8 @@
   --text-muted: hsl(0, 0%, 60%);
 }
 
+/* --- BASE LAYOUT --- */
+
 .login-container {
   height: 100vh;
   width: 100vw;
@@ -18,7 +20,6 @@
   opacity: 1;
 }
 
-/* Container stays visible during staggered child animations */
 .login-container.fade-out {
   opacity: 1;
   transition: none;
@@ -36,6 +37,8 @@
   right: -100px;
 }
 
+/* --- ENTRANCE ANIMATIONS (BUILD UP) --- */
+
 .login-card {
   width: 400px;
   padding: 2.5rem;
@@ -48,35 +51,41 @@
   flex-direction: column;
   align-items: center;
   z-index: 10;
-  transition: all 0.3s ease;
-}
-
-/* STAGE 2: Card background and border dissolve */
-.fade-out .login-card {
-  animation: cardExit 0.8s ease forwards;
-  animation-delay: 1.2s;
+  
+  /* Entrance Logic */
+  animation: cardEntry 1s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 .login-logo {
   width: 240px;
   margin-bottom: 2rem;
   display: block;
+  /* Entrance Logic */
+  animation: logoEntry 1s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: 0.3s;
 }
 
-/* STAGE 3: Logo scales up and fades out last */
+.input-group, .login-button {
+  /* Entrance Logic */
+  animation: elementEntry 0.8s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.input-group:nth-child(1) { animation-delay: 0.5s; }
+.input-group:nth-child(2) { animation-delay: 0.6s; }
+.login-button { animation-delay: 0.8s; }
+
+/* --- EXIT ANIMATIONS (DISINTEGRATE) --- */
+
+.fade-out .login-card {
+  animation: cardExit 0.8s ease forwards;
+  animation-delay: 1.2s;
+}
+
 .fade-out .login-logo {
   animation: logoFinalExit 1.5s ease-in-out forwards;
   animation-delay: 1.5s;
 }
 
-.login-form {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-/* STAGE 1: Inputs and Button disappear */
 .fade-out .input-group,
 .fade-out .login-button,
 .fade-out .login-error {
@@ -87,6 +96,15 @@
 .fade-out .input-group:nth-child(2) { animation-delay: 0.4s; }
 .fade-out .login-button { animation-delay: 0.6s; }
 .fade-out .login-error { animation-delay: 0s; }
+
+/* --- SHARED STYLES --- */
+
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
 
 .input-group {
   display: flex;
@@ -148,8 +166,45 @@
   margin-top: 1rem;
 }
 
-/* Animation Keyframes */
+/* --- KEYFRAMES --- */
 
+/* Entrance */
+@keyframes cardEntry {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(30px);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes logoEntry {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes elementEntry {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Exit */
 @keyframes elementExit {
   to {
     opacity: 0;
