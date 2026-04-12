@@ -2,16 +2,16 @@ import { useEffect, useCallback, useMemo } from 'react';
 
 export function useTopStatusBarLogic(metadata, onRunComparison, compData, setCompData) {
   
-  // Default values logic remains, but updates global state
+  // Always sync comparison inputs to the latest metadata defaults whenever
+  // the underlying date range changes (e.g. new folder uploaded).
   useEffect(() => {
-    // Check if we have values in metadata and global state is currently empty
-    if (metadata.minMonth && metadata.maxMonth && !compData.m1) {
+    if (metadata.minMonth && metadata.maxMonth) {
       setCompData({
         m1: String(metadata.maxMonth), y1: String(metadata.maxYear),
         m2: String(metadata.minMonth), y2: String(metadata.minYear)
       });
     }
-  }, [metadata, setCompData]);
+  }, [metadata.minMonth, metadata.maxMonth, metadata.minYear, metadata.maxYear, setCompData]);
 
   const handleCompChange = (e) => {
     const { name, value } = e.target;

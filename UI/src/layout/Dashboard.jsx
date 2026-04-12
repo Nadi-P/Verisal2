@@ -70,39 +70,46 @@ function Dashboard() {
         return;
       }
 
-      // Upload succeeded — now auto-load the center report
+      // Upload succeeded
       setReportsLoaded(true);
       setLoadError('');
 
-      const reportRes = await fetch('http://localhost:8000/api/get_report?report_name=center');
-      const reportResult = await reportRes.json();
+      // If a report was already selected, reload it with the new data
+      const activeReport = metadata.reportFileName;
+      if (activeReport) {
+        const reportRes = await fetch(`http://localhost:8000/api/get_report?report_name=${activeReport}`);
+        const reportResult = await reportRes.json();
 
-      if (reportResult.status === 'success') {
-        setRowData(reportResult.data);
-        setMetadata({
-          companyName: reportResult.metadata.company_name,
-          dateRange: `${reportResult.metadata.min_month}/${reportResult.metadata.min_year} - ${reportResult.metadata.max_month}/${reportResult.metadata.max_year}`,
-          reportTitle: 'מרכז שכר',
-          reportFileName: 'center',
-          minMonth: reportResult.metadata.min_month,
-          minYear: reportResult.metadata.min_year,
-          maxMonth: reportResult.metadata.max_month,
-          maxYear: reportResult.metadata.max_year,
-        });
-        if (reportResult.data.length > 0) {
-          const keys = Object.keys(reportResult.data[0]);
-          setCheckupData(reportResult.checkup || {});
-          setColumns(keys.map(k => ({ id: k, visible: true, pinned: false })));
-        } else {
-          setColumns([]);
+        if (reportResult.status === 'success') {
+          setRowData(reportResult.data);
+          setMetadata(prev => ({
+            ...prev,
+            companyName: reportResult.metadata.company_name,
+            dateRange: `${reportResult.metadata.min_month}/${reportResult.metadata.min_year} - ${reportResult.metadata.max_month}/${reportResult.metadata.max_year}`,
+            minMonth: reportResult.metadata.min_month,
+            minYear: reportResult.metadata.min_year,
+            maxMonth: reportResult.metadata.max_month,
+            maxYear: reportResult.metadata.max_year,
+          }));
+          if (reportResult.data.length > 0) {
+            const keys = Object.keys(reportResult.data[0]);
+            setCheckupData(reportResult.checkup || {});
+            setColumns(keys.map(k => ({ id: k, visible: true, pinned: false })));
+          } else {
+            setColumns([]);
+          }
         }
+      } else {
+        // No report selected yet — just show a success message in the table area
+        setRowData([]);
+        setColumns([]);
       }
     } catch (error) {
       setLoadError('שגיאה בחיבור לשרת');
     } finally {
       setIsLoading(false);
     }
-  }, [setRowData, setIsLoading, setMetadata, setColumns, setCheckupData, setReportsLoaded, setLoadError]);
+  }, [setRowData, setIsLoading, metadata, setMetadata, setColumns, setCheckupData, setReportsLoaded, setLoadError]);
 
   const handleExportExcel = useCallback(async () => {
     if (!metadata.reportFileName) return;

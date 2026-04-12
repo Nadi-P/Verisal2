@@ -232,11 +232,37 @@ export function useAuditTableLogic({
     const maxR = displayRows.length - 1;
     const maxC = displayColumns.length - 1;
 
+    // Ctrl+Home / Ctrl+End — jump to absolute start / end of table
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'Home' || e.key === 'End')) {
+      e.preventDefault();
+      // RTL: Home = row 0, col 0 (rightmost); End = last row, last col (leftmost)
+      const target = e.key === 'Home' ? { r: 0, c: 0 } : { r: maxR, c: maxC };
+      if (e.shiftKey) {
+        setSelectionEnd(target);
+      } else {
+        setExtraSelections([]);
+        setSelectionAnchor(target);
+        setSelectionEnd(target);
+      }
+      // Scroll container to the corresponding corner
+      const el = tableContainerRef.current;
+      if (el) {
+        if (e.key === 'Home') {
+          el.scrollTo({ top: 0, left: el.scrollWidth }); // RTL: scrollLeft max = right edge
+        } else {
+          el.scrollTo({ top: el.scrollHeight, left: 0 });
+        }
+      }
+      return;
+    }
+
     switch (e.key) {
       case 'ArrowUp':    newR = Math.max(0, r - 1); break;
       case 'ArrowDown':  newR = Math.min(maxR, r + 1); break;
       case 'ArrowLeft':  newC = Math.min(maxC, c + 1); break;  // RTL: left = increase col
       case 'ArrowRight': newC = Math.max(0, c - 1); break;     // RTL: right = decrease col
+      case 'Home':       newC = 0; break;          // RTL: Home = first col (rightmost)
+      case 'End':        newC = maxC; break;        // RTL: End = last col (leftmost)
       default: return;
     }
 

@@ -77,7 +77,10 @@
 }
 
 .audit-table {
-  border-collapse: collapse;
+  /* separate + 0 spacing avoids the classic border-collapse + sticky gap
+     where collapsed borders aren't painted between sticky cells. */
+  border-collapse: separate;
+  border-spacing: 0;
   width: max-content;
   min-width: 100%;
 }
@@ -103,6 +106,8 @@
   position: relative;
   font-weight: 500;
   vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-color);
 }
 
 .table-header-cell.pinned {
@@ -111,6 +116,7 @@
      pinned columns. Widths are also measured at runtime — this value is the
      floor before layout and the default when the measurement pass hasn't run. */
   min-width: 150px;
+  z-index: 13;
 }
 
 /* Column highlight — active filter on this column (any report) */
@@ -190,16 +196,16 @@
 
 /* Cells */
 .table-cell {
-  border: 1px solid var(--border-color);
+  /* Only bottom + left borders so adjacent separate cells don't double up. */
+  border-bottom: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: cell;
   user-select: none;
   color: var(--text-main);
-  background: transparent;
-  transition: background 0.08s ease;
-  z-index: 0;
+  background: var(--bg-dark);
 }
 
 .table-cell.pinned {
@@ -207,8 +213,9 @@
   /* Match the pinned header width so column boundaries stay aligned while
      scrolling horizontally and the sticky offsets stay correct. */
   min-width: 150px;
-  z-index: 10;
-  border: 1px solid var(--border-color);
+  z-index: 3;
+  border-bottom: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-color);
 }
 
 .table-cell.selected {
@@ -217,26 +224,30 @@
 
 /* Selection border frame — Excel-style */
 .table-cell.sel-top {
-  border-top: 2px solid var(--selection-border);
+  border-top: 1px solid var(--selection-border);
 }
 .table-cell.sel-bottom {
-  border-bottom: 2px solid var(--selection-border);
+  border-bottom: 1px solid var(--selection-border);
 }
 .table-cell.sel-left {
-  border-right: 2px solid var(--selection-border);
+  border-right: 1px solid var(--selection-border);
 }
 .table-cell.sel-right {
-  border-left: 2px solid var(--selection-border);
+  border-left: 1px solid var(--selection-border);
 }
 
-/* Row hover */
-.audit-table tbody tr:hover .table-cell:not(.selected, .checkup-fail, .checkup-pass) {
-  background: hsla(0, 0%, 100%, 0.025);
+/* Row hover — pinned cells get their own opaque hover to prevent bleed-through.
+   Non-pinned cells use a subtle semi-transparent tint. */
+.audit-table tbody tr:hover .table-cell:not(.selected):not(.checkup-fail):not(.checkup-pass):not(.pinned) {
+  background: hsl(0, 0%, 10.5%);
+}
+.audit-table tbody tr:hover .table-cell.pinned:not(.selected):not(.checkup-fail):not(.checkup-pass) {
+  background: hsl(225, 6%, 15%);
 }
 
 /* Alternating rows */
-.audit-table tbody tr:nth-child(even) .table-cell:not(.selected, .checkup-fail, .checkup-pass):not(.pinned) {
-  background: hsla(0, 0%, 100%, 0.015);
+.audit-table tbody tr:nth-child(even) .table-cell:not(.selected):not(.checkup-fail):not(.checkup-pass):not(.pinned) {
+  background: hsl(0, 0%, 9.5%);
 }
 
 .table-cell.checkup-pass {
@@ -256,9 +267,6 @@
 }
 
 /* Subtle tint on every cell belonging to a filtered column */
-.table-cell.filtered-col:not(.selected):not(.checkup-pass):not(.checkup-fail):not(.pinned) {
-  background: hsla(217, 89%, 61%, 0.05);
-}
 
 /* Pinned cells MUST be fully opaque — otherwise unpinned cells scrolling
    underneath them visibly bleed through. Override the semi-transparent
