@@ -6,10 +6,12 @@ import content from '../JSON/strings.json';
 import paqaLogo from '../assets/verisal-logo2.svg';
 import fileIcon from '../assets/icon-file-fill.png';
 import templateIcon from '../assets/icon-template-fill.png';
-import helpIcon from '../assets/icon-help-fill.png';
 import '../style/SideMenu.css';
 
-function SideMenu({ isOpen, onToggle, setTableData, setIsLoading, setMetadata, setColumns, setCheckupData }) {
+function SideMenu({
+  isOpen, onToggle, setTableData, setIsLoading, setMetadata, setColumns, setCheckupData,
+  reportsLoaded, loadError, onLoadReports
+}) {
   const {
     sharedSelectedItem,
     openDropdown,
@@ -49,6 +51,7 @@ function SideMenu({ isOpen, onToggle, setTableData, setIsLoading, setMetadata, s
               onSelect={(itemData) => handleSelect(content.sideMenuSourceReportDropdownHeader, itemData)}
               isOpen={openDropdown === content.sideMenuSourceReportDropdownHeader}
               onToggle={() => toggleDropdown(content.sideMenuSourceReportDropdownHeader)}
+              disabled={!reportsLoaded}
             />
 
             <SideMenuDropdown
@@ -59,15 +62,22 @@ function SideMenu({ isOpen, onToggle, setTableData, setIsLoading, setMetadata, s
               onSelect={(itemData) => handleSelect(content.sideMenuTemplatesDropdownHeader, itemData)}
               isOpen={openDropdown === content.sideMenuTemplatesDropdownHeader}
               onToggle={() => toggleDropdown(content.sideMenuTemplatesDropdownHeader)}
+              disabled={!reportsLoaded}
             />
           </div>
 
-          <ActionButton
-            style={{ marginBottom: '0.25rem', marginTop: 'auto' }}
-            icon={helpIcon}
-            label={content.sideMenuHelpButtonTitle}
-            onClick={() => console.log('Help Clicked')}
-          />
+          <div className="sidebar-load-section">
+            {loadError && (
+              <div className="sidebar-load-error">{loadError}</div>
+            )}
+            <ActionButton
+              style={{ marginBottom: '0.25rem', marginTop: 'auto' }}
+              icon={null}
+              label={content.loadReportsButtonTitle}
+              onClick={onLoadReports}
+              uploadButton
+            />
+          </div>
         </div>
       </aside>
     </>

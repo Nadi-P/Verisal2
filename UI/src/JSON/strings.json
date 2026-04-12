@@ -5,6 +5,10 @@
     "sideMenuNewTemplateButtonTitle": "צור תבנית חדשה",
     "sideMenuNewParameterButtonTitle": "צור פרמטר חדש",
     "sideMenuHelpButtonTitle": "עזרה",
+    "loadReportsButtonTitle": "טעינת דוחות",
+    "loadReportsError": "שגיאה בטעינת הדוחות",
+    "loadReportsConnectionError": "שגיאה בחיבור לשרת",
+    "loadReportsPrompt": "טען תיקיית דוחות להתחלה",
 
 
     

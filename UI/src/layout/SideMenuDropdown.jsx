@@ -11,10 +11,10 @@ function SideMenuDropdownItem({ data, isActive, onClick }) {
   );
 }
 
-function SideMenuDropdown({ title, icon, items, globalSelected, onSelect, isOpen, onToggle }) {
+function SideMenuDropdown({ title, icon, items, globalSelected, onSelect, isOpen, onToggle, disabled }) {
   return (
-    <div className="custom-dropdown-container">
-      <div className="dropdown-header" onClick={onToggle}>
+    <div className={`custom-dropdown-container ${disabled ? 'disabled' : ''}`}>
+      <div className="dropdown-header" onClick={disabled ? undefined : onToggle} style={disabled ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}>
         {icon && <img alt="" src={icon} className="sidebar-button-icon" />}
         {title}
         <span className={`arrow ${isOpen ? 'up' : 'down'}`}>▾</span>

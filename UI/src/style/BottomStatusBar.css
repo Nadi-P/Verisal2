@@ -137,3 +137,14 @@
 .zoom-slider:active::-webkit-slider-thumb {
   background-color: #ffffff; /* Excel Green when sliding */
 }
+
+/* Disabled zoom controls */
+.zoom-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.zoom-slider:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

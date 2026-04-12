@@ -1,5 +1,8 @@
 import re
 import os
+import io
+from typing import List
+from fastapi import UploadFile
 import numpy as np
 import pandas as pd
 from Processing.Files import Files
@@ -261,18 +264,86 @@ class Functions:
             else:
                 print("All specified columns are present in the DataFrame.")
     
-    def InitializeData():
-        Files.initialize_file_mapping()
+    def GetFileFromObject(file_obj, key, sheetName):
+        """
+        Replaces GetFile(key, sheetName).
+        Reads an Excel file from an UploadFile object buffer.
+        """
+        if not file_obj:
+            print(f"Warning: No file object found for {key}")
+            return pd.DataFrame()
 
+        header_row = 7 if key == "center" else 0
+        
+        try:
+            # Read the file content into a memory buffer
+            # Note: In a real app, you'd use 'await file_obj.read()' in the endpoint 
+            # and pass the bytes here.
+            file_obj.file.seek(0)
+            content = file_obj.file.read()
+            buffer = io.BytesIO(content)
+            
+            with pd.ExcelFile(buffer) as xls:
+                target_sheet = xls.sheet_names[0] if sheetName is None else sheetName
+                df = pd.read_excel(xls, sheet_name=target_sheet, header=header_row)
+            
+            df.columns = df.columns.astype(str).str.strip()
+            return df
+        except Exception as e:
+            print(f"Error loading {key}: {e}")
+            return pd.DataFrame()
+
+    def InitializeFromFiles(files_list: List[UploadFile]):
+        """
+        Replaces InitializeData(folder_path).
+        Maps file objects and loads them into memory.
+        """
+        # 1. Filter to only .xlsx/.xls files (ignore hidden files, thumbs.db, etc.)
+        excel_files = [f for f in files_list if f.filename.lower().endswith(('.xlsx', '.xls'))]
+
+        # 2. Map the uploaded file objects to their keys
+        Files.files_map = {}
+        file_map = Files.files_map
+        unmatched = []
+        for file_obj in excel_files:
+            filename = file_obj.filename.lower()
+            matched = False
+            for key, keyword in Files.KEYWORDS.items():
+                if keyword.lower() in filename:
+                    if key in file_map:
+                        raise ValueError(f"נמצאו מספר קבצים התואמים ל\"{keyword}\" — יש לטעון קובץ אחד בלבד לכל סוג")
+                    file_map[key] = file_obj
+                    matched = True
+                    break
+            if not matched:
+                unmatched.append(file_obj.filename)
+
+        # 3. Validate all 7 files are present
+        expected_keys = set(Files.KEYWORDS.keys())
+        matched_keys = set(file_map.keys())
+        missing_keys = expected_keys - matched_keys
+
+        if missing_keys or unmatched:
+            errors = []
+            if missing_keys:
+                missing_names = [Files.KEYWORDS[k] for k in missing_keys]
+                errors.append(f"קבצים חסרים: {', '.join(missing_names)}")
+            if unmatched:
+                errors.append(f"קבצים לא מזוהים: {', '.join(unmatched)}")
+            raise ValueError(" | ".join(errors))
+
+        # 4. Extract company name first (usually from 'center' or 'income')
+        # This requires reading one file briefly to get the metadata
         Files.company_name = Functions.extract_data_from_files("companyName")
 
-        Files.centerDF = Files.GetFile("center", Files.company_name)
-        Files.componentsDF = Files.GetFile("components", Files.company_name)
-        Files.providentsDF = Files.GetFile("providents", Files.company_name)
-        Files.incomeDF = Files.GetFile("income", Files.company_name)
-        Files.deductionsDF = Files.GetFile("deductions", Files.company_name)
-        Files.costingDF = Files.GetFile("costing", Files.company_name)
-        Files.absencesDF = Files.GetFile("absences", Files.company_name)
+        # 3. Load all DataFrames directly from the file objects
+        Files.centerDF = Functions.GetFileFromObject(file_map.get("center"), "center", Files.company_name)
+        Files.componentsDF = Functions.GetFileFromObject(file_map.get("components"), "components", Files.company_name)
+        Files.providentsDF = Functions.GetFileFromObject(file_map.get("providents"), "providents", Files.company_name)
+        Files.incomeDF = Functions.GetFileFromObject(file_map.get("income"), "income", Files.company_name)
+        Files.deductionsDF = Functions.GetFileFromObject(file_map.get("deductions"), "deductions", Files.company_name)
+        Files.costingDF = Functions.GetFileFromObject(file_map.get("costing"), "costing", Files.company_name)
+        Files.absencesDF = Functions.GetFileFromObject(file_map.get("absences"), "absences", Files.company_name)
 
         Files.current_year = Functions.extract_data_from_files("currentYear")
         Files.min_year = Functions.extract_data_from_files("minYear")
@@ -301,25 +372,28 @@ class Functions:
         }
 
     def extract_data_from_files(requiredDataName):
-        centerFileName = Files.controlFiles.get("center")
-        if not centerFileName:
+        centerFileObj = Files.files_map.get("center")
+        if not centerFileObj:
             raise ValueError("Center file not found in mapped files.")
 
         match requiredDataName:
             case "companyName":
-                path = os.path.join(Files.base_path, centerFileName)
-                with pd.ExcelFile(path) as xls:
-                    # Returns the name of the first sheet
+                centerFileObj.file.seek(0)
+                content = centerFileObj.file.read()
+                buffer = io.BytesIO(content)
+                with pd.ExcelFile(buffer) as xls:
                     return xls.sheet_names[0]
 
             case "currentMonth":
                 # Splitting 'קובץ מרכז שכר לחודש 08.2025.xlsx' to get the date part
                 # Assuming format: "Filename MM.YYYY.xlsx"
-                date_part = centerFileName.split()[-1].replace('.xlsx', '')
+                filename = centerFileObj.filename
+                date_part = filename.split()[-1].replace('.xlsx', '').replace('.xls', '')
                 return Functions.Aggregations.extract_year(date_part.replace('.', '/'))
 
             case "currentYear":
-                date_part = centerFileName.split()[-1].replace('.xlsx', '')
+                filename = centerFileObj.filename
+                date_part = filename.split()[-1].replace('.xlsx', '').replace('.xls', '')
                 return Functions.Aggregations.extract_month(date_part.replace('.', '/'))
 
             case "minYear" | "maxYear" | "minMonth" | "maxMonth":

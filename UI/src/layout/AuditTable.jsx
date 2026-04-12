@@ -8,7 +8,8 @@ function AuditTable({
   visibleColumns, pinnedColumns,
   sortState, filterState,
   onSortFilter, zoom, onSelectionStats,
-  checkupData
+  checkupData,
+  reportsLoaded, loadError, onLoadReports
 }) {
   const {
     tableContainerRef,
@@ -55,6 +56,25 @@ function AuditTable({
       <div className="table-message">
         <div className="loading-spinner" />
         <span>טוען דוח...</span>
+      </div>
+    );
+  }
+
+  if (!reportsLoaded && (!rowData || rowData.length === 0)) {
+    return (
+      <div className="table-message">
+        <div className="load-reports-center">
+          <svg className="load-reports-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <span className="load-reports-prompt">טען תיקיית דוחות להתחלה</span>
+          <button className="load-reports-btn" onClick={onLoadReports}>
+            טעינת דוחות
+          </button>
+          {loadError && <div className="load-error-message">{loadError}</div>}
+        </div>
       </div>
     );
   }

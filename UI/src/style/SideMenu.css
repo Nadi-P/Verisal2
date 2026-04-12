@@ -202,3 +202,43 @@
 .sidebar-all-dropdowns::-webkit-scrollbar {
   display: none;
 }
+
+/* ── Load reports section at bottom of sidebar ── */
+.sidebar-load-section {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-load-error {
+  color: hsl(0, 75%, 60%);
+  font-size: 0.78rem;
+  text-align: center;
+  padding: 6px 8px;
+  background: hsla(0, 70%, 40%, 0.12);
+  border-radius: 6px;
+  border: 1px solid hsla(0, 70%, 40%, 0.2);
+}
+
+/* Upload button variant */
+.sidebar-action-button.upload-btn {
+  border: 1px dashed var(--border-color);
+  justify-content: center;
+  gap: 8px;
+}
+
+.sidebar-action-button.upload-btn:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+
+.sidebar-button-svg-icon {
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.sidebar-action-button.upload-btn:hover .sidebar-button-svg-icon {
+  stroke: var(--accent-blue);
+  opacity: 1;
+}

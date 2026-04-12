@@ -1,10 +1,12 @@
+from typing import List
+from io import BytesIO
+
 from Processing.Files import Files
-from Processing.Functions import Functions 
-from fastapi import FastAPI, HTTPException
+from Processing.Functions import Functions
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
-
-Functions.InitializeData()
 
 app = FastAPI()
 
@@ -76,8 +78,6 @@ def get_report(report_name: str):
 
 from fastapi import Query
 
-# 1. Added /api/ prefix to match frontend
-# 2. Changed @app.post to @app.get
 @app.get("/api/update-months-comparison")
 async def update_months_comparison(
     m1: int = Query(...),
@@ -118,3 +118,41 @@ async def update_months_comparison(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/api/export_report")
+def export_report(report_name: str):
+    report_mapping = {
+        "center": Files.centerDF,
+        "costing": Files.costingDF,
+        "income": Files.incomeDF,
+        "absences": Files.absencesDF,
+        "deductions": Files.deductionsDF,
+        "providents": Files.providentsDF,
+        "components": Files.componentsDF,
+        "social_analysis": Files.socialAnalysisDF,
+        "months_comparison": Files.monthsComparisonDF,
+        "reports_against_center": Files.reportsAgainstCenterDF,
+    }
+
+    df = report_mapping.get(report_name)
+    if df is None or df.empty:
+        raise HTTPException(status_code=404, detail=f"Report '{report_name}' not found")
+
+    buffer = BytesIO()
+    df.fillna(0).to_excel(buffer, index=False, engine="openpyxl")
+    buffer.seek(0)
+
+    return StreamingResponse(
+        iter([buffer.getvalue()]),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={report_name}.xlsx"},
+    )
+
+@app.post("/api/upload_reports")
+async def upload_reports(files: List[UploadFile] = File(...)):
+    try:
+        # Pass the list of upload objects directly to the processing logic
+        Functions.InitializeFromFiles(files)
+        return {"status": "success", "message": f"Successfully processed {len(files)} files"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}

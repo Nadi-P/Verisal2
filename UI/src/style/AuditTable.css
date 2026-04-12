@@ -8,6 +8,52 @@
   gap: 12px;
 }
 
+/* ── Load reports center prompt ── */
+.load-reports-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.load-reports-icon {
+  opacity: 0.3;
+  stroke: var(--text-muted);
+}
+
+.load-reports-prompt {
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+.load-reports-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent-blue);
+  color: #fff;
+  border: none;
+  padding: 10px 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.load-reports-btn:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.load-error-message {
+  color: hsl(0, 75%, 60%);
+  font-size: 0.85rem;
+  text-align: center;
+  max-width: 320px;
+}
+
 .loading-spinner {
   width: 20px;
   height: 20px;
@@ -153,6 +199,7 @@
   color: var(--text-main);
   background: transparent;
   transition: background 0.08s ease;
+  z-index: 0;
 }
 
 .table-cell.pinned {
@@ -160,6 +207,8 @@
   /* Match the pinned header width so column boundaries stay aligned while
      scrolling horizontally and the sticky offsets stay correct. */
   min-width: 150px;
+  z-index: 10;
+  border: 1px solid var(--border-color);
 }
 
 .table-cell.selected {

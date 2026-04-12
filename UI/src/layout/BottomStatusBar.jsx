@@ -1,7 +1,7 @@
 import React from 'react';
 import '../style/BottomStatusBar.css';
 
-function BottomStatusBar({ zoom, setZoom, selectionStats }) {
+function BottomStatusBar({ zoom, setZoom, selectionStats, disabled }) {
   const handleZoomChange = (e) => {
     setZoom(Number(e.target.value));
   };
@@ -52,7 +52,7 @@ function BottomStatusBar({ zoom, setZoom, selectionStats }) {
   return (
     <footer className="bottom-status-bar">
       <div className="zoom-control">
-        <button className="zoom-btn" onClick={() => setZoom(z => Math.max(50, z - 5))} title="הקטן">−</button>
+        <button className="zoom-btn" onClick={() => setZoom(z => Math.max(50, z - 5))} title="הקטן" disabled={disabled}>−</button>
         <input
           type="range"
           className="zoom-slider"
@@ -60,8 +60,9 @@ function BottomStatusBar({ zoom, setZoom, selectionStats }) {
           max="200"
           value={zoom}
           onChange={handleZoomChange}
+          disabled={disabled}
         />
-        <button className="zoom-btn" onClick={() => setZoom(z => Math.min(200, z + 5))} title="הגדל">+</button>
+        <button className="zoom-btn" onClick={() => setZoom(z => Math.min(200, z + 5))} title="הגדל" disabled={disabled}>+</button>
         <span className="zoom-label">{zoom}%</span>
       </div>
       <div className="selection-stats">
