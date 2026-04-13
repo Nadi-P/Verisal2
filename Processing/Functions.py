@@ -269,29 +269,26 @@ class Functions:
         Replaces GetFile(key, sheetName).
         Reads an Excel file from an UploadFile object buffer.
         """
+        display = Files.DISPLAY_NAMES.get(key, key)
+
         if not file_obj:
-            print(f"Warning: No file object found for {key}")
-            return pd.DataFrame()
+            raise ValueError(f"קובץ {display} לא נמצא")
 
         header_row = 7 if key == "center" else 0
-        
+
         try:
-            # Read the file content into a memory buffer
-            # Note: In a real app, you'd use 'await file_obj.read()' in the endpoint 
-            # and pass the bytes here.
             file_obj.file.seek(0)
             content = file_obj.file.read()
             buffer = io.BytesIO(content)
-            
+
             with pd.ExcelFile(buffer) as xls:
                 target_sheet = xls.sheet_names[0] if sheetName is None else sheetName
                 df = pd.read_excel(xls, sheet_name=target_sheet, header=header_row)
-            
+
             df.columns = df.columns.astype(str).str.strip()
             return df
         except Exception as e:
-            print(f"Error loading {key}: {e}")
-            return pd.DataFrame()
+            raise ValueError(f"שגיאה בקריאת {display}: {e}")
 
     def InitializeFromFiles(files_list: List[UploadFile]):
         """
@@ -300,6 +297,9 @@ class Functions:
         """
         # 1. Filter to only .xlsx/.xls files (ignore hidden files, thumbs.db, etc.)
         excel_files = [f for f in files_list if f.filename.lower().endswith(('.xlsx', '.xls'))]
+
+        if not excel_files:
+            raise ValueError("לא נמצאו קבצי Excel בתיקייה שנבחרה")
 
         # 2. Map the uploaded file objects to their keys
         Files.files_map = {}
@@ -311,7 +311,8 @@ class Functions:
             for key, keyword in Files.KEYWORDS.items():
                 if keyword.lower() in filename:
                     if key in file_map:
-                        raise ValueError(f"נמצאו מספר קבצים התואמים ל\"{keyword}\" — יש לטעון קובץ אחד בלבד לכל סוג")
+                        display = Files.DISPLAY_NAMES[key]
+                        raise ValueError(f"נמצאו מספר קבצים עבור \"{display}\" — נדרש קובץ אחד בלבד לכל סוג")
                     file_map[key] = file_obj
                     matched = True
                     break
@@ -324,19 +325,24 @@ class Functions:
         missing_keys = expected_keys - matched_keys
 
         if missing_keys or unmatched:
-            errors = []
+            lines = []
             if missing_keys:
-                missing_names = [Files.KEYWORDS[k] for k in missing_keys]
-                errors.append(f"קבצים חסרים: {', '.join(missing_names)}")
+                lines.append("קבצים חסרים:")
+                for k in missing_keys:
+                    lines.append(f"  - {Files.DISPLAY_NAMES[k]}")
             if unmatched:
-                errors.append(f"קבצים לא מזוהים: {', '.join(unmatched)}")
-            raise ValueError(" | ".join(errors))
+                lines.append("קבצים לא מזוהים:")
+                for name in unmatched:
+                    lines.append(f"  - {name}")
+            raise ValueError("\n".join(lines))
 
-        # 4. Extract company name first (usually from 'center' or 'income')
-        # This requires reading one file briefly to get the metadata
-        Files.company_name = Functions.extract_data_from_files("companyName")
+        # 4. Extract company name from center file
+        try:
+            Files.company_name = Functions.extract_data_from_files("companyName")
+        except Exception as e:
+            raise ValueError(f"שגיאה בחילוץ שם חברה מקובץ מרכז שכר: {e}")
 
-        # 3. Load all DataFrames directly from the file objects
+        # 5. Load all 7 DataFrames (GetFileFromObject raises on failure)
         Files.centerDF = Functions.GetFileFromObject(file_map.get("center"), "center", Files.company_name)
         Files.componentsDF = Functions.GetFileFromObject(file_map.get("components"), "components", Files.company_name)
         Files.providentsDF = Functions.GetFileFromObject(file_map.get("providents"), "providents", Files.company_name)
@@ -345,36 +351,52 @@ class Functions:
         Files.costingDF = Functions.GetFileFromObject(file_map.get("costing"), "costing", Files.company_name)
         Files.absencesDF = Functions.GetFileFromObject(file_map.get("absences"), "absences", Files.company_name)
 
-        Files.current_year = Functions.extract_data_from_files("currentYear")
-        Files.min_year = Functions.extract_data_from_files("minYear")
-        Files.max_year = Functions.extract_data_from_files("maxYear")
+        # 6. Extract date metadata
+        try:
+            Files.current_year = Functions.extract_data_from_files("currentYear")
+            Files.current_month = Functions.extract_data_from_files("currentMonth")
+            Files.min_year = Functions.extract_data_from_files("minYear")
+            Files.max_year = Functions.extract_data_from_files("maxYear")
+            Files.min_month = Functions.extract_data_from_files("minMonth")
+            Files.max_month = Functions.extract_data_from_files("maxMonth")
+        except Exception as e:
+            raise ValueError(f"שגיאה בחילוץ תאריכים מהקבצים: {e}")
 
-        Files.current_month = Functions.extract_data_from_files("currentMonth")
-        Files.min_month = Functions.extract_data_from_files("minMonth")
-        Files.max_month = Functions.extract_data_from_files("maxMonth")
+        # 7. Generate derived reports
+        try:
+            Files.socialAnalysisDF = Functions.get_social_analysis()
+        except Exception as e:
+            raise ValueError(f"שגיאה ביצירת דוח אנליזה סוציאלית: {e}")
 
-        Files.socialAnalysisDF = Functions.get_social_analysis()
-        Files.monthsComparisonDF = Functions.get_months_comparison()
-        Files.reportsAgainstCenterDF = Functions.get_reports_against_center()
+        try:
+            Files.monthsComparisonDF = Functions.get_months_comparison()
+        except Exception as e:
+            raise ValueError(f"שגיאה ביצירת דוח השוואת חודשים: {e}")
+
+        try:
+            Files.reportsAgainstCenterDF = Functions.get_reports_against_center()
+        except Exception as e:
+            raise ValueError(f"שגיאה ביצירת דוח דוחות מול מרכז שכר: {e}")
 
         social_h = Headers.SocialAnalysis.SocialAnalysisFile
         comparison_h = Headers.MonthsComparison
         rac_h = Headers.ReportsAgainstCenter
         Files.socialAnalysisCheckupColumns = {
-            social_h.ee_prov_pct : lambda val : val > 0,
-            social_h.er_prov_pct : lambda val : val > 0,
+
         }
         Files.monthsComparisonCheckupColumns = {
             comparison_h.offset: lambda val : val > 0,
+            comparison_h.offset_pct: lambda val : val > 0,
         }
         Files.reportsAgainstCenterCheckupColumns = {
             rac_h.offset: lambda val : val == 0,
+            rac_h.offset_pct: lambda val : val == 0,
         }
 
     def extract_data_from_files(requiredDataName):
         centerFileObj = Files.files_map.get("center")
         if not centerFileObj:
-            raise ValueError("Center file not found in mapped files.")
+            raise ValueError("קובץ מרכז שכר לא נמצא")
 
         match requiredDataName:
             case "companyName":
@@ -479,269 +501,6 @@ class Functions:
 
 
         return audit_df
-
-    def get_queryable_merged_reports():
-        def aggregate_center(df):
-            center_h = Headers.InputFiles.Center
-            df = df.copy()
-            
-            df = df.rename(columns={
-                center_h.employee_id_shiklulit : center_h.employee_id,
-            })
-            df[center_h.work_month] = Files.current_month
-            df[center_h.work_year] = Files.current_year
-            df = Functions.Aggregations.standarize_df(df)
-    
-            
-            return df
-
-        def aggregate_components(df):
-            components_h = Headers.InputFiles.Components
-            df = df.copy()
-
-            pivot_df = df.pivot(
-            index=[components_h.work_year, components_h.work_month, components_h.employee_id],
-            columns=components_h.component_name,
-            values=[
-                components_h.component_id, 
-                components_h.tarriff, 
-                components_h.quantity, 
-                components_h.total_amount
-            ]
-            )
-
-            # 3. Flatten the Multi-Index columns
-            # This turns ('תעריף', 'Basic Salary') into 'Basic Salary_תעריף'
-            pivot_df.columns = [f"{col[1]}_{col[0]}" for col in pivot_df.columns]
-
-            pivot_df = pivot_df.reset_index().fillna(0)
-
-            pivot_df = Functions.Aggregations.standarize_df(pivot_df)
-            
-            final_table = pivot_df.fillna(0)
-
-            return final_table
-
-        def aggregate_providents(df):
-            prov_h = Headers.InputFiles.Providents
-            df = df.copy()
-
-            pivot_df = df.pivot_table(
-                index=[prov_h.work_year, prov_h.work_month, prov_h.employee_id],
-                columns=prov_h.fund_name,
-                values=[
-                    prov_h.fund_code,
-                    prov_h.fund_type,
-                    prov_h.salary_for_pension,
-                    prov_h.employee_pension,
-                    prov_h.employee_disability,
-                    prov_h.employee_other,
-                    prov_h.employee_total,
-                    prov_h.employer_pension,
-                    prov_h.employer_disability,
-                    prov_h.employer_other,
-                    prov_h.severance_pay,
-                    prov_h.employer_total,
-                    prov_h.employee_employer_total,
-                    prov_h.work_days
-                ],
-                # 'sum' handles the numeric duplicates. 
-                # For non-numeric (like fund_code), 'first' or 'max' is usually best.
-                aggfunc={
-                    prov_h.fund_code: 'first',
-                    prov_h.fund_type: 'first',
-                    prov_h.salary_for_pension: 'sum',
-                    prov_h.employee_pension: 'sum',
-                    prov_h.employee_disability: 'sum',
-                    prov_h.employee_other: 'sum',
-                    prov_h.employee_total: 'sum',
-                    prov_h.employer_pension: 'sum',
-                    prov_h.employer_disability: 'sum',
-                    prov_h.employer_other: 'sum',
-                    prov_h.severance_pay: 'sum',
-                    prov_h.employer_total: 'sum',
-                    prov_h.employee_employer_total: 'sum',
-                    prov_h.work_days: 'sum'
-                }
-            )
-            pivot_df.columns = [f"{col[1]}_{col[0]}" for col in pivot_df.columns]
-
-            pivot_df = pivot_df.reset_index()
-            
-            pivot_df[prov_h.work_month] = pivot_df[prov_h.work_month].apply(Functions.extract_month)
-            
-            pivot_df[Functions.join_key] = Functions.create_key(
-                pivot_df, 
-                prov_h.employee_id, 
-                prov_h.work_month, 
-                prov_h.work_year
-            )
-
-            final_table = pivot_df.fillna(0)
-            
-            return final_table
-
-        def aggregate_absences(df):
-            absences_h = Headers.InputFiles.Absences
-            df = df.copy()
-
-            df[absences_h.work_month] = df[absences_h.work_month].apply(Functions.extract_month)
-
-            df[Functions.join_key] = Functions.create_key(
-                df, 
-                absences_h.employee_id, 
-                absences_h.work_month, 
-                absences_h.work_year
-            )
-            df.drop(columns=[
-                absences_h.quarter, 
-                absences_h.half_year,
-                absences_h.sub_department_name, 
-                absences_h.id_number, 
-                absences_h.company_name
-                ])
-            df = df.fillna(0)
-
-            return df
-
-        def aggregate_income(df):
-            income_h = Headers.InputFiles.Income
-            df = df.copy()
-
-            df[income_h.work_month] = df[income_h.work_month].apply(Functions.extract_month)
-
-            df[Functions.join_key] = Functions.create_key(
-                df, 
-                income_h.employee_id, 
-                income_h.work_month, 
-                income_h.work_year
-            )
-            df.drop(columns=[
-                income_h.quarter, 
-                income_h.half_year,
-                income_h.sub_department_name, 
-                income_h.id_number, 
-                income_h.company_name
-                ])
-            df = df.fillna(0)
-
-            return df
-
-        def aggregate_deductions(df):
-            deduct_h = Headers.InputFiles.Deductions
-            df = df.copy()
-
-            # 1. Pivot the table using Component Name as the new columns
-            pivot_df = df.pivot_table(
-                index=[deduct_h.work_year, deduct_h.work_month, deduct_h.employee_id],
-                columns=deduct_h.component_name,
-                values=[
-                    deduct_h.component_code,
-                    deduct_h.rate,
-                    deduct_h.quantity,
-                    deduct_h.total_sum
-                ],
-                aggfunc={
-                    deduct_h.component_code: 'first',
-                    deduct_h.rate: 'mean',  
-                    deduct_h.quantity: 'sum',
-                    deduct_h.total_sum: 'sum'
-                }
-            )
-
-            pivot_df.columns = [f"{col[1]}_{col[0]}" for col in pivot_df.columns]
-
-            pivot_df = pivot_df.reset_index()
-            
-            pivot_df[deduct_h.work_month] = pivot_df[deduct_h.work_month].apply(Functions.extract_month)
-            
-            pivot_df[Functions.join_key] = Functions.create_key(
-                pivot_df, 
-                deduct_h.employee_id, 
-                deduct_h.work_month, 
-                deduct_h.work_year
-            )
-
-            final_table = pivot_df.fillna(0)
-            
-            return final_table
-
-        def aggregate_costing(df):
-            costing_h = Headers.InputFiles.Costing
-            df = df.copy()
-            for col in df.columns:
-                df[col] = df[col].astype(str)
-
-            df[costing_h.work_month] = df[costing_h.work_month].apply(Functions.extract_month)
-
-            df[Functions.join_key] = Functions.create_key(
-                df, 
-                costing_h.employee_id, 
-                costing_h.work_month, 
-                costing_h.work_year
-            )
-
-            df.drop(columns=[
-                costing_h.quarter, 
-                costing_h.half_year,
-                costing_h.sub_department_name, 
-                costing_h.id_number, 
-                costing_h.company_name
-                ])
-            df = df.fillna(0)
-
-            return df
-
-  
-        center_h = Headers.InputFiles.Center
-
-        center_df = Files.centerDF
-        components_df = Files.componentsDF
-        providents_df = Files.providentsDF
-        income_df = Files.incomeDF
-        deductions_df = Files.deductionsDF
-        costing_df = Files.costingDF
-        absences_df = Files.absencesDF
-
-        center_agg = aggregate_center(center_df)
-        components_agg = aggregate_components(components_df)
-        providents_agg = aggregate_providents(providents_df)
-        income_agg = aggregate_income(income_df)
-        deductions_agg = aggregate_deductions(deductions_df)
-        costing_agg = aggregate_costing(costing_df)
-        absences_agg = aggregate_absences(absences_df)
-
-        key_cols = [Functions.join_key, center_h.work_year, center_h.work_month, center_h.employee_id]
-
-        master_keys = pd.concat([
-            center_agg[key_cols],
-            components_agg[key_cols],
-            providents_agg[key_cols],
-            income_agg[key_cols],
-            deductions_agg[key_cols],
-            costing_agg[key_cols],
-            absences_agg[key_cols]
-        ]).drop_duplicates(subset=[Functions.join_key])
-
-        merged_df = master_keys.merge(center_agg, on=key_cols, how='left')
-        merged_df = merged_df.merge(components_agg, on=key_cols, how='left')
-        merged_df = merged_df.merge(providents_agg, on=key_cols, how='left')
-        merged_df = merged_df.merge(deductions_agg, on=key_cols, how='left')
-        merged_df = merged_df.merge(income_agg, on=key_cols, how='left')
-        merged_df = merged_df.merge(costing_agg, on=key_cols, how='left')
-        merged_df = merged_df.merge(absences_agg, on=key_cols, how='left')
-
-        print(f"Center: {len(center_agg.columns)} columns")
-        print(f"Components: {len(components_agg.columns)} columns")
-        print(f"Providents: {len(providents_agg.columns)} columns")
-        print(f"Income: {len(income_agg.columns)} columns")
-        print(f"Deductions: {len(deductions_agg.columns)} columns")
-        print(f"Costing: {len(costing_agg.columns)} columns")
-        print(f"Absences: {len(absences_agg.columns)} columns")
-        
-        print(f"Merged: {len(merged_df.columns)} columns")
-
-        return merged_df
 
     def get_social_analysis():
         center_h = Headers.InputFiles.Center
@@ -999,6 +758,7 @@ class Functions:
             # Construct rows for final table
             for name, input_val, output_val in checks:
                 diff = input_val - output_val
+                diff_pct = (diff / input_val * 100) if input_val != 0 else 0
                 results.append({
                     fac_h.employee_id: row[c_h.employee_id],
                     fac_h.employee_name: row[c_h.employee_name],
@@ -1007,6 +767,7 @@ class Functions:
                     fac_h.center_input: input_val,
                     fac_h.external_reports_output: output_val,
                     fac_h.offset: diff,
+                    fac_h.offset_pct: f"{diff_pct:.2f}%",
                     fac_h.status: "תקין" if abs(diff) < 0.1 else "הפרש בבדיקה"
                 })
 
@@ -1018,6 +779,7 @@ class Functions:
                 fac_h.center_input: kahal_eligible,
                 fac_h.external_reports_output: kahal_sum,
                 fac_h.offset: 0,
+                fac_h.offset_pct: "0%",
                 fac_h.status: kahal_stat_text
             })
 

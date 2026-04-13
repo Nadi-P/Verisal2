@@ -7,6 +7,9 @@ function ColumnsPanel({ isOpen, columns, onApply, onCancel }) {
     localColumns,
     handleToggleVisible,
     handleTogglePin,
+    handleToggleAll,
+    allVisible,
+    canApply,
     handleApply,
     handleCancel,
   } = useColumnsPanel(columns, onApply, onCancel);
@@ -16,6 +19,19 @@ function ColumnsPanel({ isOpen, columns, onApply, onCancel }) {
       <div className="columns-panel-header">
         <h3>ניהול עמודות</h3>
       </div>
+
+      {/* Select All row */}
+      <div className="columns-panel-select-all">
+        <label className="col-checkbox-label">
+          <input
+            type="checkbox"
+            checked={allVisible}
+            onChange={handleToggleAll}
+          />
+          <span className="col-name">בחר הכל</span>
+        </label>
+      </div>
+
       <div className="columns-panel-list">
         {localColumns.map((col, i) => (
           <div key={col.id} className="columns-panel-item">
@@ -40,7 +56,7 @@ function ColumnsPanel({ isOpen, columns, onApply, onCancel }) {
         ))}
       </div>
       <div className="columns-panel-footer">
-        <button className="panel-btn apply-btn" onClick={handleApply}>החל</button>
+        <button className="panel-btn apply-btn" onClick={handleApply} disabled={!canApply}>החל</button>
         <button className="panel-btn cancel-btn" onClick={handleCancel}>ביטול</button>
       </div>
     </div>

@@ -35,8 +35,8 @@ export function useAppState() {
   }, [columns]);
 
   const hasActiveFilters = useMemo(
-    () => Object.values(filterState).some(s => s && s.size > 0),
-    [filterState]
+    () => Object.values(filterState).some(s => s && s.size > 0) || !!(sortState.columnId && sortState.direction),
+    [filterState, sortState]
   );
 
   const filteredData = useMemo(() => {
@@ -90,6 +90,7 @@ export function useAppState() {
 
   const clearAllFilters = useCallback(() => {
     setFilterState({});
+    setSortState({ columnId: null, direction: null });
   }, []);
 
   const handleSortFilter = useCallback(({ sort, filter }) => {

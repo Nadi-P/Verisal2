@@ -316,9 +316,10 @@ class Headers:
         center_input = r"קלט (מרכז שכר)"
         external_reports_output = r"פלט (דוחות חיצוניים)"
         offset = r"הפרש"
+        offset_pct = r"אחוז הפרש"
         status = r"סטטוס"
 
-        
+
     class AggregatedFiles:
         class ProvidentsAGG:
             employee_month_key = r'מפתח_עובד_חודש'

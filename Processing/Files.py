@@ -30,7 +30,7 @@ class Files:
     socialAnalysisCheckupColumns = None
     reportsAgainstCenterCheckupColumns = None
 
-    # Keyword Mapping
+    # Keyword Mapping (used to match uploaded filenames)
     KEYWORDS = {
         "center": "מרכז",
         "deductions": "ניכוי",
@@ -39,6 +39,17 @@ class Files:
         "components": "רכיב",
         "income": "הכנס",
         "costing": "תמחיר"
+    }
+
+    # Display names (shown to the user in error messages)
+    DISPLAY_NAMES = {
+        "center": "קובץ מרכז שכר",
+        "deductions": "ניכויי רשות",
+        "absences": "היעדרויות",
+        "providents": "קופות גמל",
+        "components": "רכיבי שכר",
+        "income": "הכנסות זקופות",
+        "costing": "דוח תמחיר"
     }
 
     files_map = None

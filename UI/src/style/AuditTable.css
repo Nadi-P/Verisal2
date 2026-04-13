@@ -50,8 +50,10 @@
 .load-error-message {
   color: hsl(0, 75%, 60%);
   font-size: 0.85rem;
-  text-align: center;
-  max-width: 320px;
+  text-align: right;
+  max-width: 360px;
+  white-space: pre-line;
+  direction: rtl;
 }
 
 .loading-spinner {
@@ -82,7 +84,6 @@
   border-collapse: separate;
   border-spacing: 0;
   width: max-content;
-  min-width: 100%;
 }
 
 /* Header */

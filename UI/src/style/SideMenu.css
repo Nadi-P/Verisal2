@@ -214,11 +214,13 @@
 .sidebar-load-error {
   color: hsl(0, 75%, 60%);
   font-size: 0.78rem;
-  text-align: center;
+  text-align: right;
   padding: 6px 8px;
   background: hsla(0, 70%, 40%, 0.12);
   border-radius: 6px;
   border: 1px solid hsla(0, 70%, 40%, 0.2);
+  white-space: pre-line;
+  direction: rtl;
 }
 
 /* Upload button variant */

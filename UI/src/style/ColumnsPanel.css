@@ -31,6 +31,19 @@
   color: var(--text-main);
 }
 
+/* Select All row — sits between header and scrollable list */
+.columns-panel-select-all {
+  display: flex;
+  align-items: center;
+  padding: 0.45rem 0.8rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.columns-panel-select-all .col-name {
+  font-weight: 600;
+}
+
 .columns-panel-list {
   flex: 1;
   overflow-y: auto;
@@ -119,8 +132,13 @@
   color: #fff;
 }
 
-.apply-btn:hover {
+.apply-btn:hover:not(:disabled) {
   filter: brightness(1.15);
+}
+
+.apply-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .cancel-btn {

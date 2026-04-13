@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 export function useColumnsPanel(columns, onApply, onCancel) {
   const [localColumns, setLocalColumns] = useState([]);
@@ -29,13 +29,31 @@ export function useColumnsPanel(columns, onApply, onCancel) {
     });
   }, []);
 
+  // Select All / Deselect All
+  const allVisible = useMemo(() => localColumns.length > 0 && localColumns.every(c => c.visible), [localColumns]);
+
+  const handleToggleAll = useCallback(() => {
+    setLocalColumns(prev =>
+      prev.map(c => ({
+        ...c,
+        visible: !allVisible,
+        // If hiding all, also unpin
+        pinned: !allVisible ? c.pinned : false,
+      }))
+    );
+  }, [allVisible]);
+
+  // Disable Apply when no columns are visible
+  const canApply = useMemo(() => localColumns.some(c => c.visible), [localColumns]);
+
   const handleApply = useCallback(() => {
+    if (!canApply) return;
     // Do NOT reorder: preserve the original column order forever.
     // Pinning is just a flag — the AuditTable computes the display order
     // (pinned first, then unpinned, both in original order). This way
     // unpinning naturally returns a column to its original slot.
     onApply(localColumns);
-  }, [localColumns, onApply]);
+  }, [localColumns, onApply, canApply]);
 
   const handleCancel = useCallback(() => {
     setLocalColumns(columns.map(c => ({ ...c })));
@@ -46,6 +64,9 @@ export function useColumnsPanel(columns, onApply, onCancel) {
     localColumns,
     handleToggleVisible,
     handleTogglePin,
+    handleToggleAll,
+    allVisible,
+    canApply,
     handleApply,
     handleCancel,
   };

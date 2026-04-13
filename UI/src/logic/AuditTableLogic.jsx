@@ -28,6 +28,14 @@ export function useAuditTableLogic({
   const [extraSelections, setExtraSelections] = useState([]);    // array of { start, end }
   const [isSelecting, setIsSelecting] = useState(false);
 
+  // Clear selection whenever the data changes (report switch / new upload)
+  useEffect(() => {
+    setSelectionAnchor(null);
+    setSelectionEnd(null);
+    setExtraSelections([]);
+    setIsSelecting(false);
+  }, [rowData]);
+
   // Filter menu state
   const [filterMenuState, setFilterMenuState] = useState({
     open: false, columnId: null, position: null
@@ -352,19 +360,38 @@ export function useAuditTableLogic({
   // ======== FORMATTING ========
   const formatCellValue = useCallback((value) => {
     if (value === null || value === undefined) return '';
+
+    // Fix negative zero → "0"
     if (typeof value === 'number') {
-      // If it's a decimal, cut after 2 digits
+      if (Object.is(value, -0)) return '0';
       if (!Number.isInteger(value)) {
-        return value.toFixed(2);
+        const fixed = value.toFixed(2);
+        // toFixed can produce "-0.00" for very small negatives
+        return fixed === '-0.00' ? '0.00' : fixed;
       }
       return String(value);
     }
+
     const str = String(value);
+
+    // Detect ISO date/datetime strings from pandas (e.g. "2025-08-01T00:00:00" or "2025-08-01")
+    const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})(T.*)?$/);
+    if (isoMatch) {
+      const [, year, month, day] = isoMatch;
+      return `${day}/${month}/${year}`;
+    }
+
     // Check if it's a numeric string with decimals
     const num = parseFloat(str);
     if (!isNaN(num) && str.includes('.') && str === String(num)) {
-      return num.toFixed(2);
+      if (Object.is(num, -0)) return '0';
+      const fixed = num.toFixed(2);
+      return fixed === '-0.00' ? '0.00' : fixed;
     }
+
+    // Catch string "-0"
+    if (str === '-0') return '0';
+
     return str;
   }, []);
 
