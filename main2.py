@@ -1,7 +1,7 @@
 from typing import List
 from io import BytesIO
 
-from Files import Files
+from Files2 import Files
 from Functions import Functions
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from Loading import InitializeFromFiles
@@ -51,7 +51,7 @@ def get_report(report_name: str):
         checkup_results = {}
         condition = lambda x: x > 0
         checkup_cols = checkup_mapping.get(report_name, {})
-        for col_name in checkup_cols:
+        for col_name, cond in checkup_cols.items():
             if col_name in df.columns:
                 results = []
                 for val in df[col_name]:
