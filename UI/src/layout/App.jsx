@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './Login';
 import Dashboard from './Dashboard';
 
@@ -12,26 +12,26 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
-            isAuthenticated ? 
-            <Navigate to="/" /> : 
+            isAuthenticated ?
+            <Navigate to="/" /> :
             <LoginPage onLoginSuccess={handleLoginSuccess} />
-          } 
+          }
         />
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
-            isAuthenticated ? 
-            <Dashboard /> : 
+            isAuthenticated ?
+            <Dashboard /> :
             <Navigate to="/login" />
-          } 
+          }
         />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

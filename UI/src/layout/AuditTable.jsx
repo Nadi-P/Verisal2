@@ -38,7 +38,7 @@ function AuditTable({
     // Zoom
     getCellStyle,
     getHeaderStyle,
-    getCellCheckupColor,
+    getCellArrow,
     // Column highlights / pin measurement
     isColumnFiltered,
     isColumnSorted,
@@ -155,27 +155,34 @@ function AuditTable({
                 const borderClasses = selectionBorderClass(rowIndex, colIndex);
                 const pinned = isPinned(col);
                 const stickyOffset = getStickyOffset(col);
-                const checkupClass = getCellCheckupColor(row, col) || '';
                 const filteredCol = isColumnFiltered(col) ? 'filtered-col' : '';
                 const sortedCol = isColumnSorted(col) ? 'sorted-col' : '';
                 const value = row[col];
                 const formatted = formatCellValue(value);
                 const dir = getTextDirection(formatted);
+                const arrow = getCellArrow(row, col);
 
                 return (
                   <td
                     key={col}
-                    className={`table-cell ${checkupClass} ${selected ? 'selected' : ''} ${borderClasses} ${pinned ? 'pinned' : ''} ${filteredCol} ${sortedCol}`}
+                    data-r={rowIndex}
+                    data-c={colIndex}
+                    className={`table-cell ${selected ? 'selected' : ''} ${borderClasses} ${pinned ? 'pinned' : ''} ${filteredCol} ${sortedCol}`}
                     style={{
                       ...getCellStyle(),
                       direction: dir,
-                      textAlign: dir === 'rtl' ? 'right' : 'left',
+                      textAlign: 'right',
                       ...(pinned ? { position: 'sticky', right: stickyOffset, zIndex: 3 } : {}),
                     }}
                     onMouseDown={(e) => handleMouseDown(rowIndex, colIndex, e)}
                     onMouseEnter={(e) => handleMouseEnter(rowIndex, colIndex, e)}
                   >
                     {formatted}
+                    {arrow && (
+                      <span className={`cell-arrow ${arrow}`} aria-hidden="true">
+                        {arrow === 'up' ? '▲' : '▼'}
+                      </span>
+                    )}
                   </td>
                 );
               })}

@@ -1,8 +1,8 @@
 from typing import List
 from io import BytesIO
 
-from Processing.Files import Files
-from Processing.Functions import Functions
+from Files import Files
+from Functions import Functions
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,10 +10,10 @@ import pandas as pd
 
 app = FastAPI()
 
-# 1. Setup CORS so React (5173) can talk to Python (8000)
+# Allow both the Vite dev server and the packaged Electron app (file:// sends origin "null")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "null"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -151,8 +151,11 @@ def export_report(report_name: str):
 @app.post("/api/upload_reports")
 async def upload_reports(files: List[UploadFile] = File(...)):
     try:
-        # Pass the list of upload objects directly to the processing logic
         Functions.InitializeFromFiles(files)
         return {"status": "success", "message": f"Successfully processed {len(files)} files"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)

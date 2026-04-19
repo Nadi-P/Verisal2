@@ -14,10 +14,6 @@
   --selection-bg: hsl(218, 30%, 12%);
   --selection-border: hsl(217, 89%, 61%);
   --panel-bg: hsl(220, 5%, 11%);
-  --checkup-pass: hsla(140, 70%, 35%, 0.25);
-  --checkup-fail: hsla(0, 70%, 40%, 0.25);
-  --checkup-pass-highlight: hsla(140, 70%, 35%, 0.4);
-  --checkup-fail-highlight: hsla(0, 70%, 40%, 0.4);
   --transition-speed: 0.25s;
 }
 

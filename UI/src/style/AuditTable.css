@@ -239,53 +239,33 @@
 
 /* Row hover — pinned cells get their own opaque hover to prevent bleed-through.
    Non-pinned cells use a subtle semi-transparent tint. */
-.audit-table tbody tr:hover .table-cell:not(.selected):not(.checkup-fail):not(.checkup-pass):not(.pinned) {
+.audit-table tbody tr:hover .table-cell:not(.selected):not(.pinned) {
   background: hsl(0, 0%, 10.5%);
 }
-.audit-table tbody tr:hover .table-cell.pinned:not(.selected):not(.checkup-fail):not(.checkup-pass) {
+.audit-table tbody tr:hover .table-cell.pinned:not(.selected) {
   background: hsl(225, 6%, 15%);
 }
 
 /* Alternating rows */
-.audit-table tbody tr:nth-child(even) .table-cell:not(.selected):not(.checkup-fail):not(.checkup-pass):not(.pinned) {
+.audit-table tbody tr:nth-child(even) .table-cell:not(.selected):not(.pinned) {
   background: hsl(0, 0%, 9.5%);
 }
 
-.table-cell.checkup-pass {
-  background: hsla(140, 70%, 35%, 0.25);
+/* Diff-direction arrow appended to numeric "diff" columns (months comparison etc.).
+   Up = positive change (green), down = negative change (red). Zero values render
+   no arrow at all. */
+.cell-arrow {
+  display: inline-block;
+  margin-inline-start: 6px;
+  font-size: 0.85em;
+  line-height: 1;
+  vertical-align: middle;
 }
 
-.table-cell.checkup-fail {
-  background: hsla(0, 70%, 40%, 0.25);
+.cell-arrow.up {
+  color: hsl(140, 70%, 50%);
 }
 
-.table-cell.checkup-pass.selected, .audit-table tbody tr:hover .table-cell.checkup-pass {
-  background: hsla(140, 70%, 35%, 0.4);
-}
-
-.table-cell.checkup-fail.selected, .audit-table tbody tr:hover .table-cell.checkup-fail{
-  background: hsla(0, 70%, 40%, 0.4);
-}
-
-/* Subtle tint on every cell belonging to a filtered column */
-
-/* Pinned cells MUST be fully opaque — otherwise unpinned cells scrolling
-   underneath them visibly bleed through. Override the semi-transparent
-   checkup variants for pinned cells only. */
-.table-cell.pinned.checkup-pass {
-  background: hsl(140, 35%, 18%);
-}
-
-.table-cell.pinned.checkup-fail {
-  background: hsl(0, 35%, 22%);
-}
-
-.table-cell.pinned.checkup-pass.selected,
-.audit-table tbody tr:hover .table-cell.pinned.checkup-pass {
-  background: hsl(140, 40%, 24%);
-}
-
-.table-cell.pinned.checkup-fail.selected,
-.audit-table tbody tr:hover .table-cell.pinned.checkup-fail {
-  background: hsl(0, 40%, 28%);
+.cell-arrow.down {
+  color: hsl(0, 75%, 60%);
 }

@@ -1,12 +1,4 @@
-import io
-import os
-import pandas as pd
-
 class Files:
-    prefix = r"C:\Users\nadav\OneDrive\Desktop"
-    folderName = r"PAQA - Test Files - Copy"
-    base_path = os.path.join(prefix, folderName)
-
     current_month = None
     current_year = None
     company_name = None

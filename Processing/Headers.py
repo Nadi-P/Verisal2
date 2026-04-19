@@ -1,5 +1,138 @@
+
+class Helpers:
+    class SystemReportsBase:
+        work_year = r"שנת עבודה"
+        employee_id = r"מספר עובד"
+        employee_name = r"שם עובד"
+        department_name = r"שם מחלקה"
+        work_month = r"חודש עבודה"
+
+        quarter = r"רבעון"
+        half_year = r"חצי שנה"
+        sub_department_name = r"שם תת מחלקה"
+        id_number = r"מספר זהות"
+        company_name = r"שם חברה"
+        
+    class ComponentsTypeReportsBase:
+        component_code = r"קוד רכיב"
+        component_name = r"שם רכיב"
+        tarriff = r"תעריף"
+        quantity = r"כמות"
+        total_amount = r'סה"כ'
+        fixed_value = r"ה. קבע"
+
+    class AbsencesComponentsBase:
+        vacation = r"חופש"
+        sick = r"מחלה"
+        convalescence = r"הבראה"
+        reserve = r"מילואים"
+
+        id = r" קוד"
+        name = r" שם"
+        opening_balance = r" - יתרת פתיחה"
+        one_time_input = r" - קליטה חד פעמית"
+        previous_balance = r" - יתרה קודמת"
+        last_balance = r" - יתרה אחרונה"
+        monthly_accrual = r" - צבירה חודשית"
+        monthly_usage = r" - ניצול חודשי"
+        monthly_balance = r" - יתרה חודשית"
+
 class Headers:
     class InputFiles:
+
+        class Components(Helpers.SystemReportsBase, Helpers.ComponentsTypeReportsBase):
+            social_total = r'סהכ_רכיבים_לסוציאליות'
+
+        class Deductions(Helpers.SystemReportsBase, Helpers.ComponentsTypeReportsBase):
+            total_sum = r'סה"כ'
+
+        class Income(Helpers.SystemReportsBase, Helpers.ComponentsTypeReportsBase):
+            total = r'סה"כ'
+
+        class Absences(Helpers.SystemReportsBase):
+
+            month = r"חודש"
+            vacation_code = Helpers.AbsencesComponentsBase.id + Helpers.AbsencesComponentsBase.vacation
+            vacation_name = Helpers.AbsencesComponentsBase.name + Helpers.AbsencesComponentsBase.vacation
+            vacation_opening_balance = Helpers.AbsencesComponentsBase.vacation + Helpers.AbsencesComponentsBase.opening_balance
+            vacation_one_time_input = Helpers.AbsencesComponentsBase.vacation + Helpers.AbsencesComponentsBase.one_time_input
+            vacation_previous_balance = Helpers.AbsencesComponentsBase.vacation + Helpers.AbsencesComponentsBase.previous_balance
+            vacation_last_balance = Helpers.AbsencesComponentsBase.vacation + Helpers.AbsencesComponentsBase.last_balance
+            vacation_monthly_accrual = Helpers.AbsencesComponentsBase.vacation + Helpers.AbsencesComponentsBase.monthly_accrual
+            vacation_monthly_usage = Helpers.AbsencesComponentsBase.vacation + Helpers.AbsencesComponentsBase.monthly_usage
+            vacation_monthly_balance = Helpers.AbsencesComponentsBase.vacation + Helpers.AbsencesComponentsBase.monthly_balance
+
+            sick_code = Helpers.AbsencesComponentsBase.id + Helpers.AbsencesComponentsBase.sick
+            sick_name = Helpers.AbsencesComponentsBase.name + Helpers.AbsencesComponentsBase.sick
+            sick_opening_balance = Helpers.AbsencesComponentsBase.sick + Helpers.AbsencesComponentsBase.opening_balance
+            sick_one_time_input = Helpers.AbsencesComponentsBase.sick + Helpers.AbsencesComponentsBase.one_time_input
+            sick_previous_balance = Helpers.AbsencesComponentsBase.sick + Helpers.AbsencesComponentsBase.previous_balance
+            sick_last_balance = Helpers.AbsencesComponentsBase.sick + Helpers.AbsencesComponentsBase.last_balance
+            sick_monthly_accrual = Helpers.AbsencesComponentsBase.sick + Helpers.AbsencesComponentsBase.monthly_accrual
+            sick_monthly_usage = Helpers.AbsencesComponentsBase.sick + Helpers.AbsencesComponentsBase.monthly_usage
+            sick_monthly_balance = Helpers.AbsencesComponentsBase.sick + Helpers.AbsencesComponentsBase.monthly_balance
+
+            convalescence_code = Helpers.AbsencesComponentsBase.id + Helpers.AbsencesComponentsBase.convalescence
+            convalescence_name = Helpers.AbsencesComponentsBase.name + Helpers.AbsencesComponentsBase.convalescence
+            convalescence_opening_balance = Helpers.AbsencesComponentsBase.convalescence + Helpers.AbsencesComponentsBase.opening_balance
+            convalescence_one_time_input = Helpers.AbsencesComponentsBase.convalescence + Helpers.AbsencesComponentsBase.one_time_input
+            convalescence_previous_balance = Helpers.AbsencesComponentsBase.convalescence + Helpers.AbsencesComponentsBase.previous_balance
+            convalescence_last_balance = Helpers.AbsencesComponentsBase.convalescence + Helpers.AbsencesComponentsBase.last_balance
+            convalescence_monthly_accrual = Helpers.AbsencesComponentsBase.convalescence + Helpers.AbsencesComponentsBase.monthly_accrual
+            convalescence_monthly_usage = Helpers.AbsencesComponentsBase.convalescence + Helpers.AbsencesComponentsBase.monthly_usage
+            convalescence_monthly_balance = Helpers.AbsencesComponentsBase.convalescence + Helpers.AbsencesComponentsBase.monthly_balance
+
+            reserve_monthly_usage = Helpers.AbsencesComponentsBase.reserve + Helpers.AbsencesComponentsBase.monthly_usage
+
+        class Providents(Helpers.SystemReportsBase):
+            fund_code = r"קוד קופה"
+            fund_name = r"שם קופה"
+            fund_type = r"סוג קופה"
+
+            salary_for_pension = r"שכר לגמל"
+
+            employee_pension = r"גמל עובד"
+            employee_disability = r"א. כושר עובד"
+            employee_other = r"שונות עובד"
+            employee_total = r'סה"כ עובד'
+
+            employer_pension = r"גמל מעסיק"
+            employer_disability = r"א. כושר מעסיק"
+            employer_other = r"שונות מעסיק"
+            severance_pay = r"פיצויים"
+            employer_total = r'סה"כ מעסיק'
+
+            employee_employer_total = r'סה"כ עובד ומעסיק'
+
+            member_number = r"מספר עמית"
+            branch_number = r"מספר סניף"
+
+            work_days = r"ימי עבודה"
+            amount_indicator = r"ע. ע. סכומים"
+            group = r"קבוצה"
+    
+        class Costing(Helpers.SystemReportsBase):
+            gross_salary = r"ברוטו"
+            employee_national_insurance = r"ב.ל. עובד"
+            income_tax = r"מס הכנסה"
+            employee_pension_study_fund = r"גמל + קה\"ל עובד"
+            voluntary_deductions = r"ניכויי רשות"
+            net_pay = r"נטו לתשלום"
+
+            employer_national_insurance = r"ב.ל. מעסיק"
+            employer_pension_study_fund = r"גמל + קה\"ל מעסיק"
+            severance_reserve = r"עתודה לפיצויים"
+            vacation_reserve = r"עתודה לחופש"
+            convalescence_reserve = r"עתודה להבראה"
+            employer_cost = r"עלות מעסיק"
+
+            national_insurance_exemption_foreign = r"פטור ב.ל. ת.חוץ"
+            organization_tax = r"מס אירגון"
+            advance_payment = r"מקדמה"
+
+            hours_quantity = r"כמות שעות"
+            days_quantity = r"כמות ימים"
+
         class Center:
             employee_id_shiklulit = r"מספר עובד(שקלולית )"
             id_number = r"מס' ת.זהות"
@@ -58,207 +191,6 @@ class Headers:
             employee_id = r'מספר עובד'
             work_year = r"שנת עבודה"
             work_month = r"חודש עבודה"
-
-        class Providents:
-            work_year = r"שנת עבודה"
-            employee_id = r"מספר עובד"
-            employee_name = r"שם עובד"
-            department_name = r"שם מחלקה"
-            work_month = r"חודש עבודה"
-
-            fund_code = r"קוד קופה"
-            fund_name = r"שם קופה"
-            fund_type = r"סוג קופה"
-
-            salary_for_pension = r"שכר לגמל"
-
-            employee_pension = r"גמל עובד"
-            employee_disability = r"א. כושר עובד"
-            employee_other = r"שונות עובד"
-            employee_total = r'סה"כ עובד'
-
-            employer_pension = r"גמל מעסיק"
-            employer_disability = r"א. כושר מעסיק"
-            employer_other = r"שונות מעסיק"
-            severance_pay = r"פיצויים"
-            employer_total = r'סה"כ מעסיק'
-
-            employee_employer_total = r'סה"כ עובד ומעסיק'
-
-            member_number = r"מספר עמית"
-            branch_number = r"מספר סניף"
-
-            work_days = r"ימי עבודה"
-            amount_indicator = r"ע. ע. סכומים"
-            group = r"קבוצה"
-
-            quarter = r"רבעון"
-            half_year = r"חצי שנה"
-
-            sub_department_name = r"שם תת מחלקה"
-            id_number = r"מספר זהות"
-            company_name = r"שם חברה"
-
-        class Components:
-            work_year = r"שנת עבודה"
-            employee_id = r"מספר עובד"
-            emloyee_name = r"שם עובד"
-            department_name = r"שם מחלקה"
-            work_month = r"חודש עבודה"
-            clean_month = r"חודש עבודה נקי"
-            
-
-            component_id = r"קוד רכיב"
-            component_name = r"שם רכיב"
-
-            tarriff = r"תעריף"
-            quantity = r"כמות"
-            total_amount = r'סה"כ'
-            social_total = r'סהכ_רכיבים_לסוציאליות'
-
-            fixed_value = r"ה. קבע"
-
-            quarter = r"רבעון"
-            half_year = r"חצי שנה"
-
-            sub_department_name = r"שם תת מחלקה"
-            id_number = r"מספר זהות"
-            company_name = r"שם חברה"
-        
-        class Deductions:
-            work_year = r"שנת עבודה"
-            employee_id = r"מספר עובד"
-            employee_name = r"שם עובד"
-            department_name = r"שם מחלקה"
-            work_month = r"חודש עבודה"
-
-            component_code = r"קוד רכיב"
-            component_name = r"שם רכיב"
-
-            rate = r"תעריף"
-            quantity = r"כמות"
-            total_sum = r'סה"כ'
-
-            fixed_component = r"ה. קבע"
-
-            quarter = r"רבעון"
-            half_year = r"חצי שנה"
-
-            sub_department_name = r"שם תת מחלקה"
-            id_number = r"מספר זהות"
-            company_name = r"שם חברה"
-        
-        class Income:
-            work_year = r"שנת עבודה"
-            employee_id = r"מספר עובד"
-            employee_name = r"שם עובד"
-            department_name = r"שם מחלקה"
-            work_month = r"חודש עבודה"
-
-            component_code = r"קוד רכיב"
-            component_name = r"שם רכיב"
-
-            rate = r"תעריף"
-            quantity = r"כמות"
-            total = r'סה"כ'
-
-            fixed_component = r"ה. קבע"
-
-            quarter = r"רבעון"
-            half_year = r"חצי שנה"
-
-            sub_department_name = r"שם תת מחלקה"
-            id_number = r"מספר זהות"
-            company_name = r"שם חברה"
-
-        class Absences:
-            work_year = r"שנת עבודה"
-            employee_id = r"מספר עובד"
-            employee_name = r"שם עובד"
-            department_name = r"שם מחלקה"
-            work_month = r"חודש עבודה"
-            clean_month = r"חודש_נקי"
-
-
-            month = r"חודש"
-
-            vacation_code = r"קוד חופש"
-            vacation_name = r"שם חופש"
-
-            vacation_opening_balance = r"חופש - יתרת פתיחה"
-            vacation_one_time_input = r"חופש - קליטה חד פעמית"
-            vacation_previous_balance = r"חופש - יתרה קודמת"
-            vacation_last_balance = r"חופש - יתרה אחרונה"
-            vacation_monthly_accrual = r"חופש - צבירה חודשית"
-            vacation_monthly_usage = r"חופש - ניצול חודשי"
-            vacation_monthly_balance = r"חופש - יתרה חודשית"
-
-            sick_code = r"קוד מחלה"
-            sick_name = r"שם מחלה"
-
-            sick_opening_balance = r"מחלה - יתרת פתיחה"
-            sick_one_time_input = r"מחלה - קליטה חד פעמית"
-            sick_previous_balance = r"מחלה - יתרה קודמת"
-            sick_last_balance = r"מחלה - יתרה אחרונה"
-            sick_monthly_accrual = r"מחלה - צבירה חודשית"
-            sick_monthly_usage = r"מחלה - ניצול חודשי"
-            sick_monthly_balance = r"מחלה - יתרה חודשית"
-
-            convalescence_code = r"קוד הבראה"
-            convalescence_name = r"שם הבראה"
-
-            convalescence_opening_balance = r"הבראה - יתרת פתיחה"
-            convalescence_one_time_input = r"הבראה - קליטה חד פעמית"
-            convalescence_previous_balance = r"הבראה - יתרה קודמת"
-            convalescence_last_balance = r"הבראה - יתרה אחרונה"
-            convalescence_monthly_accrual = r"הבראה - צבירה חודשית"
-            convalescence_monthly_usage = r"הבראה - ניצול חודשי"
-            convalescence_monthly_balance = r"הבראה - יתרה חודשית"
-
-            reserve_monthly_usage = r"מילואים - ניצול חודשי"
-
-            quarter = r"רבעון"
-            half_year = r"חצי שנה"
-
-            sub_department_name = r"שם תת מחלקה"
-            id_number = r"מספר זהות"
-            company_name = r"שם חברה"
-
-        class Costing:
-            work_year = r"שנת עבודה"
-            employee_id = r"מספר עובד"
-            employee_name = r"שם עובד"
-            department_name = r"שם מחלקה"
-            work_month = r"חודש עבודה"
-
-            gross_salary = r"ברוטו"
-            employee_national_insurance = r"ב.ל. עובד"
-            income_tax = r"מס הכנסה"
-            employee_pension_study_fund = r"גמל + קה\"ל עובד"
-            voluntary_deductions = r"ניכויי רשות"
-            net_pay = r"נטו לתשלום"
-
-            employer_national_insurance = r"ב.ל. מעסיק"
-            employer_pension_study_fund = r"גמל + קה\"ל מעסיק"
-            severance_reserve = r"עתודה לפיצויים"
-            vacation_reserve = r"עתודה לחופש"
-            convalescence_reserve = r"עתודה להבראה"
-            employer_cost = r"עלות מעסיק"
-
-            national_insurance_exemption_foreign = r"פטור ב.ל. ת.חוץ"
-            organization_tax = r"מס אירגון"
-            advance_payment = r"מקדמה"
-
-            hours_quantity = r"כמות שעות"
-            days_quantity = r"כמות ימים"
-
-            quarter = r"רבעון"
-            half_year = r"חצי שנה"
-
-            sub_department_name = r"שם תת מחלקה"
-            id_number = r"מספר זהות"
-            company_name = r"שם חברה"
-            clean_month = r"חודש_נקי"
 
     class SocialAnalysis:
         class CenterMask:
@@ -319,7 +251,6 @@ class Headers:
         offset_pct = r"אחוז הפרש"
         status = r"סטטוס"
 
-
     class AggregatedFiles:
         class ProvidentsAGG:
             employee_month_key = r'מפתח_עובד_חודש'
@@ -335,6 +266,8 @@ class Headers:
 
             employee_disability_total = r'קופות_סה"כ אכ"ע עובד'
             employer_disability_total = r'קופות_סה"כ אכ"ע מעסיק'
+
+            total_study_fund_base = r"סה\"כ בסיס קה\"ל"
         
         class AbsencesAGG:
             employee_month_key = r'מפתח_עובד_חודש'
@@ -361,5 +294,4 @@ class Headers:
             employee_id = r'מספר עובד'
 
             total = r'סהכ_זקיפות'
-
 

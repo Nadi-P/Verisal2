@@ -232,7 +232,18 @@ export function useAuditTableLogic({
     setIsSelecting(false);
   }, []);
 
-  // Keyboard navigation: arrows, shift+arrows, ctrl+shift
+  // Estimate visible rows in a "page" by measuring an actual rendered row.
+  const getPageRowCount = useCallback(() => {
+    const container = tableContainerRef.current;
+    if (!container) return 10;
+    const sampleRow = container.querySelector('tbody tr');
+    const headerH = container.querySelector('thead')?.getBoundingClientRect().height ?? 0;
+    const rowH = sampleRow ? sampleRow.getBoundingClientRect().height : 28;
+    const usable = container.clientHeight - headerH;
+    return Math.max(1, Math.floor(usable / Math.max(rowH, 1)) - 1);
+  }, []);
+
+  // Keyboard navigation: arrows, shift+arrows, ctrl, page up/down, home/end
   const handleKeyDown = useCallback((e) => {
     if (!selectionEnd) return;
     const { r, c } = selectionEnd;
@@ -240,26 +251,17 @@ export function useAuditTableLogic({
     const maxR = displayRows.length - 1;
     const maxC = displayColumns.length - 1;
 
-    // Ctrl+Home / Ctrl+End — jump to absolute start / end of table
+    // Ctrl+Home / Ctrl+End — jump to row's horizontal extreme, keeping vertical position.
+    // RTL semantics: Ctrl+Home → rightmost column (col 0), Ctrl+End → leftmost column (maxC).
     if ((e.ctrlKey || e.metaKey) && (e.key === 'Home' || e.key === 'End')) {
       e.preventDefault();
-      // RTL: Home = row 0, col 0 (rightmost); End = last row, last col (leftmost)
-      const target = e.key === 'Home' ? { r: 0, c: 0 } : { r: maxR, c: maxC };
+      const target = { r, c: e.key === 'Home' ? 0 : maxC };
       if (e.shiftKey) {
         setSelectionEnd(target);
       } else {
         setExtraSelections([]);
         setSelectionAnchor(target);
         setSelectionEnd(target);
-      }
-      // Scroll container to the corresponding corner
-      const el = tableContainerRef.current;
-      if (el) {
-        if (e.key === 'Home') {
-          el.scrollTo({ top: 0, left: el.scrollWidth }); // RTL: scrollLeft max = right edge
-        } else {
-          el.scrollTo({ top: el.scrollHeight, left: 0 });
-        }
       }
       return;
     }
@@ -271,6 +273,8 @@ export function useAuditTableLogic({
       case 'ArrowRight': newC = Math.max(0, c - 1); break;     // RTL: right = decrease col
       case 'Home':       newC = 0; break;          // RTL: Home = first col (rightmost)
       case 'End':        newC = maxC; break;        // RTL: End = last col (leftmost)
+      case 'PageUp':     newR = Math.max(0, r - getPageRowCount()); break;
+      case 'PageDown':   newR = Math.min(maxR, r + getPageRowCount()); break;
       default: return;
     }
 
@@ -294,7 +298,128 @@ export function useAuditTableLogic({
       setSelectionAnchor({ r: newR, c: newC });
       setSelectionEnd({ r: newR, c: newC });
     }
-  }, [selectionEnd, displayRows, displayColumns]);
+  }, [selectionEnd, displayRows, displayColumns, getPageRowCount]);
+
+  // Scroll the active cell into view whenever the selection end changes,
+  // accounting for the sticky header and any sticky pinned columns on the right (RTL).
+  useLayoutEffect(() => {
+    if (!selectionEnd) return;
+    const container = tableContainerRef.current;
+    if (!container) return;
+    const cell = container.querySelector(
+      `td[data-r="${selectionEnd.r}"][data-c="${selectionEnd.c}"]`
+    );
+    if (!cell) return;
+
+    const cRect = container.getBoundingClientRect();
+    const tRect = cell.getBoundingClientRect();
+
+    // Sticky header height obscures the top of the scroll region.
+    const headerEl = container.querySelector('thead');
+    const headerH = headerEl ? headerEl.getBoundingClientRect().height : 0;
+
+    // Sticky pinned columns sit at the right edge in RTL — sum their widths.
+    let pinnedW = 0;
+    if (!cell.classList.contains('pinned')) {
+      container.querySelectorAll('thead th.pinned').forEach(el => {
+        pinnedW += el.getBoundingClientRect().width;
+      });
+    }
+
+    let dy = 0;
+    if (tRect.top < cRect.top + headerH) {
+      dy = tRect.top - (cRect.top + headerH);
+    } else if (tRect.bottom > cRect.bottom) {
+      dy = tRect.bottom - cRect.bottom;
+    }
+
+    let dx = 0;
+    // RTL: pinned columns are on the right; the visible "right edge" for unpinned cells
+    // is cRect.right - pinnedW. Off the left simply means tRect.left < cRect.left.
+    const visibleRight = cRect.right - pinnedW;
+    if (tRect.right > visibleRight) {
+      dx = tRect.right - visibleRight;
+    } else if (tRect.left < cRect.left) {
+      dx = tRect.left - cRect.left;
+    }
+
+    if (dx !== 0 || dy !== 0) {
+      container.scrollBy({ top: dy, left: dx });
+    }
+  }, [selectionEnd]);
+
+  // Mouse-drag auto-scroll: when the user drags past a container edge while selecting,
+  // scroll the table and update the selection to the cell now under the cursor.
+  const autoScrollRef = useRef({ raf: null, x: 0, y: 0 });
+  useEffect(() => {
+    const container = tableContainerRef.current;
+    if (!container || !isSelecting) return;
+
+    const state = autoScrollRef.current;
+
+    const stop = () => {
+      if (state.raf) {
+        cancelAnimationFrame(state.raf);
+        state.raf = null;
+      }
+    };
+
+    const tick = () => {
+      const rect = container.getBoundingClientRect();
+      const threshold = 40;
+      const maxStep = 24;
+      let dx = 0, dy = 0;
+
+      if (state.y < rect.top + threshold) {
+        dy = -Math.min(maxStep, (rect.top + threshold - state.y));
+      } else if (state.y > rect.bottom - threshold) {
+        dy = Math.min(maxStep, (state.y - (rect.bottom - threshold)));
+      }
+      if (state.x < rect.left + threshold) {
+        dx = -Math.min(maxStep, (rect.left + threshold - state.x));
+      } else if (state.x > rect.right - threshold) {
+        dx = Math.min(maxStep, (state.x - (rect.right - threshold)));
+      }
+
+      if (dx === 0 && dy === 0) {
+        stop();
+        return;
+      }
+
+      container.scrollBy({ top: dy, left: dx });
+
+      // After scrolling, find the cell now under the cursor and extend the selection.
+      const el = document.elementFromPoint(state.x, state.y);
+      const td = el && el.closest && el.closest('td[data-r]');
+      if (td) {
+        const r = +td.dataset.r;
+        const c = +td.dataset.c;
+        setSelectionEnd(prev => (prev && prev.r === r && prev.c === c) ? prev : { r, c });
+      }
+      state.raf = requestAnimationFrame(tick);
+    };
+
+    const onMove = (e) => {
+      state.x = e.clientX;
+      state.y = e.clientY;
+      const rect = container.getBoundingClientRect();
+      const threshold = 40;
+      const nearEdge =
+        state.x < rect.left + threshold || state.x > rect.right - threshold ||
+        state.y < rect.top + threshold || state.y > rect.bottom - threshold;
+      if (nearEdge && !state.raf) {
+        state.raf = requestAnimationFrame(tick);
+      } else if (!nearEdge) {
+        stop();
+      }
+    };
+
+    window.addEventListener('mousemove', onMove);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      stop();
+    };
+  }, [isSelecting]);
 
   // ======== SELECTION STATS ========
   useEffect(() => {
@@ -358,19 +483,24 @@ export function useAuditTableLogic({
   }, [selectionAnchor, selectionEnd, extraSelections, displayRows, displayColumns, getAllSelectedCells, onSelectionStats]);
 
   // ======== FORMATTING ========
+  // Format a JS number with thousands separators, keeping 2 decimals only when present.
+  const formatNumber = (n) => {
+    if (Object.is(n, -0)) n = 0;
+    if (Number.isInteger(n)) {
+      return n.toLocaleString('en-US');
+    }
+    const rounded = Math.round(n * 100) / 100;
+    if (rounded === 0) return '0.00';
+    return rounded.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
   const formatCellValue = useCallback((value) => {
     if (value === null || value === undefined) return '';
 
-    // Fix negative zero → "0"
-    if (typeof value === 'number') {
-      if (Object.is(value, -0)) return '0';
-      if (!Number.isInteger(value)) {
-        const fixed = value.toFixed(2);
-        // toFixed can produce "-0.00" for very small negatives
-        return fixed === '-0.00' ? '0.00' : fixed;
-      }
-      return String(value);
-    }
+    if (typeof value === 'number') return formatNumber(value);
 
     const str = String(value);
 
@@ -381,12 +511,10 @@ export function useAuditTableLogic({
       return `${day}/${month}/${year}`;
     }
 
-    // Check if it's a numeric string with decimals
+    // Decimal numeric strings (e.g. "1234.5") — format with thousands + 2 decimals.
     const num = parseFloat(str);
     if (!isNaN(num) && str.includes('.') && str === String(num)) {
-      if (Object.is(num, -0)) return '0';
-      const fixed = num.toFixed(2);
-      return fixed === '-0.00' ? '0.00' : fixed;
+      return formatNumber(num);
     }
 
     // Catch string "-0"
@@ -394,6 +522,16 @@ export function useAuditTableLogic({
 
     return str;
   }, []);
+
+  // Returns 'up' | 'down' | null. Only set for "diff" columns (those tracked in
+  // checkupData). Sign of the raw numeric value drives direction; zero → no arrow.
+  const getCellArrow = useCallback((row, col) => {
+    if (!checkupData || !(col in checkupData)) return null;
+    const raw = row[col];
+    const n = typeof raw === 'number' ? raw : parseFloat(raw);
+    if (!isFinite(n) || n === 0) return null;
+    return n > 0 ? 'up' : 'down';
+  }, [checkupData]);
 
   const getTextDirection = useCallback((text) => {
     if (typeof text === 'string' && HEBREW_REGEX.test(text)) return 'rtl';
@@ -417,14 +555,6 @@ export function useAuditTableLogic({
     };
   }, [zoom]);
 
-  const getCellCheckupColor = useCallback((row, col) => {
-    const colChecks = checkupData[col];
-    if (!colChecks) return null;
-    // Find this row's index in the original data
-    const rowIndex = rowData.indexOf(row);
-    if (rowIndex === -1 || rowIndex >= colChecks.length) return null;
-    return colChecks[rowIndex] ? 'checkup-pass' : 'checkup-fail';
-  }, [checkupData, rowData]);
 
   // ======== COLUMN HIGHLIGHT (filter / sort) ========
   const isColumnFiltered = useCallback((colId) => {
@@ -459,7 +589,7 @@ export function useAuditTableLogic({
     getTextDirection,
     getCellStyle,
     getHeaderStyle,
-    getCellCheckupColor,
+    getCellArrow,
     isColumnFiltered,
     isColumnSorted,
     setPinnedHeaderRef,

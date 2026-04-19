@@ -1,12 +1,11 @@
 import re
-import os
 import io
 from typing import List
 from fastapi import UploadFile
 import numpy as np
 import pandas as pd
-from Processing.Files import Files
-from Processing.Headers import Headers
+from Files import Files
+from Headers import Headers
 
 class Functions:
     join_key = 'מפתח_עובד_חודש'
@@ -133,6 +132,9 @@ class Functions:
             providentsAGGHeaders = Headers.AggregatedFiles.ProvidentsAGG
             df = Functions.Aggregations.standarize_df(df)
             
+            df["total_study_fund_base"] = df[providentsFileHeaders.salary_for_pension].where(
+                df[providentsFileHeaders.fund_type] == "קה\"ל", 0
+            )
             result = df.groupby(Functions.group_list).agg({
                 providentsFileHeaders.employee_pension: 'sum',      # גמל עובד
                 providentsFileHeaders.employer_pension: 'sum',      # גמל מעסיק
@@ -140,7 +142,8 @@ class Functions:
                 providentsFileHeaders.employee_other: 'sum',       # סה"כ עובד (משמש בדרך כלל לקה"ל בדו"חות מסוימים)
                 providentsFileHeaders.employer_other: 'sum',       # סה"כ מעסיק
                 providentsFileHeaders.employee_disability: 'sum',   # אכ"ע עובד
-                providentsFileHeaders.employer_disability: 'sum'    # אכ"ע מעסיק
+                providentsFileHeaders.employer_disability: 'sum',
+                "total_study_fund_base" : 'sum'       # משמש לחישוב אחוזי גמל מתוך בסיס
             }).reset_index()
             
             result = result.rename(columns={
@@ -151,7 +154,8 @@ class Functions:
                 providentsFileHeaders.employer_other: providentsAGGHeaders.employer_study_fund_total,
                 providentsFileHeaders.employee_disability: providentsAGGHeaders.employee_disability_total,
                 providentsFileHeaders.employer_disability: providentsAGGHeaders.employer_disability_total,
-                providentsFileHeaders.work_month: providentsAGGHeaders.work_month
+                providentsFileHeaders.work_month: providentsAGGHeaders.work_month,
+                "total_study_fund_base": providentsAGGHeaders.total_study_fund_base
             })
             
             return result
@@ -264,26 +268,48 @@ class Functions:
             else:
                 print("All specified columns are present in the DataFrame.")
     
-    def GetFileFromObject(file_obj, key, sheetName):
+    def GetFileFromObject(file_obj, key):
         """
-        Replaces GetFile(key, sheetName).
         Reads an Excel file from an UploadFile object buffer.
+        Center file: sheet index 0, header row 7.
+        System reports: sheet index 1, header row 0. If index 1 cannot be read,
+        fall back to the first sheet whose name contains "בע"מ" (the company-named
+        data sheet that שקלולית exports use). If neither is available, raise.
         """
         display = Files.DISPLAY_NAMES.get(key, key)
 
         if not file_obj:
             raise ValueError(f"קובץ {display} לא נמצא")
 
-        header_row = 7 if key == "center" else 0
+        is_center = key == "center"
+        header_row = 7 if is_center else 0
 
         try:
             file_obj.file.seek(0)
             content = file_obj.file.read()
             buffer = io.BytesIO(content)
 
-            with pd.ExcelFile(buffer) as xls:
-                target_sheet = xls.sheet_names[0] if sheetName is None else sheetName
-                df = pd.read_excel(xls, sheet_name=target_sheet, header=header_row)
+            if is_center:
+                df = pd.read_excel(buffer, sheet_name=0, header=header_row)
+            else:
+                with pd.ExcelFile(buffer) as xls:
+                    sheet_names = xls.sheet_names
+                    df = None
+                    # 1st try: sheet at index 1 (the standard שקלולית layout).
+                    if len(sheet_names) > 1:
+                        try:
+                            df = pd.read_excel(xls, sheet_name=sheet_names[1], header=header_row)
+                        except Exception:
+                            df = None
+                    # Fallback: first sheet whose name contains "בע"מ".
+                    if df is None:
+                        match = next((s for s in sheet_names if "בע\"מ" in s), None)
+                        if match is None:
+                            raise ValueError(
+                                f"לא נמצא גיליון מתאים בקובץ {display} — הגיליון השני לא נטען "
+                                f"ולא קיים גיליון שבשמו מופיע \"בע\"מ\""
+                            )
+                        df = pd.read_excel(xls, sheet_name=match, header=header_row)
 
             df.columns = df.columns.astype(str).str.strip()
             return df
@@ -336,20 +362,20 @@ class Functions:
                     lines.append(f"  - {name}")
             raise ValueError("\n".join(lines))
 
-        # 4. Extract company name from center file
+        # 4. Load all 7 DataFrames using sheet index (center=0, system reports=1)
+        Files.centerDF = Functions.GetFileFromObject(file_map.get("center"), "center")
+        Files.componentsDF = Functions.GetFileFromObject(file_map.get("components"), "components")
+        Files.providentsDF = Functions.GetFileFromObject(file_map.get("providents"), "providents")
+        Files.incomeDF = Functions.GetFileFromObject(file_map.get("income"), "income")
+        Files.deductionsDF = Functions.GetFileFromObject(file_map.get("deductions"), "deductions")
+        Files.costingDF = Functions.GetFileFromObject(file_map.get("costing"), "costing")
+        Files.absencesDF = Functions.GetFileFromObject(file_map.get("absences"), "absences")
+
+        # 5. Extract company name from "שם חברה" column in system reports
         try:
             Files.company_name = Functions.extract_data_from_files("companyName")
         except Exception as e:
-            raise ValueError(f"שגיאה בחילוץ שם חברה מקובץ מרכז שכר: {e}")
-
-        # 5. Load all 7 DataFrames (GetFileFromObject raises on failure)
-        Files.centerDF = Functions.GetFileFromObject(file_map.get("center"), "center", Files.company_name)
-        Files.componentsDF = Functions.GetFileFromObject(file_map.get("components"), "components", Files.company_name)
-        Files.providentsDF = Functions.GetFileFromObject(file_map.get("providents"), "providents", Files.company_name)
-        Files.incomeDF = Functions.GetFileFromObject(file_map.get("income"), "income", Files.company_name)
-        Files.deductionsDF = Functions.GetFileFromObject(file_map.get("deductions"), "deductions", Files.company_name)
-        Files.costingDF = Functions.GetFileFromObject(file_map.get("costing"), "costing", Files.company_name)
-        Files.absencesDF = Functions.GetFileFromObject(file_map.get("absences"), "absences", Files.company_name)
+            raise ValueError(f"שגיאה בחילוץ שם חברה: {e}")
 
         # 6. Extract date metadata
         try:
@@ -400,23 +426,38 @@ class Functions:
 
         match requiredDataName:
             case "companyName":
-                centerFileObj.file.seek(0)
-                content = centerFileObj.file.read()
-                buffer = io.BytesIO(content)
-                with pd.ExcelFile(buffer) as xls:
-                    return xls.sheet_names[0]
+                # Extract company name from "שם חברה" column in the system reports
+                company_col = "שם חברה"
+                for df in [
+                    Files.componentsDF, Files.providentsDF, Files.incomeDF,
+                    Files.deductionsDF, Files.costingDF, Files.absencesDF
+                ]:
+                    if df is not None and company_col in df.columns:
+                        values = df[company_col].dropna().unique()
+                        if len(values) > 0:
+                            return str(values[0]).strip()
+                raise ValueError("לא נמצאה עמודת 'שם חברה' באף אחד מהדוחות")
 
             case "currentMonth":
-                # Splitting 'קובץ מרכז שכר לחודש 08.2025.xlsx' to get the date part
-                # Assuming format: "Filename MM.YYYY.xlsx"
+                # Supports both "MM.YYYY" and "MM.YY" formats
                 filename = centerFileObj.filename
                 date_part = filename.split()[-1].replace('.xlsx', '').replace('.xls', '')
-                return Functions.Aggregations.extract_year(date_part.replace('.', '/'))
+                parts = date_part.split('.')
+                if len(parts) == 2:
+                    return int(parts[0])
+                raise ValueError(f"פורמט תאריך לא תקין בשם הקובץ: {filename}")
 
             case "currentYear":
+                # Supports both "MM.YYYY" and "MM.YY" formats
                 filename = centerFileObj.filename
                 date_part = filename.split()[-1].replace('.xlsx', '').replace('.xls', '')
-                return Functions.Aggregations.extract_month(date_part.replace('.', '/'))
+                parts = date_part.split('.')
+                if len(parts) == 2:
+                    year = int(parts[1])
+                    if year < 100:
+                        year = 2000 + year
+                    return year
+                raise ValueError(f"פורמט תאריך לא תקין בשם הקובץ: {filename}")
 
             case "minYear" | "maxYear" | "minMonth" | "maxMonth":
                 all_years = []
@@ -518,6 +559,7 @@ class Functions:
             center_h.employee_name,
             center_h.study_fund_tax_ceiling_deposit
         ]].drop_duplicates(subset=[center_h.employee_id])
+
         # 2. הבסיס החדש: כל מי שמופיע ברכיבי השכר (Social Total)
         # אנחנו מתחילים מכאן כדי לא לאבד עובדים שאין להם הפרשות לקופות
 
@@ -550,7 +592,7 @@ class Functions:
         )
 
         # א. יצירת עמודת שם עובד (טיפול במקרה שהעובד לא נמצא במרכז)
-        main_df[components_h.emloyee_name] = main_df[center_h.employee_name].fillna("לא נמצא במרכז")
+        main_df[components_h.employee_name] = main_df[center_h.employee_name].fillna("לא נמצא במרכז")
 
         # הכנת משתני עזר מספריים לחישוב
         social_base = pd.to_numeric(main_df[components_h.social_total], errors='coerce').fillna(0)
@@ -581,7 +623,7 @@ class Functions:
         # סידור עמודות סופי
         headersList = [
             Functions.join_key,
-            components_h.emloyee_name,
+            components_h.employee_name,
             components_h.employee_id, # משתמשים ב-ID מהרכיבים
             components_h.work_month,
             components_h.social_total,
@@ -729,8 +771,8 @@ class Functions:
             on=jk, how="left"
         )
         audit_df = audit_df.merge(
-            provAgg[[jk, prov_h.employee_study_fund_total, prov_h.employer_study_fund_total]], 
-            on=jk, how="left"
+            provAgg[[jk, prov_h.employee_study_fund_total, prov_h.employer_study_fund_total, prov_h.total_study_fund_base]], 
+            on=jk, how="left"   
         )
         
         # 4. Analysis Loop
@@ -738,17 +780,17 @@ class Functions:
         for _, row in audit_df.iterrows():
             # Standard Checks
             checks = [
-                ("1. שכר ברוטו", (row.get(c_h.total_salary)), (row.get(cost_h.gross_salary))),
-                ("2. שווי (ארוחות/מתנות)", (row.get(c_h.meal_value)) + (row.get(c_h.gift_value)), (row.get(inc_h.total))),
-                ("3. ניכויי רשות", (row.get(c_h.local_expense_reimbursement)) + (row.get(c_h.expense_charge)) + (row.get(c_h.abroad_expense_reimbursement)), (row.get(cost_h.voluntary_deductions))),
-                ("4. ניצול חופשה", (row.get(c_h.vacation_usage)), (row.get(abs_h.vacation_monthly_usage))),
-                ("5. ניצול מחלה", (row.get(c_h.sick_usage)), (row.get(abs_h.sick_monthly_usage)))
+                ("שכר ברוטו", (row.get(c_h.total_salary)), (row.get(cost_h.gross_salary))),
+                ("שווי (ארוחות/מתנות)", (row.get(c_h.meal_value)) + (row.get(c_h.gift_value)), (row.get(inc_h.total))),
+                ("ניכויי רשות", (row.get(c_h.local_expense_reimbursement)) + (row.get(c_h.expense_charge)) + (row.get(c_h.abroad_expense_reimbursement)), (row.get(cost_h.voluntary_deductions))),
+                ("ניצול חופשה", (row.get(c_h.vacation_usage)), (row.get(abs_h.vacation_monthly_usage))),
+                ("ניצול מחלה", (row.get(c_h.sick_usage)), (row.get(abs_h.sick_monthly_usage)))
             ]
 
             # Kahal Logic
-            kahal_raw = str(row.get(c_h.study_fund_tax_ceiling_deposit, "")).strip()
-            kahal_eligible = "כן" if "כן" in kahal_raw else ("לא" if "לא" in kahal_raw else "חסר נתון")
-            kahal_sum = (row.get(prov_h.employee_study_fund_total)) + (row.get(prov_h.employer_study_fund_total))
+            kahal_raw = str(row.get(c_h.study_fund_exists, "")).strip()
+            kahal_eligible = "כן" if "כן" in kahal_raw else "ללא קה\"ל"
+            kahal_sum = row.get(prov_h.total_study_fund_base)
             
             if kahal_eligible == "חסר נתון": kahal_stat_text = "בדיקה ידנית - חסר סימון במרכז שכר"
             elif kahal_eligible == "כן" and kahal_sum == 0: kahal_stat_text = "חסרה הפקדה!"
@@ -775,7 +817,7 @@ class Functions:
                 fac_h.employee_id: row[c_h.employee_id],
                 fac_h.employee_name: row[c_h.employee_name],
                 fac_h.month: Files.current_month,
-                fac_h.check: '6. קה"ל (זכאות)',
+                fac_h.check: 'קה"ל (בסיס להפקדה)',
                 fac_h.center_input: kahal_eligible,
                 fac_h.external_reports_output: kahal_sum,
                 fac_h.offset: 0,

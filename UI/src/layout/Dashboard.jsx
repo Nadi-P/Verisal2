@@ -54,7 +54,8 @@ function Dashboard() {
 
     const formData = new FormData();
     for (const file of files) {
-      formData.append('files', file);
+      const buffer = await file.arrayBuffer();
+      formData.append('files', new Blob([buffer], { type: file.type }), file.name);
     }
 
     try {
