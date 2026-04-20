@@ -116,23 +116,24 @@ def _build_center_coded_df(raw_df, header_row, data_df):
         return data_df[keep_cols].rename(columns=rename_map).copy()
 
     codes_row = raw_df.iloc[header_row - 1]
-    # Headers row, used to map positional codes to actual cleaned column names.
-    headers_row = raw_df.iloc[header_row]
 
-    keep_cols = []     # names from data_df.columns
-    rename_map = {}    # data_df col name -> integer code (positive or negative)
+    # Iterate by POSITION, not by header name. data_df.columns[pos] is pandas'
+    # already-deduplicated, stripped column name at position pos — matching by
+    # name fails silently when headers repeat (pandas appends ".1") or contain
+    # invisible chars (RTL marks, NBSP) that survive .strip().
+    n_cols = min(len(data_df.columns), len(codes_row))
 
-    for pos in range(min(len(headers_row), len(codes_row))):
-        raw_header = headers_row.iat[pos]
-        if raw_header is None or (isinstance(raw_header, float) and pd.isna(raw_header)):
-            continue
-        header_name = str(raw_header).strip()
-        if header_name not in data_df.columns:
-            continue
+    keep_positions = []   # positional indices into data_df
+    new_codes = []        # integer code for each kept position
+
+    for pos in range(n_cols):
+        col_name = data_df.columns[pos]
 
         code_cell = codes_row.iat[pos]
         code_int = None
-        if isinstance(code_cell, (int,)) and not isinstance(code_cell, bool):
+        if isinstance(code_cell, bool):
+            pass
+        elif isinstance(code_cell, int):
             code_int = code_cell
         elif isinstance(code_cell, float) and not pd.isna(code_cell) and float(code_cell).is_integer():
             code_int = int(code_cell)
@@ -142,21 +143,34 @@ def _build_center_coded_df(raw_df, header_row, data_df):
                 code_int = int(s)
 
         if code_int is not None:
-            keep_cols.append(header_name)
-            rename_map[header_name] = code_int
-        else:
+            keep_positions.append(pos)
+            new_codes.append(code_int)
+            continue
+
+        if isinstance(col_name, str):
             for needles, fake_code in ALWAYS_INCLUDE:
-                if all(n in header_name for n in needles):
-                    keep_cols.append(header_name)
-                    rename_map[header_name] = fake_code
+                if all(n in col_name for n in needles):
+                    keep_positions.append(pos)
+                    new_codes.append(fake_code)
                     break
 
-    if not keep_cols:
+    if not keep_positions:
         return data_df.iloc[:, :0].copy()
 
-    coded = data_df[keep_cols].copy()
-    if rename_map:
-        coded = coded.rename(columns=rename_map)
+    coded = data_df.iloc[:, keep_positions].copy()
+
+    # DEBUG: dump every (code -> original header) pair detected, sorted by code.
+    # print("=" * 70)
+    # print(f"[center_df_coded] {len(keep_positions)} columns kept:")
+    # pairs = sorted(
+    #     zip(new_codes, [str(data_df.columns[p]) for p in keep_positions]),
+    #     key=lambda x: x[0],
+    # )
+    # for code, header in pairs:
+    #     print(f"  {code:>6}  ->  {header[::-1]}")
+    # print("=" * 70)
+
+    coded.columns = new_codes
     return coded
 
 def _load_center_sheets(file_obj):

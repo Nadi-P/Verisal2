@@ -5,19 +5,20 @@ from fastapi import UploadFile
 import numpy as np
 import pandas as pd
 from Files import Files
-from Headers import Headers
+from Headers import Headers, PayrollCodes, Helpers, Masks
 
 class Functions:
     join_key = 'מפתח_עובד_חודש'
     key_regex = r'^(.+)-(\d{1,2})-(\d{4})$'
     group_list = [
-        join_key, 
-        Headers.InputFiles.Center.work_year, 
-        Headers.InputFiles.Center.work_month, 
-        Headers.InputFiles.Center.employee_id
+        join_key,
+        Helpers.SystemReportsBase.work_year,
+        Helpers.SystemReportsBase.work_month,
+        Helpers.SystemReportsBase.employee_id
     ]
 
     class Aggregations:
+
         def extract_month(val):
             try:
                 return int(str(val).split('/')[1])
@@ -30,11 +31,10 @@ class Functions:
             except (IndexError, ValueError, AttributeError):
                 return None
 
-        def standarize_df(df):
-            center_h = Headers.InputFiles.Center
-            id_col = center_h.employee_id            
-            month_col = center_h.work_month
-            year_col = center_h.work_year
+        def standarize_df(df, is_center=False):
+            id_col = Helpers.SystemReportsBase.employee_id if not is_center else PayrollCodes.employee_id
+            month_col = Helpers.SystemReportsBase.work_month if not is_center else PayrollCodes.work_month
+            year_col = Helpers.SystemReportsBase.work_year if not is_center else PayrollCodes.work_year
             df = df.copy()
 
             df[month_col] = df[month_col].apply(Functions.Aggregations.extract_month)
@@ -48,39 +48,22 @@ class Functions:
             return df.fillna(0)
         
         def aggregate_center(df):
-            center_h = Headers.InputFiles.Center
             df = df.copy()
-            
-            df = df.rename(columns={center_h.employee_id_shiklulit: center_h.employee_id})
-            df = df.dropna(subset=[center_h.employee_id])
-            df[center_h.employee_id] = pd.to_numeric(df[center_h.employee_id], errors='coerce').fillna(0).astype('int64')
 
-            df[center_h.employee_id] = (
-                pd.to_numeric(df[center_h.employee_id], errors='coerce')
+            df = df.dropna(subset=[PayrollCodes.employee_id])
+            df[PayrollCodes.employee_id] = (
+                pd.to_numeric(df[PayrollCodes.employee_id], errors='coerce')
                 .fillna(0)
-                .astype(int)
+                .astype('int64')
             )
 
-            # 3. Set Year and Month
-            df[center_h.work_year] = Files.current_year
-            df[center_h.work_month] = f"{Files.current_year}/{Files.current_month:02}"
-            # 4. Standardize (Now the join_key will be built with clean IDs)
-            df = Functions.Aggregations.standarize_df(df)
+            df[PayrollCodes.work_year] = Files.current_year
+            df[PayrollCodes.work_month] = f"{Files.current_year}/{Files.current_month:02}"
+            df = Functions.Aggregations.standarize_df(df, is_center=True)
 
-
-            
-            # 5. Calculate Total Salary
-            components = [
-                center_h.base_salary,
-                center_h.global_overtime,
-                center_h.car_or_travel_allowance,
-                center_h.bonus,
-                center_h.quarterly_bonus_for_social,
-                center_h.quarterly_commission,
-                center_h.reserve_adjustments,
-            ]
-            
-            df[center_h.total_salary] = (
+            target_codes = Masks.TotalSalaryCenterMask.mask
+            components = [code for code in target_codes if code in df.columns]
+            df[PayrollCodes.total_salary] = (
                 df[components]
                 .apply(pd.to_numeric, errors='coerce')
                 .fillna(0)
@@ -120,18 +103,24 @@ class Functions:
         def aggregate_income(df):
             incomeFileHeaders = Headers.InputFiles.Income
             incomeAGGHeaders = Headers.AggregatedFiles.IncomeAGG
+            mask = Masks.MealsAndGiftsIncomeMask.mask
             df = Functions.Aggregations.standarize_df(df)
 
-            df = df.groupby(Functions.group_list).agg({incomeFileHeaders.total: 'sum'}).reset_index()
-            df = df.rename(columns={incomeFileHeaders.total: incomeAGGHeaders.total})
-            
-            return df
+            result = df.groupby(Functions.group_list).agg({incomeFileHeaders.total_amount: 'sum'}).reset_index()
+            result = result.rename(columns={incomeFileHeaders.total_amount: incomeAGGHeaders.total})
+
+            df_mg = df[df[incomeFileHeaders.component_name].isin(mask)]
+            mg_agg = df_mg.groupby(Functions.group_list).agg({incomeFileHeaders.total_amount: 'sum'}).reset_index()
+            mg_agg = mg_agg.rename(columns={incomeFileHeaders.total_amount: 'meals_gifts_total'})
+            result = result.merge(mg_agg, on=Functions.group_list, how='left')
+            result['meals_gifts_total'] = result['meals_gifts_total'].fillna(0)
+
+            return result
 
         def aggregate_providents(df):
             providentsFileHeaders = Headers.InputFiles.Providents
             providentsAGGHeaders = Headers.AggregatedFiles.ProvidentsAGG
             df = Functions.Aggregations.standarize_df(df)
-            
             df["total_study_fund_base"] = df[providentsFileHeaders.salary_for_pension].where(
                 df[providentsFileHeaders.fund_type] == "קה\"ל", 0
             )
@@ -145,7 +134,6 @@ class Functions:
                 providentsFileHeaders.employer_disability: 'sum',
                 "total_study_fund_base" : 'sum'       # משמש לחישוב אחוזי גמל מתוך בסיס
             }).reset_index()
-            
             result = result.rename(columns={
                 providentsFileHeaders.employee_pension: providentsAGGHeaders.employee_pension_total,
                 providentsFileHeaders.employer_pension: providentsAGGHeaders.employer_pension_total,
@@ -157,7 +145,6 @@ class Functions:
                 providentsFileHeaders.work_month: providentsAGGHeaders.work_month,
                 "total_study_fund_base": providentsAGGHeaders.total_study_fund_base
             })
-            
             return result
 
         def aggregate_deductions(df):
@@ -178,13 +165,8 @@ class Functions:
 
         def aggregate_components(df):
             comp_h = Headers.InputFiles.Components
-            mask = Headers.SocialAnalysis.ComponentsMask
             df = Functions.Aggregations.standarize_df(df)
-            social_list = [
-                mask.base_salary, mask.global_overtime, mask.quarterly_bonus_social,
-                mask.early_notice_payment_taxable, mask.quarterly_commission_social,
-                mask.base_salary_rate_2, mask.global_overtime_rate_2, mask.hourly_holidays
-            ]
+            social_list = Masks.SocialAnalaysisComponentsMask.mask
 
             def calculate_social(row):
                 if row[comp_h.component_name] in social_list:
@@ -284,9 +266,7 @@ class Functions:
                 return None
         
     def run_payroll_audit():
-        centerFileHeaders = Headers.InputFiles.Center
-
-        centerAgg = Functions.Aggregations.aggregate_center(Files.centerDF)
+        centerAgg = Functions.Aggregations.aggregate_center(Files.center_df_coded)
         provAgg = Functions.Aggregations.aggregate_providents(Files.providentsDF)
         componentsAgg = Functions.Aggregations.aggregate_components(Files.componentsDF)
         incomeAgg = Functions.Aggregations.aggregate_income(Files.incomeDF)
@@ -327,29 +307,27 @@ class Functions:
         split_pattern = Functions.key_regex
         parsed_keys = audit_df[jk].str.extract(split_pattern)
 
-        audit_df[centerFileHeaders.employee_id] = parsed_keys[0].astype(int)
-        audit_df[centerFileHeaders.work_month] = parsed_keys[1].astype(int)
-        audit_df[centerFileHeaders.work_year] = parsed_keys[2].astype(int)
+        audit_df[PayrollCodes.employee_id] = parsed_keys[0].astype(int)
+        audit_df[PayrollCodes.work_month] = parsed_keys[1].astype(int)
+        audit_df[PayrollCodes.work_year] = parsed_keys[2].astype(int)
 
 
         return audit_df
 
     def get_social_analysis():
-        center_h = Headers.InputFiles.Center
         components_h = Headers.InputFiles.Components
         providents_h = Headers.AggregatedFiles.ProvidentsAGG
-        social_h = Headers.SocialAnalysis.SocialAnalysisFile
+        social_h = Headers.SocialAnalysisFile
 
-        center_df = Functions.Aggregations.aggregate_center(Files.centerDF)
+        center_df = Functions.Aggregations.aggregate_center(Files.center_df_coded)
         providentsAgg = Functions.Aggregations.aggregate_providents(Files.providentsDF)
         componentsAgg = Functions.Aggregations.aggregate_components(Files.componentsDF)
-
         # 1. הכנת עמודות מהמרכז (השם והתקרה)
         center_cols = center_df[[
-            center_h.employee_id,
-            center_h.employee_name,
-            center_h.study_fund_tax_ceiling_deposit
-        ]].drop_duplicates(subset=[center_h.employee_id])
+            PayrollCodes.employee_id,
+            PayrollCodes.employee_name,
+            PayrollCodes.is_study_fund_exist
+        ]].drop_duplicates(subset=[PayrollCodes.employee_id])
 
         # 2. הבסיס החדש: כל מי שמופיע ברכיבי השכר (Social Total)
         # אנחנו מתחילים מכאן כדי לא לאבד עובדים שאין להם הפרשות לקופות
@@ -360,6 +338,7 @@ class Functions:
             components_h.employee_id,
             components_h.social_total
         ]].copy()
+
         # 3. מיזוג נתוני הקופות לתוך בסיס השכר (Left Merge)
         # מי שאין לו נתונים בקופות יקבל NaN, אותו נהפוך ל-0 מיד אחרי
         main_df = main_df.merge(
@@ -376,20 +355,19 @@ class Functions:
 
         # 4. מיזוג נתוני המרכז (שם ותקרה) לפי מספר עובד
         main_df = main_df.merge(
-            center_cols, 
-            left_on=components_h.employee_id, 
-            right_on=center_h.employee_id, 
+            center_cols,
+            left_on=components_h.employee_id,
+            right_on=PayrollCodes.employee_id,
             how='left'
         )
 
         # א. יצירת עמודת שם עובד (טיפול במקרה שהעובד לא נמצא במרכז)
-        main_df[components_h.employee_name] = main_df[center_h.employee_name].fillna("לא נמצא במרכז")
+        main_df[components_h.employee_name] = main_df[PayrollCodes.employee_name].fillna("לא נמצא במרכז")
 
         # הכנת משתני עזר מספריים לחישוב
         social_base = pd.to_numeric(main_df[components_h.social_total], errors='coerce').fillna(0)
         ee_pension = pd.to_numeric(main_df[providents_h.employee_pension_total], errors='coerce').fillna(0)
         er_pension = pd.to_numeric(main_df[providents_h.employer_pension_total], errors='coerce').fillna(0)
-
         # ב. חישוב אחוז גמל עובד
         main_df[social_h.ee_prov_pct] = np.where(
             social_base != 0, 
@@ -406,7 +384,7 @@ class Functions:
 
         # ד. בסיס קהל נגזר - רק אם רשום "כן"
         main_df[social_h.capped_val] = np.where(
-            main_df[center_h.study_fund_tax_ceiling_deposit] == "כן",
+            main_df[PayrollCodes.is_study_fund_exist] == "כן",
             social_base.clip(upper=15712),
             0
         )
@@ -430,7 +408,6 @@ class Functions:
         return main_df[headersList]
     
     def get_months_comparison(input_months1=None, input_year1=None, input_months2=None, input_year2=None):
-        center_h = Headers.InputFiles.Center
         comparison_h = Headers.MonthsComparison
         source_df = Functions.run_payroll_audit()
 
@@ -444,13 +421,13 @@ class Functions:
             month1, month2 = input_months1, input_months2
 
         curr_table = source_df[
-            (source_df[center_h.work_month] == month1) & 
-            (source_df[center_h.work_year] == year1)
+            (source_df[PayrollCodes.work_month] == month1) &
+            (source_df[PayrollCodes.work_year] == year1)
         ].copy()
-        
+
         prev_table = source_df[
-            (source_df[center_h.work_month] == month2) & 
-            (source_df[center_h.work_year] == year2)
+            (source_df[PayrollCodes.work_month] == month2) &
+            (source_df[PayrollCodes.work_year] == year2)
         ].copy()
 
         def create_lookup_key(key):
@@ -498,14 +475,13 @@ class Functions:
                 prev_val = row[col_name + '_prev'] if col_name + '_prev' in row and pd.notnull(row[col_name + '_prev']) else 0
                 
                 analysis_rows.append({
-                    comparison_h.employee_id: row[center_h.employee_id],
-                    comparison_h.employee_name: row["מרכזשכר" + "_" + center_h.employee_name],
+                    comparison_h.employee_id: row[f"מרכזשכר_{PayrollCodes.employee_id}"],
+                    comparison_h.employee_name: row[f"מרכזשכר_{PayrollCodes.employee_name}"],
                     comparison_h.check: item['בדיקה'],
                     comparison_h.category: item['סיווג'],
                     month1_str: curr_val,
                     month2_str: prev_val
                 })
-
         final_df = pd.DataFrame(analysis_rows)
 
         final_df[comparison_h.offset] = final_df[month1_str] - final_df[month2_str]
@@ -521,7 +497,6 @@ class Functions:
         return final_df
 
     def get_reports_against_center():
-        c_h = Headers.InputFiles.Center
         cost_h = Headers.InputFiles.Costing
         inc_h = Headers.AggregatedFiles.IncomeAGG
         abs_h = Headers.AggregatedFiles.AbsencesAGG
@@ -529,7 +504,7 @@ class Functions:
         fac_h = Headers.ReportsAgainstCenter
 
         # 1. Run Aggregations from the Functions module
-        centerAgg = Functions.Aggregations.aggregate_center(Files.centerDF)
+        centerAgg = Functions.Aggregations.aggregate_center(Files.center_df_coded)
         costingAgg = Functions.Aggregations.aggregate_costing(Files.costingDF)
         absencesAgg = Functions.Aggregations.aggregate_absences(Files.absencesDF)
         incomeAgg = Functions.Aggregations.aggregate_income(Files.incomeDF)
@@ -538,8 +513,8 @@ class Functions:
         
         # Filter Center to the current period
         audit_df = centerAgg[
-            (centerAgg[c_h.work_year] == Files.current_year) & 
-            (centerAgg[c_h.work_month] == Files.current_month)
+            (centerAgg[PayrollCodes.work_year] == Files.current_year) &
+            (centerAgg[PayrollCodes.work_month] == Files.current_month)
         ].copy()
 
         if audit_df.empty:
@@ -554,7 +529,7 @@ class Functions:
             on=jk, how="left"
         )
         audit_df = audit_df.merge(
-            incomeAgg[[jk, inc_h.total]], 
+            incomeAgg[[jk, inc_h.total, 'meals_gifts_total']],
             on=jk, how="left"
         )
         audit_df = audit_df.merge(
@@ -571,15 +546,15 @@ class Functions:
         for _, row in audit_df.iterrows():
             # Standard Checks
             checks = [
-                ("שכר ברוטו", (row.get(c_h.total_salary)), (row.get(cost_h.gross_salary))),
-                ("שווי (ארוחות/מתנות)", (row.get(c_h.meal_value)) + (row.get(c_h.gift_value)), (row.get(inc_h.total))),
-                ("ניכויי רשות", (row.get(c_h.local_expense_reimbursement)) + (row.get(c_h.expense_charge)) + (row.get(c_h.abroad_expense_reimbursement)), (row.get(cost_h.voluntary_deductions))),
-                ("ניצול חופשה", (row.get(c_h.vacation_usage)), (row.get(abs_h.vacation_monthly_usage))),
-                ("ניצול מחלה", (row.get(c_h.sick_usage)), (row.get(abs_h.sick_monthly_usage)))
+                ("שכר ברוטו", (row.get(PayrollCodes.total_salary)), (row.get(cost_h.gross_salary))),
+                ("שווי (ארוחות/מתנות)", (row.get(PayrollCodes.shovi_meals_value)) + (row.get(PayrollCodes.shovi_gifts)), (row.get('meals_gifts_total', 0))),
+                ("ניכויי רשות", (row.get(PayrollCodes.expense_reimbursement)) + (row.get(PayrollCodes.expense_reimbursement_charge)) + (row.get(PayrollCodes.abroad_expense_reimbursement)), (row.get(cost_h.voluntary_deductions))),
+                ("ניצול חופשה", (row.get(PayrollCodes.vacation_usage)), (row.get(abs_h.vacation_monthly_usage))),
+                ("ניצול מחלה", (row.get(PayrollCodes.sick_usage)), (row.get(abs_h.sick_monthly_usage)))
             ]
 
             # Kahal Logic
-            kahal_raw = str(row.get(c_h.study_fund_exists, "")).strip()
+            kahal_raw = str(row.get(PayrollCodes.is_study_fund_exist, "")).strip()
             kahal_eligible = "כן" if "כן" in kahal_raw else "ללא קה\"ל"
             kahal_sum = row.get(prov_h.total_study_fund_base)
             
@@ -593,27 +568,25 @@ class Functions:
                 diff = input_val - output_val
                 diff_pct = (diff / input_val * 100) if input_val != 0 else 0
                 results.append({
-                    fac_h.employee_id: row[c_h.employee_id],
-                    fac_h.employee_name: row[c_h.employee_name],
+                    fac_h.employee_id: row[PayrollCodes.employee_id],
+                    fac_h.employee_name: row[PayrollCodes.employee_name],
                     fac_h.month: Files.current_month,
                     fac_h.check: name,
                     fac_h.center_input: input_val,
                     fac_h.external_reports_output: output_val,
                     fac_h.offset: diff,
                     fac_h.offset_pct: f"{diff_pct:.2f}%",
-                    fac_h.status: "תקין" if abs(diff) < 0.1 else "הפרש בבדיקה"
                 })
 
             results.append({
-                fac_h.employee_id: row[c_h.employee_id],
-                fac_h.employee_name: row[c_h.employee_name],
+                fac_h.employee_id: row[PayrollCodes.employee_id],
+                fac_h.employee_name: row[PayrollCodes.employee_name],
                 fac_h.month: Files.current_month,
                 fac_h.check: 'קה"ל (בסיס להפקדה)',
                 fac_h.center_input: kahal_eligible,
                 fac_h.external_reports_output: kahal_sum,
                 fac_h.offset: 0,
                 fac_h.offset_pct: "0%",
-                fac_h.status: kahal_stat_text
             })
 
         return pd.DataFrame(results)
