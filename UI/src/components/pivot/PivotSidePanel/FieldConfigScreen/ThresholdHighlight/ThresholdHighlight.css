@@ -1,0 +1,81 @@
+/* ==========================================================================
+   Threshold Highlight
+   ========================================================================== */
+
+.threshold-highlight {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.threshold-highlight-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.threshold-highlight-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.threshold-highlight-row {
+  display: flex;
+  gap: 8px;
+}
+
+.threshold-highlight-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.threshold-highlight-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.threshold-highlight-input,
+.threshold-highlight-select {
+  background: var(--bg-elevated-1);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.threshold-highlight-input:focus,
+.threshold-highlight-select:focus {
+  border-color: var(--accent);
+}
+
+.threshold-highlight-legend {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.threshold-highlight-swatch {
+  font-size: var(--font-size-xs);
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.threshold-highlight-swatch.is-pass {
+  background: rgba(102, 187, 106, 0.18);
+  color: var(--success);
+}
+
+.threshold-highlight-swatch.is-fail {
+  background: rgba(239, 83, 80, 0.18);
+  color: var(--error);
+}

@@ -1,0 +1,108 @@
+/* ==========================================================================
+   Pivot Side Panel — orchestrator shell
+   ========================================================================== */
+
+.pivot-side-panel {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  min-width: 300px;
+  height: 100%;
+  background: linear-gradient(to bottom, hsl(0, 0%, 12%), hsl(0, 0%, 10%));
+  border-inline-start: 1px solid var(--border-subtle);
+  box-sizing: border-box;
+  flex-shrink: 0;
+  transition: width 280ms cubic-bezier(0.22, 0.61, 0.36, 1),
+              min-width 280ms cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 200ms ease;
+}
+
+/* Closed: width collapses to zero, content clips, clicks pass through. */
+.pivot-side-panel.is-closed {
+  width: 0;
+  min-width: 0;
+  opacity: 0;
+  pointer-events: none;
+  border-inline-start: none;
+}
+
+.pivot-side-panel-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Screen stage: holds both outgoing + incoming layers during a
+   transition. Layers are absolutely positioned so they overlap. ---- */
+.pivot-side-panel-screen-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Mode-transition wrapper. Re-keyed on `displayMode` change so React
+   re-mounts it and the animation fires — incoming content slides in from
+   the right while fading in. Same easing + duration as the report-page
+   mode frame for a unified feel across the screen. */
+.pivot-side-panel-mode-frame {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  animation: panelModeEnter 240ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes panelModeEnter {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.pivot-side-panel-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  will-change: transform, opacity;
+}
+
+/* Forward navigation:
+   - Outgoing: slides leftward + fades out
+   - Incoming: fades in + slides from the right */
+.pivot-side-panel-screen-stage[data-direction="forward"] .is-leaving {
+  animation: pivot-screen-out-left 260ms ease-in forwards;
+}
+.pivot-side-panel-screen-stage[data-direction="forward"] .is-entering {
+  animation: pivot-screen-in-from-right 260ms ease-out both;
+}
+
+/* Back navigation (mirror): */
+.pivot-side-panel-screen-stage[data-direction="back"] .is-leaving {
+  animation: pivot-screen-out-right 260ms ease-in forwards;
+}
+.pivot-side-panel-screen-stage[data-direction="back"] .is-entering {
+  animation: pivot-screen-in-from-left 260ms ease-out both;
+}
+
+@keyframes pivot-screen-out-left {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-24px); }
+}
+
+@keyframes pivot-screen-in-from-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pivot-screen-out-right {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(24px); }
+}
+
+@keyframes pivot-screen-in-from-left {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+

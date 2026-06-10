@@ -1,0 +1,58 @@
+/* ==========================================================================
+   FX Converter
+   ========================================================================== */
+
+.fx-converter {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fx-converter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.fx-converter-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fx-converter-row {
+  display: flex;
+  gap: 8px;
+}
+
+.fx-converter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.fx-converter-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.fx-converter-input,
+.fx-converter-select {
+  background: var(--bg-elevated-1);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.fx-converter-input:focus,
+.fx-converter-select:focus {
+  border-color: var(--accent);
+}

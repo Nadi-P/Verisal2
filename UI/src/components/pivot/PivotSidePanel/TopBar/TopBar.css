@@ -1,0 +1,42 @@
+/* ==========================================================================
+   Pivot side-panel TopBar
+   ========================================================================== */
+
+.pivot-topbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  flex-shrink: 0;
+}
+
+.pivot-topbar-spacer {
+  flex: 1;
+}
+
+.pivot-topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition-fast),
+              color var(--transition-fast),
+              opacity var(--transition-fast);
+}
+
+.pivot-topbar-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.pivot-topbar-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

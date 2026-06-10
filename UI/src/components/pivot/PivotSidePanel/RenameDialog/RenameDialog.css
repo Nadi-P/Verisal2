@@ -1,0 +1,119 @@
+.rename-dialog-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  animation: rename-overlay-in 160ms ease;
+}
+
+@keyframes rename-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.rename-dialog {
+  min-width: 320px;
+  max-width: 440px;
+  padding: 18px;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  direction: rtl;
+  animation: rename-dialog-in 180ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes rename-dialog-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.rename-dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rename-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rename-dialog-field-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rename-dialog-input {
+  padding: 8px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.rename-dialog-input:focus {
+  border-color: var(--accent);
+}
+
+.rename-dialog-input.has-error {
+  border-color: var(--error);
+}
+
+.rename-dialog-error {
+  font-size: var(--font-size-xs);
+  color: var(--error);
+}
+
+.rename-dialog-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.rename-dialog-btn {
+  padding: 7px 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  transition: background var(--transition-fast), opacity var(--transition-fast);
+}
+
+.rename-dialog-btn-primary {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.rename-dialog-btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.rename-dialog-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+}
+
+.rename-dialog-btn-ghost:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}

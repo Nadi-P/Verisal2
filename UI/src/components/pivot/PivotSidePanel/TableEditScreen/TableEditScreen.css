@@ -1,0 +1,13 @@
+/* ==========================================================================
+   Table Edit Screen
+   --------------------------------------------------------------------------
+   The outer frame inherits from `EditPresetScreen.css` — we reuse the
+   `edit-preset-screen` / `edit-preset-header` classes so both modes share
+   the same visual shell.
+
+   The column-list container reuses the `.field-bank` class from
+   `FieldBank.css`, so the search input + list get the exact same shell
+   (background, padding, border-radius, search-input styling) used by the
+   pivot field bank. There's no table-mode-only CSS needed for the search
+   bar anymore — the shared `.field-bank-search` rule covers it.
+   ========================================================================= */

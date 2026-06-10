@@ -1,0 +1,369 @@
+/* ==========================================================================
+   Pivot Table
+   ========================================================================== */
+
+.pivot-table-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.pivot-table-wrap::-webkit-scrollbar{
+  display: none;
+} 
+
+.pivot-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  height: auto;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+/* ---- Header ---- */
+.pivot-th {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  background: var(--bg-elevated-2);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-align: start;
+  padding: 8px 12px;
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+}
+
+.pivot-th-corner {
+  background: var(--bg-elevated-1);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.pivot-th-col {
+  text-align: start;
+}
+
+.pivot-th-value {
+  text-align: start;
+  background: var(--bg-elevated-1);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* ---- Body rows ---- */
+.pivot-row {
+  transition: background var(--transition-fast),
+              color var(--transition-fast);
+}
+
+.pivot-row.is-toggleable {
+  cursor: pointer;
+}
+
+.pivot-row:hover {
+  background: var(--bg-hover);
+}
+
+/* Subtle accent highlight while the row is expanded (cleared at the moment
+   the user clicks to close — driven by the !closing.has(path) check). */
+.pivot-row.is-expanded {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.pivot-row.is-expanded .pivot-td-label,
+.pivot-row.is-expanded .pivot-td-value {
+  color: var(--accent);
+}
+
+.pivot-row.is-expanded .pivot-expand-icon {
+  color: var(--accent);
+}
+
+.pivot-row.is-expanded:hover {
+  background: var(--accent-glow);
+}
+
+/* Cell text colors should also fade smoothly when the highlight toggles. */
+.pivot-td-label,
+.pivot-td-value {
+  transition: color var(--transition-fast);
+}
+
+/* Slide + fade in for newly mounted rows. Row opacity fades while each cell's
+   inner wrapper grows from 0fr to 1fr — pushes subsequent rows down smoothly. */
+.pivot-row[data-anim="in"] {
+  animation: pivot-row-fade-in 100ms linear both;
+}
+
+.pivot-row[data-anim="out"] {
+  animation: pivot-row-fade-out 100ms linear forwards;
+}
+
+.pivot-row[data-anim="in"] .pivot-cell-inner {
+  animation: pivot-cell-grow 150ms linear both;
+}
+
+.pivot-row[data-anim="out"] .pivot-cell-inner {
+  animation: pivot-cell-shrink 150ms linear forwards;
+}
+
+.pivot-row[data-anim="in"] .pivot-cell-content {
+  animation: pivot-cell-padding-grow 150ms linear both;
+}
+
+.pivot-row[data-anim="out"] .pivot-cell-content {
+  animation: pivot-cell-padding-shrink 150ms linear forwards;
+}
+
+.pivot-row[data-anim="in"] .pivot-tree-connector.pivot-tree-connector.is-branch::after {
+  animation: pivot-cell-brnach-connector-grow 150ms linear both;
+}
+
+.pivot-row[data-anim="out"] .pivot-tree-connector.pivot-tree-connector.is-branch::after {
+  animation: pivot-cell-brnach-connector-shrink 150ms ease-in forwards;
+}
+
+
+
+@keyframes pivot-row-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pivot-row-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes pivot-cell-grow {
+  from {
+    grid-template-rows: 0fr;
+  }
+  to {
+    grid-template-rows: 1fr;
+  }
+}
+
+@keyframes pivot-cell-shrink {
+  from {
+    grid-template-rows: 1fr;
+  }
+  to {
+    grid-template-rows: 0fr;
+  }
+}
+
+@keyframes pivot-cell-padding-grow {
+  from {
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 0;
+  }
+  to {
+    height: auto;
+  }
+}
+
+@keyframes pivot-cell-padding-shrink {
+  from {
+    height: auto;
+  }
+  to {
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 0;
+  }
+}
+
+@keyframes pivot-cell-brnach-connector-grow {
+  from {
+    height: 0;
+  }
+  to {
+  }
+}
+
+@keyframes pivot-cell-brnach-connector-shrink {
+  from {
+  }
+  to {
+    height: 0;
+  }
+}
+
+
+/* ---- Body cells ----
+   The <td> has NO padding or border of its own. Everything that contributes
+   vertical space lives on .pivot-cell-content, so when it shrinks to 0
+   the row truly collapses to 0 height (no padding ghost, no border line). */
+.pivot-td {
+  padding: 0;
+  white-space: nowrap;
+}
+
+/* Wrapper that drives the slide animation. */
+.pivot-cell-inner {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.pivot-cell-content {
+  min-height: 0;
+  overflow: hidden;
+  padding: 7px 12px;
+}
+
+.pivot-td-label {
+  position: relative;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.pivot-row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;     /* sits above the connectors */
+  z-index: 1;
+}
+
+/* ---- Expand chevron (no longer a button) ---- */
+.pivot-expand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  width: 14px;
+  height: 14px;
+}
+
+.pivot-row:hover .pivot-expand-icon {
+  color: var(--accent);
+}
+
+/* ---- Tree connectors (depth >= 1) ---- */
+.pivot-tree-connector {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--text-secondary);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* The branch connector at the immediate depth: vertical line stops at midpoint
+   + a short horizontal segment reaching toward the label text (inline-start). */
+.pivot-tree-connector.is-branch {
+  bottom: auto;
+  height: 100%;
+}
+
+.pivot-tree-connector.is-branch::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;     /* anchor to the left edge of the trunk in RTL */
+  width: 8px;
+  height: 2px;
+  background: var(--text-secondary);
+}
+
+/* ---- Value cells ---- */
+.pivot-td-value {
+  text-align: start;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+/* Deviation column header tint */
+.pivot-th-value.is-deviation {
+  color: var(--text-secondary);
+}
+
+/* Deviation cell value text — accent color, arrow sits to its right */
+/* .pivot-td-value.is-deviation .pivot-cell-text {
+  color: var(--accent);
+} */
+
+/* Cell content row: value text + sign arrow side-by-side */
+.pivot-cell-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pivot-cell-text {
+  /* No flex grow — pack tightly with the arrow at the start side */
+  min-width: 0;
+}
+
+.pivot-cell-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pivot-cell-arrow.is-up   { color: var(--success); }
+.pivot-cell-arrow.is-down { color: var(--error); }
+
+/* Per-cell highlights driven by per-field configs (FieldConfigScreen).
+   Applied to <td> so the colored background covers the cell. */
+.pivot-td-value.is-threshold-pass .pivot-cell-content {
+  background: rgba(102, 187, 106, 0.18);
+  color: var(--success);
+}
+.pivot-td-value.is-threshold-fail .pivot-cell-content {
+  background: rgba(239, 83, 80, 0.18);
+  color: var(--error);
+}
+.pivot-td-value.is-stat-pass .pivot-cell-content {
+  background: rgba(102, 187, 106, 0.22);
+  color: var(--success);
+}
+/* Threshold pass + stat pass: stat is the stronger green */
+.pivot-td-value.is-threshold-pass.is-stat-pass .pivot-cell-content {
+  background: rgba(102, 187, 106, 0.3);
+}
+
+/* ---- Empty states ---- */
+.pivot-table-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: var(--font-size-md);
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.pivot-empty-row {
+  padding: 40px 20px !important;
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* ---- Depth-based weight emphasis on top-level groups ---- */
+.pivot-row-depth-0 {
+  background: var(--bg-elevated-2);
+}
+.pivot-row-depth-0 .pivot-td-label {
+  font-weight: 600;
+}

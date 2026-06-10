@@ -1,0 +1,132 @@
+/* The column-list lives inside a `.field-bank` shell (shared with the
+   pivot mode bank). The list takes the remaining flex space, scrolls
+   internally, and reads RTL like the surrounding screen. */
+.column-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2px;
+  min-height: 0;
+  direction: rtl;
+}
+
+.column-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border-right: 3px solid transparent;
+  user-select: none;
+}
+
+.column-list-item:hover {
+  background: var(--hover-bg);
+}
+
+.column-list-item.is-dragging {
+  opacity: 0.5;
+}
+
+.column-list-item.is-hidden .column-list-label {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+/* Pinned row — accent right border ONLY. Text + background stay neutral
+   so pinned rows don't read as "currently active" the way a colored row
+   would. */
+.column-list-item.is-pinned {
+  border-right-color: var(--accent);
+}
+
+/* Deviation row — matches the pivot field-bank's deviation styling so
+   both modes treat deviation entries identically: accent text on an
+   accent-soft tinted background. */
+.column-list-item.is-deviation {
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 500;
+}
+.column-list-item.is-deviation:hover {
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+
+/* When pinned + deviation: deviation styling wins on text/background,
+   pinned accent stays on the right border. */
+.column-list-item.is-pinned.is-deviation {
+  border-right-color: var(--accent);
+}
+
+.column-list-item.is-locked {
+  cursor: default;
+}
+.column-list-item.is-locked .column-list-grip svg {
+  opacity: 0.25;
+}
+
+.column-list-grip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.column-list-item:active .column-list-grip {
+  cursor: grabbing;
+}
+
+.column-list-label {
+  flex: 1;
+  font-size: 0.82rem;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.column-list-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: var(--accent-blue);
+  flex-shrink: 0;
+}
+
+.column-list-pin {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+  flex-shrink: 0;
+}
+
+.column-list-pin:hover {
+  background: var(--hover-bg);
+  color: var(--text-main);
+}
+
+.column-list-pin.pinned {
+  color: var(--accent-blue);
+}
+
+/* Drop indicator — a thin accent line between rows */
+.column-list-indicator {
+  height: 2px;
+  margin: 1px 0.4rem;
+  background: var(--accent-blue);
+  border-radius: 1px;
+  pointer-events: none;
+}

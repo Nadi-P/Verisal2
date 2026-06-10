@@ -1,0 +1,98 @@
+/* ==========================================================================
+   Confirm Dialog
+   Centered modal that blocks the pivot content area.
+   The sidebar (TopBar etc.) sits outside this overlay, so its controls stay
+   active — the orchestrator dismisses the dialog if the user clicks them.
+   ========================================================================== */
+
+.confirm-dialog-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: confirm-fade-in 150ms ease-out;
+}
+
+.confirm-dialog {
+  background: var(--bg-elevated-1);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
+  min-width: 340px;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--shadow-md);
+  animation: confirm-slide-in 180ms ease-out;
+}
+
+.confirm-dialog-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.confirm-dialog-message {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.confirm-dialog-btn {
+  padding: 7px 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast),
+              color var(--transition-fast);
+}
+
+.confirm-dialog-btn-primary {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+.confirm-dialog-btn-primary:hover {
+  background: var(--accent-dim);
+}
+
+.confirm-dialog-btn-danger {
+  background: var(--error);
+  color: #fff;
+}
+.confirm-dialog-btn-danger:hover {
+  background: #c64744;
+}
+
+.confirm-dialog-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-primary);
+}
+.confirm-dialog-btn-ghost:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+@keyframes confirm-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes confirm-slide-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

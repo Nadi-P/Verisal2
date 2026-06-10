@@ -1,0 +1,86 @@
+/* ==========================================================================
+   Preset List Item
+   ========================================================================== */
+
+.preset-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: var(--bg-elevated-2);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  transition: background var(--transition-fast),
+              border-color var(--transition-fast),
+              color var(--transition-fast);
+  position: relative;
+}
+
+.preset-list-item:hover {
+  background: var(--bg-hover);
+}
+
+/* Default highlight — yellow-orange */
+.preset-list-item.is-default {
+  background: rgba(255, 167, 38, 0.12);
+  border-color: rgba(255, 167, 38, 0.55);
+  color: #ffa726;
+}
+.preset-list-item.is-default:hover {
+  background: rgba(255, 167, 38, 0.2);
+}
+
+/* Applied highlight — accent. Accent overrides default per spec. */
+.preset-list-item.is-applied {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.preset-list-item.is-applied:hover {
+  background: var(--accent-glow);
+}
+
+.preset-list-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preset-list-item-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(255, 167, 38, 0.18);
+  color: #ffa726;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.preset-list-item.is-applied .preset-list-item-badge {
+  background: rgba(255, 167, 38, 0.25);
+}
+
+.preset-list-item-dots {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 1px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition-fast),
+              background var(--transition-fast);
+}
+
+.preset-list-item-dots:hover {
+  background: var(--bg-elevated-1);
+  color: var(--text-primary);
+}
+
+.preset-list-item.is-applied .preset-list-item-dots {
+  color: var(--accent);
+}

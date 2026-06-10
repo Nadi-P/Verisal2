@@ -1,0 +1,29 @@
+.page-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 100%;
+  min-height: 400px;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.page-placeholder-icon {
+  opacity: 0.3;
+}
+
+.page-placeholder-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.page-placeholder-subtitle {
+  font-size: var(--font-size-md);
+  color: var(--text-muted);
+  max-width: 360px;
+  text-align: center;
+  line-height: 1.5;
+}

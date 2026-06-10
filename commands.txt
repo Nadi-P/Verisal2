@@ -1,1 +1,22 @@
-python -m uvicorn Processing.main:app --reload
+python -m uvicorn main:app --reload
+
+.\venv\Scripts\Activate.ps1
+
+cd Processing
+.\venv\Scripts\Activate.ps1
+python -m uvicorn main:app --reload
+
+TODOS:
+fix banches - no need for duplication brancehes, show branching from 
+source, remove vertical branch from top and bottom.
+
+
+function verisal-up {
+    Push-Location C:\Verisal2\Processing
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\venv\Scripts\Activate.ps1; python -m uvicorn main:app --reload"
+    Pop-Location
+
+    Push-Location C:\Verisal2\UI
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", "npm run dev"
+    Pop-Location
+}

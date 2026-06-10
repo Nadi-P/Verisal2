@@ -1,0 +1,52 @@
+/* ==========================================================================
+   Verisal — Table-Mode Design Tokens
+   --------------------------------------------------------------------------
+   Holds every CSS custom property used by the table-mode UI tree (everything
+   under `components/table/*` + the table-mode side-panel screens under
+   `components/pivot/PivotSidePanel/TableEditScreen/`,
+   `components/pivot/PivotSidePanel/TableFieldConfigScreen/`) that is NOT
+   already declared by the global `theme.css`.
+
+   The variables here are mostly LEGACY names inherited from v1's standalone
+   table UI. Each one aliases to its modern equivalent from `theme.css`, so
+   we never duplicate the source-of-truth value — we just bridge naming.
+
+   When you want to retheme the table:
+     - Adjust the alias mapping below, OR
+     - Override individual `--*` properties on a scoped selector (e.g.
+       `.table-view { --header-bg: ...; }`) to retint without touching the
+       global theme.
+   ========================================================================= */
+
+:root {
+  /* ---- Backgrounds -------------------------------------------------- */
+  --bg-dark:        var(--bg-primary);     /* table container surface     */
+  --header-bg:      var(--bg-elevated-1);  /* header row + toolbars       */
+  --panel-bg:       var(--bg-elevated-1);  /* filter menu + context menu  */
+  --sidebar-bg:     var(--bg-sidebar);     /* bottom status bar           */
+  --hover-bg:       var(--bg-hover);       /* row + button hover tint     */
+  --elevated-bg2:   var(--bg-elevated-2);  /* pinned-cell base background */
+  --cell-bg-pinned: var(--bg-elevated-2);  /* legacy alias for the same   */
+
+  /* ---- Borders ------------------------------------------------------ */
+  --border-color:   var(--border-primary);
+
+  /* ---- Text --------------------------------------------------------- */
+  --text-main:      var(--text-primary);
+
+  /* ---- Accent ------------------------------------------------------- */
+  --accent-blue:    var(--accent);         /* highlights, sort/filter UI  */
+
+  /* ---- Motion ------------------------------------------------------- */
+  --transition-speed: var(--transition-med);
+
+  --cell-bg-deviation-soft: hsla(211, 74%, 26%, 0.25);
+  --cell-bg-deviation-dark: hsla(211, 74%, 16%, 0.35);
+  --cell-bg-pinned-soft: var(--bg-elevated-3);
+  --cell-bg-pinned-dark: var(--bg-elevated-2);
+  --cell-bg-soft: hsl(0, 0%, 10%);
+  --cell-bg-dark: hsl(0, 0%, 15%);
+
+
+
+}

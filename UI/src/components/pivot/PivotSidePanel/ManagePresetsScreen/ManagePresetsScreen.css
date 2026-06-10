@@ -1,0 +1,174 @@
+/* ==========================================================================
+   Manage Presets Screen
+   ========================================================================== */
+
+.manage-presets-screen {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.manage-presets-back {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast),
+              color var(--transition-fast);
+}
+
+.manage-presets-back:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.manage-presets-title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ---- Summary panel (resolved applied / default names) ---- */
+.manage-presets-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 10px 16px;
+}
+
+.manage-presets-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+}
+
+.manage-presets-summary-label {
+  color: var(--text-muted);
+}
+
+.manage-presets-summary-value {
+  font-weight: 600;
+}
+
+.manage-presets-summary-value-applied {
+  color: var(--accent);
+}
+
+.manage-presets-summary-value-default {
+  color: #ffa726;
+}
+
+/* ---- "Bank"-style container (matches .field-bank) ---- */
+.manage-presets-bank {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 4px 14px 14px;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  gap: 8px;
+  overflow: hidden;
+}
+
+/* ---- Search (matches .field-bank-search) ---- */
+.manage-presets-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-elevated-1);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.manage-presets-search input {
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  width: 100%;
+}
+
+/* ---- List (matches .field-bank-list — items packed, first/last rounded) ---- */
+.manage-presets-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+  min-height: 0;
+}
+
+.manage-presets-empty {
+  padding: 24px 12px;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  font-style: italic;
+}
+
+/* ---- Actions menu (right-click / dots) ---- */
+.manage-presets-menu {
+  position: fixed;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  min-width: 160px;
+  box-shadow: var(--shadow-md);
+  z-index: 300;
+  font-size: var(--font-size-sm);
+}
+
+/* (Old `is-anchor-bottom { transform: translateY(-100%); }` removed — the
+   anchor offset is now computed in JS from the measured menu height,
+   which is reliable across portaling + variable item counts.) */
+
+.manage-presets-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: background var(--transition-fast);
+}
+
+.manage-presets-menu-item:hover:not(.is-disabled) {
+  background: var(--bg-hover);
+}
+
+.manage-presets-menu-item.is-danger {
+  color: var(--error);
+}
+
+.manage-presets-menu-item.is-danger:hover:not(.is-disabled) {
+  background: rgba(239, 83, 80, 0.1);
+}
+
+.manage-presets-menu-item.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.manage-presets-menu-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 4px 0;
+}

@@ -1,0 +1,57 @@
+/* Column-list right-click menu. Bottom-left anchored at click point via
+   transform: translateY(-100%). */
+.column-list-context-menu {
+  position: fixed;
+  transform: translateY(-100%);
+  min-width: 170px;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: 4px 0;
+  box-shadow: var(--shadow-md);
+  z-index: 300;
+  direction: rtl;
+  animation: clcmFade 0.12s ease;
+}
+
+@keyframes clcmFade {
+  from { opacity: 0; transform: translateY(-100%) translateY(-2px); }
+  to   { opacity: 1; transform: translateY(-100%) translateY(0); }
+}
+
+.clcm-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+  text-align: right;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.clcm-item:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+.clcm-item:disabled {
+  color: var(--text-muted);
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.clcm-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 4px 0;
+}
+
+/* IconChevronDown points down — flip it to mean "up" for the move-up item. */
+.clcm-flip {
+  transform: rotate(180deg);
+}

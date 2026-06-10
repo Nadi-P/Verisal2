@@ -1,0 +1,107 @@
+/* ==========================================================================
+   Value Filter
+   ========================================================================== */
+
+.value-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.value-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.value-filter-title {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.value-filter-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-elevated-1);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  color: var(--text-muted);
+}
+
+.value-filter-search input {
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  width: 100%;
+}
+
+.value-filter-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.value-filter-btn {
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.value-filter-btn:hover {
+  background: var(--accent-dim);
+}
+
+.value-filter-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+.value-filter-btn-ghost:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.value-filter-list {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-elevated-1);
+  border-radius: var(--radius-sm);
+}
+
+.value-filter-empty {
+  padding: 14px 10px;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.value-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  transition: background var(--transition-slow);
+}
+
+.value-filter-row:hover {
+  background: var(--bg-hover);
+}

@@ -1,0 +1,563 @@
+/* ==========================================================================
+   Configuration Page
+   ========================================================================== */
+
+.config-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 32px 40px;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+}
+
+.config-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: var(--font-size-lg);
+}
+
+/* ---- Header ---- */
+.config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+.config-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ---- Tabs ---- */
+.config-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+.config-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color var(--transition-fast),
+              border-color var(--transition-fast);
+}
+
+.config-tab:hover {
+  color: var(--text-primary);
+}
+
+.config-tab.is-active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.config-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--bg-elevated-2);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.config-tab.is-active .config-tab-count {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ---- Content ---- */
+.config-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---- Section ---- */
+.config-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.config-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.config-section-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.config-section-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.config-section-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.config-section-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ---- Card list (scrollable) ---- */
+.config-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 0 10px 10px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---- Card ---- */
+.config-card {
+  background: var(--bg-elevated-1);
+  background: linear-gradient(to left, var(--bg-elevated-1), var(--bg-elevated-2));
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  transition: border-color var(--transition-slow),
+              box-shadow var(--transition-slow),
+              transform var(--transition-slow),
+              opacity var(--transition-slow);
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.15);
+}
+
+.config-card:hover {
+  border-color: var(--border-primary);
+  box-shadow: inset 0 -0 16px rgba(255, 255, 255, 0.05);
+}
+
+.config-card-valid:focus-within {
+  border-color: var(--success);
+  box-shadow: inset 0 0 16px rgba(102, 187, 106, 0.15);
+}
+
+.config-card-invalid:focus-within {
+  border-color: var(--error);
+  box-shadow: inset 0 0 16px rgba(239, 83, 80, 0.15);
+}
+
+.config-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.config-card-fields {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+}
+
+.config-card-fields-fx {
+  display: grid;
+  grid-template-columns: 1.2fr 0.7fr 0.8fr 1fr;
+  gap: 16px;
+  flex: 1;
+}
+
+/* ---- Field ---- */
+.config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.config-field-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ---- Inputs ---- */
+.config-input {
+  background: var(--bg-elevated-2);
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  margin-top: 2px;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  transition: border-color var(--transition-fast);
+  min-width: 0;
+  -moz-appearance: textfield;
+}
+
+.config-input::-webkit-outer-spin-button,
+.config-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.config-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.config-input::placeholder {
+  color: var(--text-muted);
+}
+
+.config-input-num {
+  max-width: 100px;
+  text-align: center;
+}
+
+.config-select {
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.config-select:focus {
+  border-color: var(--accent);
+}
+
+/* ==========================================================================
+   Flag card layout
+   ========================================================================== */
+
+.flag-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.flag-name-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+  max-width: 200px;
+}
+
+.flag-conditions-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.flag-conditions-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px;
+}
+
+.flag-conditions-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.flag-conditions-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 2px;
+}
+
+/* ---- Condition pair: [operator][value][remove] — no gaps ---- */
+.flag-condition-pair {
+  display: flex;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 2px solid var(--border-primary);
+  transition: box-shadow var(--transition-fast);
+}
+
+.flag-condition-pair:focus-within {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.flag-cond-operator {
+  background: var(--bg-elevated-2);
+  border: none;
+  border-right: 2px solid var(--border-primary);
+  padding: 7px 10px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 32px;
+  text-align: center;
+  border-left: none;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.flag-cond-operator:focus {
+  border-color: var(--border-primary);
+}
+
+.flag-cond-value {
+  background: var(--bg-elevated-2);
+  border: none;
+  padding: 7px 10px;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  width: 64px;
+  text-align: center;
+  -moz-appearance: textfield;
+  border-left: none;
+  outline: none;
+}
+
+.flag-cond-value:focus {
+  border-color: var(--border-primary);
+}
+
+.flag-cond-value::-webkit-outer-spin-button,
+.flag-cond-value::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.flag-cond-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  background: var(--bg-elevated-2);
+  border-left: 2px solid var(--border-primary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition-slow),
+              background var(--transition-slow);
+}
+
+.flag-cond-remove:hover:not(.is-disabled) {
+  color: var(--error);
+  background: rgba(239, 83, 80, 0.1);
+}
+
+.flag-cond-remove.is-disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.flag-delete-btn {
+  flex-shrink: 0;
+  transition: background var(--transition-slow),
+              color var(--transition-slow);
+}
+
+.flag-delete-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---- Flag footer ---- */
+.flag-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 4px;
+}
+
+.flag-footer-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---- FX global actions ---- */
+.fx-global-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+/* ---- Buttons ---- */
+.config-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-slow),
+              color var(--transition-slow),
+              opacity var(--transition-slow);
+}
+.config-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.config-btn-xs {
+  padding: 4px 14px;
+  font-size: var(--font-size-sm);
+}
+
+.config-btn-primary {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.config-btn-primary:hover:not(:disabled) {
+  background: var(--accent-dim);
+}
+
+.config-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+.config-btn-ghost:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.config-btn-accent {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.config-btn-accent:hover {
+  background: var(--accent-glow);
+}
+
+.config-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background var(--transition-slow),
+              color var(--transition-slow);
+  flex-shrink: 0;
+}
+
+.config-btn-danger {
+  color: var(--text-muted);
+}
+
+.config-btn-danger:hover {
+  color: var(--error);
+  background: rgba(239, 83, 80, 0.1);
+}
+
+.config-btn-add-condition {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  font-size: var(--font-size-sm);
+  color: var(--accent-dim);
+  background: none;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: color var(--transition-slow),
+              background var(--transition-slow);
+}
+
+.config-btn-add-condition:hover {
+  color: var(--accent);
+    background: var(--accent-soft);
+}
+
+/* ---- Empty state ---- */
+.config-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-md);
+}
+
+/* ---- Toast ---- */
+.config-toast {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 24px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  animation: config-toast-in 200ms ease;
+  z-index: 100;
+}
+
+.config-toast-success {
+  background: var(--success);
+  color: #111;
+}
+
+.config-toast-error {
+  background: var(--error);
+  color: #fff;
+}
+
+@keyframes config-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}

@@ -3,7 +3,7 @@ import io
 
 from Files import Files
 from Headers import Headers
-from Functions import Functions
+from Constants import KEYWORDS, DISPLAY_NAMES
 from fastapi import UploadFile
 import pandas as pd
 
@@ -16,7 +16,7 @@ def GetFileFromObject(file_obj, key):
     first sheet whose name contains "בע"מ". Use _load_center_sheets for the
     center file — it has its own signature-based detection and produces two DFs.
     """
-    display = Files.DISPLAY_NAMES.get(key, key)
+    display = DISPLAY_NAMES.get(key, key)
 
     if not file_obj:
         raise ValueError(f"קובץ {display} לא נמצא")
@@ -158,18 +158,6 @@ def _build_center_coded_df(raw_df, header_row, data_df):
         return data_df.iloc[:, :0].copy()
 
     coded = data_df.iloc[:, keep_positions].copy()
-
-    # DEBUG: dump every (code -> original header) pair detected, sorted by code.
-    # print("=" * 70)
-    # print(f"[center_df_coded] {len(keep_positions)} columns kept:")
-    # pairs = sorted(
-    #     zip(new_codes, [str(data_df.columns[p]) for p in keep_positions]),
-    #     key=lambda x: x[0],
-    # )
-    # for code, header in pairs:
-    #     print(f"  {code:>6}  ->  {header[::-1]}")
-    # print("=" * 70)
-
     coded.columns = new_codes
     return coded
 
@@ -183,7 +171,7 @@ def _load_center_sheets(file_obj):
             row above it as the source of integer codes for the coded DF.
         4. Raise if no sheet contains the signature.
     """
-    display = Files.DISPLAY_NAMES.get("center", "center")
+    display = DISPLAY_NAMES.get("center", "center")
 
     if not file_obj:
         raise ValueError(f"קובץ {display} לא נמצא")
@@ -245,26 +233,25 @@ def _load_center_sheets(file_obj):
 
 def InitializeFromFiles(files_list: List[UploadFile]):
     """
-    Replaces InitializeData(folder_path).
-    Maps file objects and loads them into memory.
+    Maps file objects, parses them into pandas DataFrames, 
+    and returns a dictionary of dataframes.
     """
-    # 1. Filter to only .xlsx/.xls files (ignore hidden files, thumbs.db, etc.)
+    # 1. Filter to only .xlsx/.xls files
     excel_files = [f for f in files_list if f.filename.lower().endswith(('.xlsx', '.xls'))]
 
     if not excel_files:
         raise ValueError("לא נמצאו קבצי Excel בתיקייה שנבחרה")
 
-    # 2. Map the uploaded file objects to their keys
-    Files.files_map = {}
-    file_map = Files.files_map
+    # 2. Map the uploaded file objects to their temporary keys
+    file_map = {}
     unmatched = []
     for file_obj in excel_files:
         filename = file_obj.filename.lower()
         matched = False
-        for key, keyword in Files.KEYWORDS.items():
+        for key, keyword in KEYWORDS.items():
             if keyword.lower() in filename:
                 if key in file_map:
-                    display = Files.DISPLAY_NAMES[key]
+                    display = DISPLAY_NAMES[key]
                     raise ValueError(f"נמצאו מספר קבצים עבור \"{display}\" — נדרש קובץ אחד בלבד לכל סוג")
                 file_map[key] = file_obj
                 matched = True
@@ -272,8 +259,8 @@ def InitializeFromFiles(files_list: List[UploadFile]):
         if not matched:
             unmatched.append(file_obj.filename)
 
-    # 3. Validate all 7 files are present
-    expected_keys = set(Files.KEYWORDS.keys())
+    # 3. Validate all required keys are present
+    expected_keys = set(KEYWORDS.keys())
     matched_keys = set(file_map.keys())
     missing_keys = expected_keys - matched_keys
 
@@ -282,66 +269,23 @@ def InitializeFromFiles(files_list: List[UploadFile]):
         if missing_keys:
             lines.append("קבצים חסרים:")
             for k in missing_keys:
-                lines.append(f"  - {Files.DISPLAY_NAMES[k]}")
+                lines.append(f"  - {DISPLAY_NAMES[k]}")
         if unmatched:
             lines.append("קבצים לא מזוהים:")
             for name in unmatched:
                 lines.append(f"  - {name}")
         raise ValueError("\n".join(lines))
 
-    # 4. Load all 7 DataFrames. Center uses signature-based detection and
-    #    produces an additional "coded" projection alongside the regular DF.
-    Files.centerDF, Files.center_df_coded = _load_center_sheets(file_map.get("center"))
-    Files.componentsDF = GetFileFromObject(file_map.get("components"), "components")
-    Files.providentsDF = GetFileFromObject(file_map.get("providents"), "providents")
-    Files.incomeDF = GetFileFromObject(file_map.get("income"), "income")
-    Files.deductionsDF = GetFileFromObject(file_map.get("deductions"), "deductions")
-    Files.costingDF = GetFileFromObject(file_map.get("costing"), "costing")
-    Files.absencesDF = GetFileFromObject(file_map.get("absences"), "absences")
+    # 4. Parse the file objects into actual pandas DataFrames
+    dfs_map = {}
+    for key, file_obj in file_map.items():
+        if key == "center":
+            # The center file yields a tuple: (center_df, center_df_coded)
+            center_df, center_df_coded = _load_center_sheets(file_obj)
+            dfs_map["center"] = center_df
+            dfs_map["center_coded"] = center_df_coded
+        else:
+            # All other standard files yield a single DataFrame
+            dfs_map[key] = GetFileFromObject(file_obj, key)
 
-    # 5. Extract company name from "שם חברה" column in system reports
-    try:
-        Files.company_name = Functions.extract_data_from_files("companyName")
-    except Exception as e:
-        raise ValueError(f"שגיאה בחילוץ שם חברה: {e}")
-
-    # 6. Extract date metadata
-    try:
-        Files.current_year = Functions.extract_data_from_files("currentYear")
-        Files.current_month = Functions.extract_data_from_files("currentMonth")
-        Files.min_year = Functions.extract_data_from_files("minYear")
-        Files.max_year = Functions.extract_data_from_files("maxYear")
-        Files.min_month = Functions.extract_data_from_files("minMonth")
-        Files.max_month = Functions.extract_data_from_files("maxMonth")
-    except Exception as e:
-        raise ValueError(f"שגיאה בחילוץ תאריכים מהקבצים: {e}")
-
-    # 7. Generate derived reports
-    try:
-        Files.socialAnalysisDF = Functions.get_social_analysis()
-    except Exception as e:
-        raise ValueError(f"שגיאה ביצירת דוח אנליזה סוציאלית: {e}")
-
-    try:
-        Files.monthsComparisonDF = Functions.get_months_comparison()
-    except Exception as e:
-        raise ValueError(f"שגיאה ביצירת דוח השוואת חודשים: {e}")
-
-    try:
-        Files.reportsAgainstCenterDF = Functions.get_reports_against_center()
-    except Exception as e:
-        raise ValueError(f"שגיאה ביצירת דוח דוחות מול מרכז שכר: {e}")
-
-    comparison_h = Headers.MonthsComparison
-    rac_h = Headers.ReportsAgainstCenter
-    Files.socialAnalysisCheckupColumns = {
-
-    }
-    Files.monthsComparisonCheckupColumns = {
-        comparison_h.offset: lambda val : val > 0,
-        comparison_h.offset_pct: lambda val : val > 0,
-    }
-    Files.socialAnalysisCheckupColumns = []
-    Files.reportsAgainstCenterCheckupColumns = [comparison_h.offset, comparison_h.offset_pct]
-    Files.reportsAgainstCenterCheckupColumns = [rac_h.offset, rac_h.offset_pct]
-
+    return dfs_map

@@ -1,0 +1,110 @@
+/* ==========================================================================
+   Report Top Bar
+   ========================================================================== */
+
+.report-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+/* ---- Title block (3 stacked lines) ---- */
+.report-topbar-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.report-topbar-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Subtitle row: date range + company name on the same line.
+   In RTL, the date renders on the right and the company on its left. */
+.report-topbar-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.report-topbar-dates {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  white-space: nowrap;
+}
+
+.report-topbar-company {
+  font-size: var(--font-size-sm);
+  color: var(--accent);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Controls cluster ---- */
+.report-topbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  direction: ltr;
+  flex-shrink: 0;
+}
+
+/* Base button shape (icon + label) */
+.report-topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-primary);
+  background: var(--bg-elevated-2);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-slow),
+              color var(--transition-slow),
+              border-color var(--transition-slow),
+              transform var(--transition-slow);
+  white-space: nowrap;
+}
+
+.report-topbar-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.report-topbar-btn:active {
+  transform: translateY(1px);
+}
+
+/* Edit-menu button — neutral with subtle accent on hover */
+.report-topbar-btn-edit:hover {
+  color: var(--accent);
+}
+
+/* Excel export — green, modern */
+.report-topbar-btn-excel {
+  background: hsla(122, 39%, 30%, 1);
+  color: var(--text-primary);
+}
+
+.report-topbar-btn-excel:hover {
+  background: rgba(76, 175, 80, 0.28);
+  color: #81c784;
+}

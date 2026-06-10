@@ -1,0 +1,73 @@
+/* ==========================================================================
+   Context Menu (zone item right-click)
+   ========================================================================== */
+
+.context-menu {
+  position: fixed;
+  /* Anchor by the menu's BOTTOM-start corner at (left, top): shift up by
+     own height so the click point becomes the menu's bottom corner. */
+  transform: translateY(-100%);
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  min-width: 180px;
+  box-shadow: var(--shadow-md);
+  z-index: 300;
+  font-size: var(--font-size-sm);
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: background var(--transition-fast);
+}
+
+.context-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* IconChevronDown reused as "move up" via 180° flip. */
+.cm-flip {
+  transform: rotate(180deg);
+}
+
+.context-menu-item:hover {
+  background: var(--bg-hover);
+}
+
+.context-menu-item.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.context-menu-item.is-danger {
+  color: var(--error);
+}
+
+.context-menu-item.is-danger:hover {
+  background: rgba(239, 83, 80, 0.1);
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 4px 0;
+}
+
+.context-menu-section {
+  padding: 6px 12px 2px;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  font-weight: 600;
+}

@@ -1,0 +1,116 @@
+/* ==========================================================================
+   Drop Zone (Rows / Values)
+   ========================================================================== */
+
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 0;          /* zones share the row width evenly */
+  min-width: 0;
+}
+
+.drop-zone-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 0 4px;
+}
+
+.drop-zone-list {
+  height: 140px;        /* fixed height — does not grow with item count */
+  overflow-y: auto;
+  background: var(--bg-elevated-2);
+  border: 1px dashed var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.drop-zone-list::-webkit-scrollbar{
+  display: none;
+} 
+
+.drop-zone-empty {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  text-align: center;
+  padding: 14px 6px;
+  font-style: italic;
+}
+
+.drop-zone-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: var(--bg-elevated-1);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  cursor: grab;
+  user-select: none;
+  transition: background var(--transition-slow),
+              border-color var(--transition-slow);
+}
+.drop-zone-item:first-child{
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0 ;
+}
+.drop-zone-item:last-child{
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+
+.drop-zone-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.drop-zone-item:active {
+  cursor: grabbing;
+}
+
+.drop-zone-item.has-filter {
+  border-color: var(--accent);
+}
+
+/* Deviation entries — accent text, no aggregation badge, visually distinct. */
+.drop-zone-item.is-deviation {
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 500;
+}
+
+.drop-zone-item.is-deviation:hover {
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+
+/* Drop indicator — thin accent line between items showing where the
+   dragged item will land on release. */
+.drop-zone-indicator {
+  height: 2px;
+  margin: 1px 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.drop-zone-item-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drop-zone-item-agg {
+  background: var(--bg-elevated-1);
+  color: var(--text-secondary);
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+.drop-zone-item-filter {
+  font-size: 12px;
+}

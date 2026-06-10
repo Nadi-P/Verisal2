@@ -1,7 +1,8 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { spawn } from 'child_process'; // Essential for running the Python EXE
+import { spawn, exec } from 'child_process'; // Essential for running the Python EXE
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 let pythonProcess = null;
@@ -12,7 +13,7 @@ function createWindow() {
     height: 900,
     autoHideMenuBar: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false, // Security best practice
       contextIsolation: true, 
     },
@@ -48,6 +49,18 @@ ipcMain.handle('dialog:openFile', async () => {
   return canceled ? null : filePaths[0];
 });
 
+ipcMain.handle('dialog:openFolder', async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ['openDirectory']
+  });
+  return canceled ? null : filePaths[0];
+});
+
+ipcMain.handle('file:readBytes', async (event, filePath) => {
+  const buf = await fs.promises.readFile(filePath);
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+});
+
 ipcMain.handle('dialog:saveFile', async (event, defaultName) => {
   const { canceled, filePath } = await dialog.showSaveDialog({
     defaultPath: defaultName,
@@ -59,10 +72,25 @@ ipcMain.handle('dialog:saveFile', async (event, defaultName) => {
 app.whenReady().then(createWindow);
 
 // 3. CLEAN UP ON CLOSE
-app.on('window-all-closed', () => {
-  // Kill the Python backend so it doesn't leave a ghost process
-  if (pythonProcess) {
-    pythonProcess.kill();
+// On Windows, pythonProcess.kill() only signals the top-level PyInstaller
+// launcher — the uvicorn child keeps the port bound. Use taskkill with
+// /T (tree) and /F (force) to terminate the whole process tree.
+function killBackend() {
+  if (!pythonProcess || pythonProcess.killed) return;
+  const pid = pythonProcess.pid;
+  pythonProcess.killed = true;
+  if (process.platform === 'win32') {
+    exec(`taskkill /pid ${pid} /T /F`, () => {});
+  } else {
+    try { process.kill(-pid, 'SIGTERM'); } catch { pythonProcess.kill('SIGTERM'); }
   }
+}
+
+app.on('window-all-closed', () => {
+  killBackend();
   if (process.platform !== 'darwin') app.quit();
 });
+
+app.on('before-quit', killBackend);
+app.on('will-quit', killBackend);
+process.on('exit', killBackend);

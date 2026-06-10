@@ -1,0 +1,49 @@
+/* ==========================================================================
+   Table Field-Config Screen
+   --------------------------------------------------------------------------
+   Reuses `field-config-*` classes from `FieldConfigScreen.css` so the
+   screen frame, header, body, sections, and notes look identical to the
+   pivot field-config screen.
+
+   The rules below only style the table-mode-only block — the row of three
+   big "icon-over-text" buttons (Visibility / Sort / Pin).
+   ========================================================================= */
+
+.tfc-actions {
+  display: flex;
+  gap: 8px;
+  margin: 6px 14px 0;
+}
+
+.tfc-action {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 4px;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.tfc-action:hover {
+  background: var(--bg-elevated-3);
+  color: var(--text-primary);
+}
+
+.tfc-action.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tfc-action-label {
+  font-size: var(--font-size-xs);
+}

@@ -27,8 +27,8 @@ class Helpers:
         convalescence = r"הבראה"
         reserve = r"מילואים"
 
-        id = r" קוד"
-        name = r" שם"
+        id = r"קוד "
+        name = r"שם "
         opening_balance = r" - יתרת פתיחה"
         one_time_input = r" - קליטה חד פעמית"
         previous_balance = r" - יתרה קודמת"
@@ -275,7 +275,6 @@ class Headers:
             employee_id = r'מספר עובד'
 
             total = r'סהכ_זקיפות'
-
 
 class PayrollCodes:
 

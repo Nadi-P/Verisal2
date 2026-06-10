@@ -1,0 +1,104 @@
+/* ==========================================================================
+   Deviation Item (one pair definition row)
+   ========================================================================== */
+
+.deviation-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  background: var(--bg-elevated-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.deviation-item-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.deviation-item-select {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  padding: 3px 6px;
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.deviation-item-select:focus {
+  border-color: var(--accent);
+}
+
+.deviation-item-swap {
+  background: transparent;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: background var(--transition-fast),
+              color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.deviation-item-swap:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+
+.deviation-item-delete {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--transition-fast),
+              color var(--transition-fast);
+}
+
+.deviation-item-delete:hover {
+  background: rgba(239, 83, 80, 0.1);
+  color: var(--error);
+}
+
+.deviation-item-name {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.deviation-item-name:focus {
+  border-color: var(--accent);
+}
+
+.deviation-item-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.deviation-item-check input[type="checkbox"] {
+  cursor: pointer;
+}

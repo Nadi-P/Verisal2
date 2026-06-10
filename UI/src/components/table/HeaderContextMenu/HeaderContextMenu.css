@@ -1,0 +1,49 @@
+.header-context-menu {
+  position: fixed;
+  min-width: 160px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  padding: 4px 0;
+  z-index: 200;
+  direction: rtl;
+  animation: hcmFadeIn 0.12s ease;
+}
+
+@keyframes hcmFadeIn {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hcm-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-size: 0.82rem;
+  font-family: inherit;
+  text-align: right;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.hcm-item:hover:not(:disabled) {
+  background: var(--hover-bg);
+}
+
+.hcm-item:disabled {
+  color: var(--text-muted);
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hcm-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
+}

@@ -1,3 +1,16 @@
+"""
+Files — process-wide singleton holding loaded report state.
+
+Today this is still a flat collection of raw DataFrames and shared metadata
+(legacy shape). The plan is to migrate each slot to a Report-instance held
+under a bare attribute (`Files.center`, `Files.components`, …), with all
+per-report metadata living on the instance.
+
+Constants previously declared here (KEYWORDS, DISPLAY_NAMES) now live in
+Constants.py.
+"""
+
+
 class Files:
     current_month = None
     current_year = None
@@ -22,27 +35,3 @@ class Files:
     monthsComparisonCheckupColumns = None
     socialAnalysisCheckupColumns = None
     reportsAgainstCenterCheckupColumns = None
-
-    # Keyword Mapping (used to match uploaded filenames)
-    KEYWORDS = {
-        "center": "מרכז",
-        "deductions": "ניכוי",
-        "absences": "העדר",
-        "providents": "גמל",
-        "components": "רכיב",
-        "income": "הכנס",
-        "costing": "תמחיר"
-    }
-
-    # Display names (shown to the user in error messages)
-    DISPLAY_NAMES = {
-        "center": "קובץ מרכז שכר",
-        "deductions": "ניכויי רשות",
-        "absences": "היעדרויות",
-        "providents": "קופות גמל",
-        "components": "רכיבי שכר",
-        "income": "הכנסות זקופות",
-        "costing": "דוח תמחיר"
-    }
-
-    files_map = None

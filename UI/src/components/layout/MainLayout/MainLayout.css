@@ -1,0 +1,10 @@
+.main-layout {
+  display: flex;
+  direction: rtl;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  font-family: var(--font-family);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}

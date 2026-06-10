@@ -1,0 +1,44 @@
+/* ==========================================================================
+   Edit Preset Screen
+   ========================================================================== */
+
+.edit-preset-screen {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top header — matches the FieldConfigScreen header style */
+.edit-preset-header, .field-config-header, .manage-presets-header{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  flex-shrink: 0;
+  font-size: var(--font-size-sm);
+}
+
+.edit-preset-header-label, .field-config-title  {
+  font-size: var(--font-size-md);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.edit-preset-header-name, .field-config-field-name {
+  color: var(--accent);
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.edit-preset-zones {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  flex-shrink: 0;
+  padding: 14px;
+  padding-top: 0;
+}
+

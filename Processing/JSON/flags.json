@@ -1,0 +1,11 @@
+{
+    "flag_1779280443663": {
+        "name": "חיובH",
+        "conditions": [
+            {
+                "operator": "<",
+                "value": 0
+            }
+        ]
+    }
+}
