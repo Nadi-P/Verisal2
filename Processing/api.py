@@ -19,6 +19,7 @@ from pydantic import BaseModel
 from Files import Files
 from Loading import InitializeFromFiles, GetFileFromObject, _load_center_sheets
 from Constants import KEYWORDS
+from UploadManager import UploadManager
 
 
 JSON_DIR = Path(__file__).parent / "JSON"
@@ -67,6 +68,10 @@ class Api:
     def __init__(self):
         self.router = APIRouter()
         self.selected_folder: str | None = None
+        # Live UploadManager — replaced atomically on each successful upload.
+        # Phase 1a foundation; downstream endpoints will migrate to read from
+        # this in Phase 2.
+        self.upload_manager: UploadManager | None = None
         self._register_routes()
 
     # ------------------------------------------------------------------
@@ -86,6 +91,9 @@ class Api:
         r.add_api_route("/api/upload_reports", self.upload_reports, methods=["POST"])
         r.add_api_route("/api/folder/set", self.set_folder, methods=["POST"])
         r.add_api_route("/api/folder/get", self.get_folder, methods=["GET"])
+
+        # UploadManager — re-fetch on page refresh (Phase 1a wire format).
+        r.add_api_route("/api/upload_manager", self.get_upload_manager, methods=["GET"])
 
         # FX configuration
         r.add_api_route("/api/config/fx", self.get_fx, methods=["GET"])
@@ -260,10 +268,55 @@ class Api:
     # File ingestion / folder selection
     # ------------------------------------------------------------------
     async def upload_reports(self, files: List[UploadFile] = File(...)):
-        """Permissive multi-file upload — loads whatever recognizable files are present."""
-        result = self._load_from_files(files)
-        result["status"] = "success"
-        return result
+        """Permissive multi-file upload — loads whatever recognizable files are present.
+
+        Two pipelines run in parallel during the Phase 1a transition:
+          (a) the legacy `_load_from_files` populating the `Files` singleton
+              (kept so the existing frontend pages keep working)
+          (b) the new `UploadManager.from_files` building Report instances
+              with LineageFrames + returning a column-major rich-cell payload.
+
+        Both results ship in the response under `legacy` / `uploadManager`
+        so the frontend can adopt the new path incrementally.
+        """
+        # Need to read each UploadFile twice (once per pipeline); buffer
+        # the bytes locally so the second read isn't on an exhausted stream.
+        buffered = []
+        for f in files:
+            try:
+                f.file.seek(0)
+            except Exception:
+                pass
+            buffered.append(f)
+
+        # Pipeline A — legacy (Files singleton). Kept for transition.
+        legacy_result = self._load_from_files(buffered)
+        legacy_result["status"] = "success"
+
+        # Pipeline B — UploadManager. Atomic swap into self.upload_manager.
+        for f in buffered:
+            try:
+                f.file.seek(0)
+            except Exception:
+                pass
+        try:
+            self.upload_manager = UploadManager.from_files(buffered)
+            upload_payload = self.upload_manager.to_wire()
+        except Exception as e:
+            upload_payload = {"error": f"{type(e).__name__}: {e}"}
+
+        return {
+            "status":        "success",
+            "legacy":        legacy_result,
+            "uploadManager": upload_payload,
+        }
+
+    def get_upload_manager(self):
+        """Re-fetch the current UploadManager payload — used by the frontend
+        on page refresh to re-hydrate state without re-uploading."""
+        if self.upload_manager is None:
+            return {"loaded": False}
+        return {"loaded": True, "uploadManager": self.upload_manager.to_wire()}
 
     def set_folder(self, payload: FolderPayload):
         """

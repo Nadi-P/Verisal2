@@ -6,27 +6,65 @@ from Constants import JOIN_KEY
 
 class Report:
     def __init__(self):
-        self.id = None
-        self.display_label = None
-        self.is_input = None
-        self.dependencies = []
+        # ---- Identity + classification ----
+        self.id = None                  # str — stable wire id (e.g. "components")
+        self.display_label = None       # str — Hebrew friendly title
+        self.is_input = None            # bool — True for raw inputs, False for manufactured
+        self.dependencies = []          # list[str] — report_ids this one needs
 
+        # ---- Metadata extracted from input data ----
         self.company_name = None
         self.min_month = None
         self.min_year = None
         self.max_month = None
         self.max_year = None
 
+        # ---- Shape ----
         self.rows_count = 0
         self.columns_count = 0
 
-        self.exceptions = []
-        self.status = None
-        self.missing_dependencies = []
-        self.skipped_steps = []
+        # ---- Build status / processing telemetry ----
+        self.exceptions = []            # list[str] — error messages from this report's build
+        self.status = None              # 'loaded' | 'skipped' | 'error'
+        self.missing_dependencies = []  # list[str] — dep ids that weren't ready
+        self.skipped_steps = []         # list[str] — named sub-steps that were skipped
+
+        # ---- THE data ----
+        self.lineageFrame = None        # LineageFrame | None — the table itself
+
+        # ---- Legacy fields kept for transition (will be removed in phase 2) ----
         self.tracebacks_map = {}
         self.df = None
         self.aggregated = None
+
+    # ------------------------------------------------------------------
+    #  Serialization
+    # ------------------------------------------------------------------
+
+    def to_dict(self) -> dict:
+        """
+        Return the metadata-only block — everything except the LineageFrame.
+        The LineageFrame is serialized separately by UploadManager.to_wire()
+        because it's the heavy payload and may be omitted for skipped /
+        errored reports.
+        """
+        return {
+            "id":                   self.id,
+            "display_label":        self.display_label,
+            "is_input":             self.is_input,
+            "dependencies":         list(self.dependencies or []),
+            "company_name":         self.company_name,
+            "min_month":            self.min_month,
+            "min_year":             self.min_year,
+            "max_month":            self.max_month,
+            "max_year":             self.max_year,
+            "rows_count":           self.rows_count,
+            "columns_count":        self.columns_count,
+            "exceptions":           list(self.exceptions or []),
+            "status":               self.status,
+            "missing_dependencies": list(self.missing_dependencies or []),
+            "skipped_steps":        list(self.skipped_steps or []),
+        }
 
     # ------------------------------------------------------------------
     #  Standardization helpers

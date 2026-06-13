@@ -26,12 +26,27 @@ _RESET     = "\033[0m"
 
 
 class LineageFrame:
-    def __init__(self, report_id: str, manager):
+    def __init__(self, report_id: str, manager, translucent: bool = False):
         self.report_id      = report_id
         self.report_idx     = -1            # set by manager.register
         self.manager        = manager       # LineageManager (single source of truth)
         self.columns        = []            # list[Column]
         self._name_to_index = {}            # dict[str, int]
+
+        # Translucent frames are computational intermediates — they exist in
+        # memory during constructor execution but never appear in the wire
+        # payload, never surface in the trace UI, and any CellReference that
+        # lands on one of their cells is "transparent" (resolved through to
+        # the underlying non-translucent ancestors during manager.freeze()).
+        # Set on the frame itself (this attribute) so the constructor of a
+        # manufactured report can flip it on/off at will:
+        #
+        #     tmp = some_frame.merge(other, on='JOIN_KEY')
+        #     tmp.translucent = True              # hide tmp from the wire
+        #     out['final_col'] = tmp['some_col']  # refs land on tmp, then
+        #                                         # get flattened at freeze.
+        self.translucent    = translucent
+
         manager.register(self)              # populates self.report_idx
 
 

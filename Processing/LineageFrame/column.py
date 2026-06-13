@@ -68,6 +68,7 @@ class Column:
         "source_columns", "dependent_columns",
         "calculate",
         "frame",
+        "formula",
     )
 
     def __init__(
@@ -79,6 +80,7 @@ class Column:
         dependent_columns: Optional[List[Tuple[int, int]]] = None,
         calculate: Optional[Callable] = None,
         frame=None,
+        formula: Optional[str] = None,
     ):
         self.name              = name
         self.index             = index
@@ -87,6 +89,10 @@ class Column:
         self.dependent_columns = dependent_columns if dependent_columns is not None else []
         self.calculate         = calculate
         self.frame             = frame
+        # Display-only formula string (e.g. "sum(total_amount)", "A + B").
+        # Set by manufactured-report constructors. Substituted through
+        # translucent ancestors at manager.freeze() time.
+        self.formula           = formula
 
     # ------------------------------------------------------------------
     #  Cascade core
