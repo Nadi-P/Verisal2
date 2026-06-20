@@ -6,6 +6,9 @@ import {
   formatValue,
   checkThreshold,
 } from './PivotTable.logic.jsx';
+import { useUploadManager } from '../../../contexts/UploadManagerContext.jsx';
+import { useTrace } from '../../../contexts/TraceContext.jsx';
+import { resolveReportFromRef } from '../../../lib/uploadManager.js';
 import './PivotTable.css';
 
 /** Display label for a value column header (handles deviation entries). */
@@ -22,8 +25,79 @@ const BASE_PAD  = 12;      // base inline-start padding inside the label cell
 /* ===================================================================
    PivotTable — layout only.
    =================================================================== */
-export default function PivotTable({ data, columns, config, fxRates }) {
-  const L = usePivotTableLogic({ data, config, fxRates });
+export default function PivotTable({
+  data, columns, config, onConfigChange, fxRates,
+  onCellTrace,
+  hasRefsAtCoord,
+  focusCoord,
+  highlightSet,
+  reportId,
+}) {
+  const { payload } = useUploadManager();
+  const trace = useTrace();
+
+  // Persist row-group expansion into the report config (the draft), so
+  // leaving + returning restores the exact open tree — parity with table
+  // mode. `closing` (exit animation) stays local inside the hook.
+  const onExpandedChange = React.useCallback((updater) => {
+    if (!onConfigChange) return;
+    onConfigChange((prev) => ({
+      ...prev,
+      expanded: updater(Array.isArray(prev.expanded) ? prev.expanded : []),
+    }));
+  }, [onConfigChange]);
+
+  // ----------------------------------------------------------------------
+  // Single LEFT click → toggle the trace target on a pivot VALUE cell.
+  // Only one cell can be the target at a time (matches the single-target
+  // semantics of TraceContext), so only ONE refs section is ever expanded.
+  // Clicking the current target = deselect: collapse the section + clear
+  // the target (cell loses its purple marker).
+  // Higher-level aggregates ignore the gesture.
+  // ----------------------------------------------------------------------
+  const [expandedKey, setExpandedKey] = React.useState(null);
+
+  const handlePivotCellClick = React.useCallback((e, matchedRows, vDef) => {
+    e.stopPropagation();
+    if (!Array.isArray(matchedRows) || matchedRows.length !== 1) return;
+    const row = matchedRows[0];
+    const origRow = typeof row.__origRow === 'number' ? row.__origRow : -1;
+    if (origRow < 0) return;
+    const colIdx = columns.indexOf(vDef.field);
+    if (colIdx < 0) return;
+    if (!hasRefsAtCoord || !hasRefsAtCoord(origRow, colIdx)) return;
+    const key = `${origRow},${colIdx}`;
+    if (expandedKey === key) {
+      // Re-click on the current target: deselect + collapse.
+      setExpandedKey(null);
+      trace.closeTrace();
+      trace.clearFocus();
+    } else {
+      // Move target to this cell. Any previously-expanded cell collapses
+      // automatically because the state is a single key.
+      setExpandedKey(key);
+      if (onCellTrace) onCellTrace(origRow, colIdx);
+    }
+  }, [onCellTrace, hasRefsAtCoord, columns, expandedKey, trace]);
+
+  // If the trace target was cleared externally (e.g. user closed the side
+  // panel, or navigated away), collapse the inline section too.
+  React.useEffect(() => {
+    if (!focusCoord && !trace.panelTarget && expandedKey != null) {
+      setExpandedKey(null);
+    }
+  }, [focusCoord, trace.panelTarget, expandedKey]);
+
+  // Restore the inline refs section when returning to this report with a
+  // live trace target (single global target) — so the pivot looks exactly
+  // as the user left it.
+  React.useEffect(() => {
+    if (focusCoord) {
+      setExpandedKey(`${focusCoord.rowIndex},${focusCoord.colIndex}`);
+    }
+  }, [focusCoord]);
+
+  const L = usePivotTableLogic({ data, config, fxRates, onExpandedChange });
 
   if (L.isEmpty) {
     return (
@@ -113,6 +187,18 @@ export default function PivotTable({ data, columns, config, fxRates }) {
               fxRates: L.fxRates,
               deviations: L.deviations,
               regularValues: L.regularValues,
+              // Trace plumbing into the value-cell render path.
+              columns,
+              handlePivotCellClick,
+              hasRefsAtCoord,
+              focusCoord,
+              highlightSet,
+              expandedKey,
+              payload,
+              reportId,
+              trace,
+              totalValueCols: L.totalValueCols,
+              labelColSpan: L.labelColSpan,
             })
           )}
         </tbody>
@@ -130,6 +216,10 @@ function renderRows({
   rowDims, columnPaths, values, colDims,
   fxConversions, thresholds, statQualifyingPerValue, fxRates,
   deviations, regularValues,
+  // Phase 3 trace props (threaded through recursion).
+  columns, handlePivotCellClick, hasRefsAtCoord, focusCoord, highlightSet,
+  expandedKey, payload, reportId, trace,
+  totalValueCols, labelColSpan,
 }) {
   if (!Array.isArray(tree)) return [];
 
@@ -206,6 +296,26 @@ function renderRows({
               : null;
             const formatted = formatValue(result, { suffix: isDev && vDef.kind === 'percent' ? '%' : null });
 
+            // Trace metadata: this cell is "traceable" only when it
+            // aggregates a single source row (leaf level).
+            const isLeafCell  = matchedRows.length === 1;
+            const origRow     = isLeafCell && typeof matchedRows[0].__origRow === 'number'
+              ? matchedRows[0].__origRow : -1;
+            const traceColIdx = columns ? columns.indexOf(vDef.field) : -1;
+            const cellHasRefs =
+              isLeafCell
+              && origRow >= 0
+              && traceColIdx >= 0
+              && hasRefsAtCoord
+              && hasRefsAtCoord(origRow, traceColIdx);
+            // In pivot mode the "target" marker IS the expansion state —
+            // they're coupled. A cell is purple either because the trace
+            // panel is showing it (it's in highlightSet) or because its
+            // refs section is open beneath it (expandedKey match).
+            const cellKey = `${origRow},${traceColIdx}`;
+            const isExpanded = cellHasRefs && expandedKey === cellKey;
+            const isHighlighted = cellHasRefs && highlightSet && highlightSet.has(cellKey);
+
             const cellCls = [
               'pivot-td',
               'pivot-td-value',
@@ -213,10 +323,19 @@ function renderRows({
               threshResult === true  ? 'is-threshold-pass' : '',
               threshResult === false ? 'is-threshold-fail' : '',
               statPass               ? 'is-stat-pass'      : '',
+              cellHasRefs            ? 'has-refs'          : '',
+              isHighlighted          ? 'is-refs-expanded'  : '',  // reuse purple style
             ].filter(Boolean).join(' ');
-
             return (
-              <td key={`agg-${ci}-${vi}`} className={cellCls}>
+              <td
+                key={`agg-${ci}-${vi}`}
+                className={`${cellCls}${isExpanded ? ' is-refs-expanded' : ''}`}
+                onClick={
+                  cellHasRefs && handlePivotCellClick
+                    ? (e) => handlePivotCellClick(e, matchedRows, vDef)
+                    : undefined
+                }
+              >
                 <div className="pivot-cell-inner">
                   <div className="pivot-cell-content">
                     {/* Arrow first in DOM → renders on the start-side (right in RTL)
@@ -237,6 +356,79 @@ function renderRows({
       </tr>
     );
 
+    // Inline ref-row rendering: only at the deepest level, only for the
+    // ONE leaf cell whose cellKey matches expandedKey (single-target rule).
+    if (isDeepest && expandedKey && node.rows && node.rows.length === 1) {
+      const origRow = typeof node.rows[0].__origRow === 'number' ? node.rows[0].__origRow : -1;
+      if (origRow >= 0 && payload && payload.reports && reportId) {
+        const reportBlock = payload.reports[reportId];
+        const lineageColumns = reportBlock && reportBlock.lineageFrame
+          ? reportBlock.lineageFrame.columns : null;
+
+        values.forEach((vDef, vi) => {
+          const traceColIdx = columns ? columns.indexOf(vDef.field) : -1;
+          if (traceColIdx < 0) return;
+          const cellKey = `${origRow},${traceColIdx}`;
+          if (cellKey !== expandedKey) return;
+          if (!lineageColumns) return;
+          const lcol = lineageColumns[traceColIdx];
+          if (!lcol || !lcol.cells) return;
+          const cell = lcol.cells[origRow];
+          if (!cell || !Array.isArray(cell.references)) return;
+
+          cell.references.forEach((ref, ri) => {
+            const sourceReport = resolveReportFromRef(payload, ref);
+            const srcReportBlock = sourceReport ? payload.reports[sourceReport.id] : null;
+            const srcColName = srcReportBlock && srcReportBlock.lineageFrame
+              ? (srcReportBlock.lineageFrame.columns[ref.c]?.name || '—')
+              : '—';
+            const srcReportLabel = sourceReport
+              ? (sourceReport.display_label || sourceReport.id) : '—';
+            const refLabel = `${srcReportLabel} · ${srcColName}`;
+            const refVal = ref.v;
+            const fullColSpan = (labelColSpan || 1) + (totalValueCols || values.length);
+            out.push(
+              <tr
+                key={`${path}-ref-${vi}-${ri}`}
+                className="pivot-row pivot-ref-row"
+                data-anim="in"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (sourceReport && trace) {
+                    trace.navigateToRef(sourceReport.id, ref.c, ref.r, reportId);
+                  }
+                }}
+              >
+                <td className="pivot-td pivot-td-label pivot-ref-label" colSpan={fullColSpan}>
+                  <div
+                    className="pivot-cell-content"
+                    style={{ paddingRight: BASE_PAD + (depth + 1) * DEPTH_PAD }}
+                  >
+                    <span className="pivot-ref-text">
+                      <span className="pivot-ref-name">{refLabel}</span>
+                      <span className="pivot-ref-sep"> = </span>
+                      <span className="pivot-ref-val">{formatValue(refVal, {})}</span>
+                    </span>
+                  </div>
+                  {Array.from({ length: depth + 1 }).map((_, d) => {
+                    const isBranch = d === depth;
+                    const offset = BASE_PAD + d * DEPTH_PAD - 4;
+                    return (
+                      <span
+                        key={`refconn-${d}`}
+                        className={`pivot-tree-connector ${isBranch ? 'is-branch' : 'is-trunk'}`}
+                        style={{ right: `${offset}px` }}
+                      />
+                    );
+                  })}
+                </td>
+              </tr>
+            );
+          });
+        });
+      }
+    }
+
     if (isOpen && !isDeepest) {
       const childClosing = parentClosing || closing.has(path);
       out.push(...renderRows({
@@ -248,6 +440,9 @@ function renderRows({
         rowDims, columnPaths, values, colDims,
         fxConversions, thresholds, statQualifyingPerValue, fxRates,
         deviations, regularValues,
+        columns, handlePivotCellClick, hasRefsAtCoord, focusCoord, highlightSet,
+        expandedKey, payload, reportId, trace,
+        totalValueCols, labelColSpan,
       }));
     }
   }

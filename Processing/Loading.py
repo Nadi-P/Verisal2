@@ -112,8 +112,8 @@ def _build_center_coded_df(raw_df, header_row, data_df):
                     rename_map[header_name] = fake_code
                     break
         if not keep_cols:
-            return data_df.iloc[:, :0].copy()
-        return data_df[keep_cols].rename(columns=rename_map).copy()
+            return data_df.iloc[:, :0].copy(), {}
+        return data_df[keep_cols].rename(columns=rename_map).copy(), dict(rename_map)
 
     codes_row = raw_df.iloc[header_row - 1]
 
@@ -155,11 +155,15 @@ def _build_center_coded_df(raw_df, header_row, data_df):
                     break
 
     if not keep_positions:
-        return data_df.iloc[:, :0].copy()
+        return data_df.iloc[:, :0].copy(), {}
 
     coded = data_df.iloc[:, keep_positions].copy()
+    # Build the (raw_col_name -> int_code) map so downstream callers can
+    # construct a coded LineageFrame via rename+project off the raw frame
+    # (preserving cell lineage through the transform).
+    name_to_code = {data_df.columns[pos]: code for pos, code in zip(keep_positions, new_codes)}
     coded.columns = new_codes
-    return coded
+    return coded, name_to_code
 
 def _load_center_sheets(file_obj):
     """
@@ -223,9 +227,9 @@ def _load_center_sheets(file_obj):
             center_df = pd.read_excel(xls, sheet_name=target_sheet, header=signature_row)
             center_df.columns = center_df.columns.astype(str).str.strip()
 
-            center_df_coded = _build_center_coded_df(raw_df, signature_row, center_df)
+            center_df_coded, code_map = _build_center_coded_df(raw_df, signature_row, center_df)
 
-            return center_df, center_df_coded
+            return center_df, center_df_coded, code_map
     except ValueError:
         raise
     except Exception as e:
@@ -281,7 +285,7 @@ def InitializeFromFiles(files_list: List[UploadFile]):
     for key, file_obj in file_map.items():
         if key == "center":
             # The center file yields a tuple: (center_df, center_df_coded)
-            center_df, center_df_coded = _load_center_sheets(file_obj)
+            center_df, center_df_coded, _code_map = _load_center_sheets(file_obj)
             dfs_map["center"] = center_df
             dfs_map["center_coded"] = center_df_coded
         else:

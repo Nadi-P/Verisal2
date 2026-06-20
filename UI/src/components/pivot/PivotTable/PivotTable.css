@@ -11,9 +11,9 @@
   border-radius: var(--radius-lg);
 }
 
-.pivot-table-wrap::-webkit-scrollbar{
+/* .pivot-table-wrap::-webkit-scrollbar{
   display: none;
-} 
+}  */
 
 .pivot-table {
   border-collapse: separate;
@@ -92,6 +92,58 @@
 .pivot-td-label,
 .pivot-td-value {
   transition: color var(--transition-fast);
+}
+
+/* Pivot value cells that have lineage refs — subtle purple underline so the
+   user knows they're traceable. */
+.pivot-td-value.has-refs .pivot-cell-content {
+  position: relative;
+}
+.pivot-td-value.has-refs .pivot-cell-content::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  inset-inline-start: 6px;
+  inset-inline-end: 6px;
+  height: 1px;
+  background: var(--trace-accent);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* Active trace target — purple highlight matching the table-mode treatment. */
+.pivot-td-value.is-trace-target {
+  color: var(--trace-accent) !important;
+}
+
+/* Traceable cell — show pointer on hover. */
+.pivot-td-value.has-refs { cursor: pointer; }
+
+/* Currently-expanded leaf cell — persistent purple wash so the user can see
+   which cell's drill-down they're looking at. */
+.pivot-td-value.is-refs-expanded {
+  color: var(--trace-accent) !important;
+}
+
+/* In-pivot reference rows — rendered as an extra drill-down level beneath
+   the clicked leaf cell. Single full-width cell, purple accents, clickable
+   to navigate to the source cell. */
+.pivot-ref-row {
+  cursor: pointer;
+}
+.pivot-ref-row:hover {
+  filter: brightness(0.97);
+}
+.pivot-ref-row .pivot-ref-label {
+  color: var(--trace-accent);
+  font-weight: 500;
+}
+.pivot-ref-row .pivot-ref-name { font-weight: 600; }
+.pivot-ref-row .pivot-ref-sep  { opacity: 0.7; }
+.pivot-ref-row .pivot-ref-val  { font-weight: 600; }
+.pivot-ref-row .pivot-tree-connector {
+  background: var(--trace-accent) !important;
+  opacity: 0.5;
 }
 
 /* Slide + fade in for newly mounted rows. Row opacity fades while each cell's

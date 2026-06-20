@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import ValueFilter from '../FieldConfigScreen/ValueFilter/ValueFilter.jsx';
-import FxConverter from '../FieldConfigScreen/FxConverter/FxConverter.jsx';
+import ValueFilter                  from '../FieldConfigScreen/ValueFilter/ValueFilter.jsx';
+import FxConverter                  from '../FieldConfigScreen/FxConverter/FxConverter.jsx';
+import ConditionalHighlightSection  from '../FieldConfigScreen/ConditionalHighlight/ConditionalHighlightSection.jsx';
 import {
   IconEye, IconEyeOff,
   IconPin, IconPinOff,
@@ -112,17 +113,23 @@ export default function TableFieldConfigScreen({
             />
         )}
 
-        {/* FX — hidden for deviation columns */}
+        {/* FX + Conditional highlight — hidden for deviation columns */}
         {isNumeric && !L.isDeviation && (
-          <div className="field-config-section">
-            <div className="field-config-section-title">המרת מטבע</div>
+          <>
             <FxConverter fx={L.fx} onChange={L.setFx} />
-          </div>
+            <ConditionalHighlightSection
+              threshold={L.threshold}
+              statHighlight={L.statHighlight}
+              onChangeThreshold={L.setThreshold}
+              onChangeStat={L.setStatHighlight}
+              clearConditional={L.clearConditional}
+            />
+          </>
         )}
 
         {!isNumeric && !L.isDeviation && (
           <div className="field-config-note">
-            שדה זה אינו מספרי — המרת מטבע זמינה רק לשדות מספריים.
+            שדה זה אינו מספרי — המרת מטבע והדגשה זמינות רק לשדות מספריים.
           </div>
         )}
       </div>

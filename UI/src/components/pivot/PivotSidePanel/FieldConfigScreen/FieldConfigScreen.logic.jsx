@@ -55,8 +55,19 @@ export function useFieldConfigScreenLogic({ field, config, onConfigChange }) {
     onConfigChange(next);
   }, [config, field, onConfigChange]);
 
+  // Clear BOTH threshold + stat in a single config update — calling the
+  // two setters in succession would race because each one clones the
+  // stale config independently.
+  const clearConditional = useCallback(() => {
+    const next = clone(config);
+    delete next.thresholds[field];
+    delete next.statHighlights[field];
+    onConfigChange(next);
+  }, [config, field, onConfigChange]);
+
   return {
     filter, fx, threshold, statHighlight,
     setFilter, setFx, setThreshold, setStatHighlight,
+    clearConditional,
   };
 }

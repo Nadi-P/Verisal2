@@ -16,7 +16,7 @@ from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
-from LineageFrame.cell   import CellReference, TableCell
+from LineageFrame.cell   import CellReference, ReferencingTableCell, TableCell
 from LineageFrame.column import Column
 
 
@@ -49,6 +49,47 @@ class LineageFrame:
 
         manager.register(self)              # populates self.report_idx
 
+
+    @classmethod
+    def from_rows(
+        cls,
+        report_id: str,
+        manager,
+        column_names: List[str],
+        rows: list,                # list[dict[col_name -> (value, refs_list) | value]]
+        translucent: bool = False,
+    ) -> "LineageFrame":
+        """
+        Explicit row-wise constructor for derived reports whose values come
+        from per-row computations (check-driven loops, etc.).
+
+        Each row entry per column is either:
+          - a tuple `(value, refs_list)` — produces a ReferencingTableCell
+          - a bare value — produces a TableCell with empty refs (constant)
+          - missing → None value, empty refs
+
+        `refs_list` is a list[CellReference] pointing at the cells whose
+        values actually entered the computation of THIS cell — no anchor
+        refs, no filter-column refs.
+        """
+        frame = cls(report_id, manager, translucent=translucent)
+        for col_idx, col_name in enumerate(column_names):
+            cells = []
+            for row_idx, row in enumerate(rows):
+                entry = row.get(col_name) if isinstance(row, dict) else None
+                if isinstance(entry, tuple) and len(entry) == 2:
+                    value, refs = entry
+                else:
+                    value, refs = entry, []
+                sr = CellReference(frame.report_idx, col_idx, row_idx, value)
+                if refs:
+                    cells.append(ReferencingTableCell(sr, list(refs)))
+                else:
+                    cells.append(TableCell(sr))
+            frame.add_column(Column(
+                name=col_name, index=col_idx, cells=cells, frame=frame,
+            ))
+        return frame
 
     @classmethod
     def from_pandas(cls, df: pd.DataFrame, report_id: str, manager) -> "LineageFrame":
@@ -93,19 +134,17 @@ class LineageFrame:
 
     def __getitem__(self, key):
         """
-        Three accessor modes (pandas-style):
-          - string         → Column
-          - list of strings → projection sub-frame
-          - boolean Column → row-filtered sub-frame
+        Pandas-style accessor:
+          - Column (bool)        → row-filtered sub-frame
+          - list of column names → projection sub-frame
+          - anything hashable    → Column lookup (str or int code both fine)
         """
-        if isinstance(key, str):
-            return self.get_column(key)
-        if isinstance(key, list) and all(isinstance(k, str) for k in key):
-            return self._project(key)
         if isinstance(key, Column):
             keep_rows = [i for i, v in enumerate(key.values()) if bool(v)]
             return self._slice_rows(keep_rows, "filter")
-        raise TypeError(f"LineageFrame[]: unsupported key {type(key)}")
+        if isinstance(key, list):
+            return self._project(key)
+        return self.get_column(key)
 
     def __setitem__(self, name: str, column_or_values) -> None:
         """
@@ -183,7 +222,7 @@ class LineageFrame:
     # ------------------------------------------------------------------
 
     def copy(self) -> "LineageFrame":
-        new = LineageFrame(f"{self.report_id}.copy", self.manager)
+        new = LineageFrame(f"{self.report_id}.copy", self.manager, translucent=True)
         for col in self.columns:
             new[col.name] = col.copy()
         return new
@@ -236,14 +275,20 @@ class LineageFrame:
         return self._slice_rows(keep_rows, "drop_duplicates")
 
     def fillna(self, value) -> "LineageFrame":
-        new = self.copy()
-        for col in new.columns:
+        # Build a fresh translucent frame whose columns are the filled
+        # version of `self`'s columns. CRITICAL: we must apply fillna
+        # against `self`'s columns (NOT a copy), otherwise the resulting
+        # cells' refs would point at the copy's cells which are then
+        # overwritten in __setitem__, creating a self-referential loop
+        # that survives the freeze walk.
+        new = LineageFrame(f"{self.report_id}.fillna", self.manager, translucent=True)
+        for col in self.columns:
             new[col.name] = col.fillna(value)
         return new
 
     def where(self, condition: Column, other=None) -> "LineageFrame":
-        new = self.copy()
-        for col in new.columns:
+        new = LineageFrame(f"{self.report_id}.where", self.manager, translucent=True)
+        for col in self.columns:
             new[col.name] = col.where(condition, other if other is not None else None)
         return new
 
@@ -269,12 +314,19 @@ class LineageFrame:
         how: str = "inner",
         suffixes: Tuple[str, str] = ("_x", "_y"),
     ) -> "LineageFrame":
+        def _as_keys(v):
+            if v is None:
+                return []
+            if isinstance(v, (list, tuple)):
+                return list(v)
+            return [v]    # str, int, anything hashable
+
         if on is not None:
-            left_keys  = [on] if isinstance(on, str) else list(on)
+            left_keys  = _as_keys(on)
             right_keys = list(left_keys)
         else:
-            left_keys  = [left_on]  if isinstance(left_on,  str) else list(left_on  or [])
-            right_keys = [right_on] if isinstance(right_on, str) else list(right_on or [])
+            left_keys  = _as_keys(left_on)
+            right_keys = _as_keys(right_on)
         if not left_keys or len(left_keys) != len(right_keys):
             raise ValueError("merge: must pass `on` or matching left_on/right_on")
 
@@ -288,14 +340,19 @@ class LineageFrame:
         overlap = set(self.column_names()) & set(right_only_cols)
         sx, sy = suffixes
 
-        out = LineageFrame(f"{self.report_id}.merge({other.report_id})", self.manager)
+        out = LineageFrame(f"{self.report_id}.merge({other.report_id})", self.manager, translucent=True)
+
+        def _suffixed(name, sfx):
+            if not sfx:
+                return name
+            return f"{name}{sfx}" if isinstance(name, str) else f"{name!r}{sfx}"
 
         plan: List[Tuple[str, str, str]] = []
         for c in self.column_names():
-            out_name = c + sx if c in overlap else c
+            out_name = _suffixed(c, sx) if c in overlap else c
             plan.append((out_name, "left",  c))
         for c in right_only_cols:
-            out_name = c + sy if c in overlap else c
+            out_name = _suffixed(c, sy) if c in overlap else c
             plan.append((out_name, "right", c))
 
         out_rows: List[Tuple[Optional[int], Optional[int]]] = []
@@ -322,13 +379,13 @@ class LineageFrame:
                         row_values.append(None); per_row_refs.append([])
                     else:
                         cell = self[src_name].cells[l]
-                        row_values.append(cell.value); per_row_refs.append([cell.self_ref])
+                        row_values.append(cell.value); per_row_refs.append(cell.contrib_refs())
                 else:
                     if r is None:
                         row_values.append(None); per_row_refs.append([])
                     else:
                         cell = other[src_name].cells[r]
-                        row_values.append(cell.value); per_row_refs.append([cell.self_ref])
+                        row_values.append(cell.value); per_row_refs.append(cell.contrib_refs())
             vehicle = self.columns[0] if self.columns else other.columns[0]
             out[out_name] = vehicle._make_unattached_column(
                 name=out_name, row_values=row_values, per_row_refs=per_row_refs,
@@ -341,16 +398,16 @@ class LineageFrame:
     # ------------------------------------------------------------------
 
     def _project(self, col_names: List[str]) -> "LineageFrame":
-        sub = LineageFrame(f"{self.report_id}.proj", self.manager)
+        sub = LineageFrame(f"{self.report_id}.proj", self.manager, translucent=True)
         for name in col_names:
             sub[name] = self[name].copy()
         return sub
 
     def _slice_rows(self, row_indices: List[int], label: str) -> "LineageFrame":
-        new = LineageFrame(f"{self.report_id}.{label}", self.manager)
+        new = LineageFrame(f"{self.report_id}.{label}", self.manager, translucent=True)
         for col in self.columns:
             row_values   = [col.cells[i].value for i in row_indices]
-            per_row_refs = [[col.cells[i].self_ref] for i in row_indices]
+            per_row_refs = [col.cells[i].contrib_refs() for i in row_indices]
             new[col.name] = col._make_unattached_column(
                 name=col.name, row_values=row_values, per_row_refs=per_row_refs,
             )

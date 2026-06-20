@@ -35,6 +35,7 @@
 
 .edit-preset-zones {
   display: flex;
+  margin-top: 6px;
   flex-direction: row;
   gap: 10px;
   flex-shrink: 0;

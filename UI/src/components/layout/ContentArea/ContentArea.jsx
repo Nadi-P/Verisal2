@@ -1,38 +1,35 @@
 import React from 'react';
 import { useContentAreaLogic } from './ContentArea.logic.jsx';
-import DashboardPage from '../../../pages/DashboardPage/DashboardPage.jsx';
-import CreateReportPage from '../../../pages/CreateReportPage/CreateReportPage.jsx';
-import ConfigurationPage from '../../../pages/ConfigurationPage/ConfigurationPage.jsx';
+import WelcomePage from '../../../pages/WelcomePage/WelcomePage.jsx';
+import FxManagementPage from '../../../pages/FxManagementPage/FxManagementPage.jsx';
+import AxiologyPage from '../../../pages/AxiologyPage/AxiologyPage.jsx';
 import LoadingManagementPage from '../../../pages/LoadingManagementPage/LoadingManagementPage.jsx';
+import HistoryPage from '../../../pages/HistoryPage/HistoryPage.jsx';
 import ReportPage from '../../../pages/ReportPage/ReportPage.jsx';
 import './ContentArea.css';
 
-export default function ContentArea({ activePage }) {
+export default function ContentArea({ activePage, onNavigate }) {
   const { pageType, reportId } = useContentAreaLogic({ activePage });
 
   const renderPage = () => {
     switch (pageType) {
       case 'dashboard':
-        return <DashboardPage />;
-      case 'create-report':
-        return <CreateReportPage />;
-      case 'configuration':
-        return <ConfigurationPage />;
+        return <WelcomePage onNavigate={onNavigate} />;
+      case 'fx-management':
+        return <FxManagementPage />;
       case 'loading-management':
         return <LoadingManagementPage />;
+      case 'history':
+        return <HistoryPage />;
+      case 'axiology':
+        return <AxiologyPage />;
       case 'report':
         return <ReportPage reportId={reportId} />;
       default:
-        return <DashboardPage />;
+        return <WelcomePage onNavigate={onNavigate} />;
     }
   };
 
-  // Important: key by `pageType` (not `activePage.id`) so that navigating
-  // BETWEEN reports keeps the single `<ReportPage />` instance mounted —
-  // only its `reportId` prop changes. The Report View screen is a
-  // singleton; its top status bar (with metadata, mode toggle, sidebar
-  // toggle) stays in place across report switches, and only the body
-  // swaps. The data refetch is driven by ReportPage's effect on reportId.
   return (
     <div className="content-area">
       <div className="content-area-inner" key={pageType || 'dashboard'}>

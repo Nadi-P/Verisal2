@@ -68,3 +68,283 @@
   text-align: center;
   line-height: 1.5;
 }
+
+/* ---- SectionShell (activate / deactivate button + collapsible body) -- */
+.field-config-section {
+  padding: 10px 12px;
+}
+.fc-section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fc-section-toggle {
+  flex-shrink: 0;
+  background: var(--bg-elevated-3);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+.fc-section-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.fc-section-toggle.is-active {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
+}
+.fc-section-toggle.is-active:hover {
+  filter: brightness(1.05);
+  color: var(--text-on-accent);
+}
+.fc-section-body {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---- Shared form bits used by ConditionalHighlight + FxConverter ---- */
+.fc-form-row { display: flex; gap: 10px; }
+.fc-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.fc-field-grow { flex: 1 1 0; }
+.fc-field-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+.fc-input {
+  background: var(--bg-elevated-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  width: 80%;
+  direction: rtl;;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  outline: none;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.fc-input:focus {
+  border-color: var(--accent);
+  background: var(--bg-elevated-2);
+}
+
+/* ---- ConditionalHighlight ---- */
+.fc-cond-highlight {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ---- FxConverter ---- */
+.fc-fx-converter {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fc-fx-currency-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+.fc-fx-flag {
+  flex-shrink: 0;
+  display: inline-flex;
+  width: 36px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated-3);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+.fc-fx-flag-empty {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.fc-direction-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: 1px solid var(--border-accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+.fc-direction-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+.fc-direction-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.fc-direction-arrow { font-weight: 700; }
+
+.fc-rate-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 14px 12px;
+  min-height: 70px;
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated-3);
+  border: 1px solid var(--border-subtle);
+}
+.fc-rate-value {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.fc-rate-caption {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+.fc-rate-empty {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.fc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.fc-btn-ghost {
+  background: transparent;
+  border-color: var(--border-subtle);
+  color: var(--text-secondary);
+}
+.fc-btn-ghost:hover {
+  background: var(--bg-elevated-3);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Children of the scrolling body should keep their natural size and let
+   the body itself scroll — without this, opening another section makes
+   the ValueFilter shrink to share the height. */
+.field-config-body > .value-filter,
+.field-config-body > .field-config-section {
+  flex-shrink: 0;
+}
+
+/* Section head: title on one side, [actions + toggle] on the other. */
+.fc-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.fc-section-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+/* Icon-only secondary buttons in the section head (toggle direction,
+   add rate, etc.). Same gray as the rest of the icon UI. */
+.fc-head-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.fc-head-icon-btn:hover:not(:disabled) {
+  background: var(--bg-elevated-3);
+  color: var(--text-primary);
+}
+.fc-head-icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ConditionalHighlight — uniform grid layout so all rows align. */
+.fc-cond-highlight {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  align-items: center;
+  gap: 10px 12px;
+}
+.fc-cond-highlight .fc-field {
+  display: contents;
+}
+.fc-cond-highlight .fc-field-label {
+  grid-column: 1;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin: 0;
+}
+.fc-cond-highlight .fc-input {
+  grid-column: 2;
+  width: 100%;
+}
+
+/* ---- FX direction toggle (labeled button, segmented look) ---- */
+.fc-direction-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  align-self: stretch;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated-3);
+  overflow: hidden;
+}
+.fc-direction-tab {
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.fc-direction-tab.is-active {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+.fc-direction-tab:hover:not(:disabled):not(.is-active) {
+  background: var(--bg-elevated-2);
+  color: var(--text-primary);
+}
+.fc-direction-tab:disabled { opacity: 0.4; cursor: not-allowed; }

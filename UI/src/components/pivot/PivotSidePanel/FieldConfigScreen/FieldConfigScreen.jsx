@@ -1,18 +1,12 @@
 import React from 'react';
-import ValueFilter        from './ValueFilter/ValueFilter.jsx';
-import FxConverter        from './FxConverter/FxConverter.jsx';
-import ThresholdHighlight from './ThresholdHighlight/ThresholdHighlight.jsx';
-import StatHighlight      from './StatHighlight/StatHighlight.jsx';
+import ValueFilter                   from './ValueFilter/ValueFilter.jsx';
+import FxConverter                   from './FxConverter/FxConverter.jsx';
+import ConditionalHighlightSection   from './ConditionalHighlight/ConditionalHighlightSection.jsx';
 import { useFieldConfigScreenLogic } from './FieldConfigScreen.logic.jsx';
 import './FieldConfigScreen.css';
 
 const DEV_FIELD_PREFIX = '__dev_';
 
-/**
- * Resolve a friendly display label for a field. Deviation fields get the
- * user-entered name (plus "%" for the percent kind); raw fields render their
- * own name.
- */
 function resolveDisplay(field, config) {
   if (!field || !field.startsWith(DEV_FIELD_PREFIX)) return field;
   const item = (config.values || []).find((v) => v && v.field === field);
@@ -24,14 +18,10 @@ function resolveDisplay(field, config) {
 /**
  * Screen 3 — per-field configuration.
  *
- * For deviation columns (synthetic __dev_* fields), the Value-filter and FX
- * sections are hidden — only Threshold and Stat-highlight apply.
- *
- * Props:
- *   field, zone
- *   config, onConfigChange
- *   uniqueValuesFor — (field) => unique values from the dataframe
- *   onBack          — kept for backward compat; back lives in TopBar now
+ * Sections (each gated by a top-left activate/deactivate button):
+ *   - Value filter (always visible — uses its own checkbox UI)
+ *   - FX conversion
+ *   - Conditional highlighting (merged threshold + statistical)
  */
 export default function FieldConfigScreen({
   field, zone, config, onConfigChange, uniqueValuesFor,
@@ -42,10 +32,8 @@ export default function FieldConfigScreen({
   const displayName = resolveDisplay(field, config);
   const uniqueValues = !isDeviation && uniqueValuesFor ? uniqueValuesFor(field) : [];
 
-  // Heuristic: treat the field as numeric if every non-empty unique value
-  // parses to a number. FX / threshold / stat highlight only show for numeric.
   const isNumeric = React.useMemo(() => {
-    if (isDeviation) return true;                         // deviations are inherently numeric
+    if (isDeviation) return true;
     if (uniqueValues.length === 0) return false;
     return uniqueValues.every((v) => {
       if (v === null || v === undefined || v === '') return true;
@@ -54,7 +42,6 @@ export default function FieldConfigScreen({
     });
   }, [uniqueValues, isDeviation]);
 
-  // For values zone, the field is always treated as numeric (it's being aggregated)
   const treatAsNumeric = zone === 'values' || isNumeric;
 
   return (
@@ -66,7 +53,6 @@ export default function FieldConfigScreen({
       </div>
 
       <div className="field-config-body">
-        {/* ValueFilter — hidden for deviation columns (no raw values to pick) */}
         {!isDeviation && (
           <ValueFilter
             uniqueValues={uniqueValues}
@@ -77,23 +63,17 @@ export default function FieldConfigScreen({
 
         {treatAsNumeric && (
           <>
-            {/* FX — hidden for deviation columns */}
             {!isDeviation && (
-              <div className="field-config-section">
-                <div className="field-config-section-title">המרת מטבע</div>
-                <FxConverter fx={L.fx} onChange={L.setFx} />
-              </div>
+              <FxConverter fx={L.fx} onChange={L.setFx} />
             )}
 
-            <div className="field-config-section">
-              <div className="field-config-section-title">סף הדגשה</div>
-              <ThresholdHighlight threshold={L.threshold} onChange={L.setThreshold} />
-            </div>
-
-            <div className="field-config-section">
-              <div className="field-config-section-title">הדגשה סטטיסטית</div>
-              <StatHighlight statHighlight={L.statHighlight} onChange={L.setStatHighlight} />
-            </div>
+            <ConditionalHighlightSection
+              threshold={L.threshold}
+              statHighlight={L.statHighlight}
+              onChangeThreshold={L.setThreshold}
+              onChangeStat={L.setStatHighlight}
+              clearConditional={L.clearConditional}
+            />
           </>
         )}
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLogoLogic } from './Logo.logic.jsx';
 import './Logo.css';
-import logo from '../../../assets/verisal-logo2.svg';
+import logo from '../../../assets/logo-with-text.svg';
 
 export default function Logo({ onClick }) {
   const { handleClick } = useLogoLogic({ onClick });

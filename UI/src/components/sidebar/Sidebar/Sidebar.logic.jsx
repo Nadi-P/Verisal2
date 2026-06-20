@@ -1,4 +1,7 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+
+import { useUploadManager } from '../../../contexts/UploadManagerContext.jsx';
+import { statusIndicator } from '../../../lib/uploadManager.js';
 
 // Empty base = relative URLs → Vite dev server proxies /api/* to uvicorn.
 // Avoids cross-origin CORS / PNA issues entirely.
@@ -59,43 +62,100 @@ function buildFolderStatus(body) {
 }
 
 /* -------------------------------------------------------------------
-   Report definitions — single source of truth for sidebar navigation
+   Default/empty sidebar lists — used before an upload happens. Once an
+   UploadManager payload exists, the buckets are derived from it directly
+   (see useSidebarLogic below). These statics fall back when payload is
+   null so the empty sidebar still renders the expected categories.
    ------------------------------------------------------------------- */
 
 export const SYSTEM_REPORTS = [
-  { id: 'center',      label: 'מרכז שכר' },
-  { id: 'costing',     label: 'תמחיר' },
-  { id: 'income',      label: 'הכנסות' },
-  { id: 'absences',    label: 'היעדרויות' },
-  { id: 'deductions',  label: 'ניכויים' },
-  { id: 'providents',  label: 'קופות גמל' },
-  { id: 'components',  label: 'רכיבי שכר' },
+  { id: 'center',      label: 'מרכז שכר',     status: null },
+  { id: 'costing',     label: 'תמחיר',         status: null },
+  { id: 'income',      label: 'הכנסות',        status: null },
+  { id: 'absences',    label: 'היעדרויות',     status: null },
+  { id: 'deductions',  label: 'ניכויים',       status: null },
+  { id: 'providents',  label: 'קופות גמל',     status: null },
+  { id: 'components',  label: 'רכיבי שכר',     status: null },
 ];
 
 export const MANUFACTURED_REPORTS = [
-  { id: 'social_analysis',        label: 'אנליזה סוציאלית' },
-  { id: 'months_comparison',      label: 'השוואת חודשים' },
-  { id: 'reports_against_center', label: 'דוחות מול מרכז' },
+  { id: 'social_analysis',        label: 'אנליזה סוציאלית',  status: null },
+  { id: 'months_comparison',      label: 'השוואת חודשים',     status: null },
+  { id: 'reports_against_center', label: 'דוחות מול מרכז',   status: null },
 ];
 
 export const PAGE_IDS = {
   DASHBOARD:           'dashboard',
-  CREATE_REPORT:       'create-report',
-  LOADING_MANAGEMENT:  'loading-management',
-  CONFIGURATION:       'configuration',
-  ANOMALIES:           'anomalies',
+  LOADING_MANAGEMENT:  'loading-management',   // legacy id, label is now "ניהול העלאות"
+  FX_MANAGEMENT:       'fx-management',
+  HISTORY:             'history',
+  AXIOLOGY:            'axiology',
+  LOADING_TABLE:       'loading_table',          // manufactured report id (matches backend)
+  LOADING_VS_CENTER:   'loading-vs-center',      // future report (placeholder)
 };
 
 export const DROPDOWN_IDS = {
   SYSTEM:       'system-reports',
   MANUFACTURED: 'manufactured-reports',
+  LOADING:      'loading-dropdown',
 };
+
+const SYSTEM_REPORT_IDS = new Set([
+  'center', 'costing', 'income', 'absences', 'deductions',
+  'providents', 'components',
+]);
+const MANUFACTURED_REPORT_IDS = new Set([
+  'social_analysis', 'months_comparison', 'reports_against_center',
+]);
+const LOADING_REPORT_IDS = new Set([
+  'loading_table', 'loading-vs-center',
+]);
 
 /* -------------------------------------------------------------------
    Hook
    ------------------------------------------------------------------- */
 
 export function useSidebarLogic({ activePage, onNavigate }) {
+  const { payload, uploadFiles, uploadState } = useUploadManager();
+
+  /* ---- Derived reports — pulled off UploadManager when available, fall
+         back to the empty const lists otherwise. Each item carries an
+         indicator: 'ok' | 'skipped' | 'error' | 'unknown' | null. ---- */
+  const { systemReports, manufacturedReports } = useMemo(() => {
+    if (!payload || !payload.reports) {
+      return {
+        systemReports:       SYSTEM_REPORTS,
+        manufacturedReports: MANUFACTURED_REPORTS,
+      };
+    }
+    const SYSTEM_ORDER = [
+      'center', 'costing', 'income', 'absences', 'deductions',
+      'providents', 'components',
+    ];
+    const MANUFACTURED_ORDER = [
+      'social_analysis', 'months_comparison', 'reports_against_center',
+    ];
+
+    const all = Object.values(payload.reports);
+    const byId = new Map(all.map((r) => [r.id, r]));
+
+    const pick = (ids) =>
+      ids
+        .map((id) => byId.get(id))
+        .filter(Boolean)
+        .map((r) => ({
+          id:       r.id,
+          label:    r.display_label || r.id,
+          status:   statusIndicator(r),
+          disabled: !!r.disabled,
+        }));
+
+    return {
+      systemReports:       pick(SYSTEM_ORDER),
+      manufacturedReports: pick(MANUFACTURED_ORDER),
+    };
+  }, [payload]);
+
   /* ---- Collapse / expand ---- */
   const [collapsed, setCollapsed] = useState(false);
 
@@ -103,12 +163,24 @@ export function useSidebarLogic({ activePage, onNavigate }) {
     setCollapsed((prev) => !prev);
   }, []);
 
-  /* ---- Accordion: only one dropdown open at a time ---- */
+  /* ---- Accordion: only one dropdown open at a time ----
+         When activePage points at a report (e.g. via programmatic nav from
+         a trace ref-click), force the dropdown containing that report open
+         so the user sees their location in the tree. Single-open invariant
+         is preserved either way. */
   const [openDropdownId, setOpenDropdownId] = useState(DROPDOWN_IDS.SYSTEM);
 
   const toggleDropdown = useCallback((dropdownId) => {
     setOpenDropdownId((prev) => (prev === dropdownId ? null : dropdownId));
   }, []);
+
+  useEffect(() => {
+    if (!activePage || activePage.type !== 'report') return;
+    const id = activePage.id;
+    if (SYSTEM_REPORT_IDS.has(id))            setOpenDropdownId(DROPDOWN_IDS.SYSTEM);
+    else if (MANUFACTURED_REPORT_IDS.has(id)) setOpenDropdownId(DROPDOWN_IDS.MANUFACTURED);
+    else if (LOADING_REPORT_IDS.has(id))      setOpenDropdownId(DROPDOWN_IDS.LOADING);
+  }, [activePage]);
 
   /* ---- Navigation ---- */
   const handleReportClick = useCallback((reportId) => {
@@ -125,69 +197,38 @@ export function useSidebarLogic({ activePage, onNavigate }) {
 
   /* ---- File upload ---- */
   const fileInputRef = useRef(null);
-  const [uploadStatus, setUploadStatus] = useState(null);
 
   const handleUploadClick = useCallback(() => {
-    // HTML input with webkitdirectory shows a folder picker in Electron/Chrome.
     fileInputRef.current?.click();
   }, []);
 
   const handleFilesSelected = useCallback(async (e) => {
     const inputEl = e.target;
     const all = Array.from(inputEl.files || []);
-    if (all.length === 0) return;
-
-    // Filter to Excel files only — the folder may contain unrelated junk.
-    const excel = all.filter((f) => /\.(xlsx|xls)$/i.test(f.name));
-    if (excel.length === 0) {
-      inputEl.value = '';
-      setUploadStatus({ type: 'error', message: 'לא נמצאו קבצי Excel בתיקייה שנבחרה' });
-      return;
+    if (all.length > 0) {
+      await uploadFiles(all);
     }
+    inputEl.value = '';
+  }, [uploadFiles]);
 
-    setUploadStatus({ type: 'loading', message: 'טוען קבצים...' });
-
-    try {
-      // Snapshot every File into an in-memory Blob BEFORE building FormData.
-      // Files from <input webkitdirectory> are live OS handles in Chromium;
-      // by the time fetch streams the multipart body, those handles can be
-      // invalidated → fetch aborts internally and surfaces as ERR_FAILED
-      // with the request never leaving the browser. Reading arrayBuffer()
-      // up-front decouples us from the live handle entirely.
-      const snapshots = await Promise.all(
-        excel.map(async (f) => ({
-          name: f.name,
-          blob: new Blob([await f.arrayBuffer()], {
-            type: f.type || 'application/octet-stream',
-          }),
-        }))
-      );
-
-      const form = new FormData();
-      snapshots.forEach(({ name, blob }) => form.append('files', blob, name));
-
-      const res = await fetch(`${API_BASE}/api/upload_reports`, {
-        method: 'POST',
-        body: form,
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setUploadStatus({ type: 'error', message: body.detail || body.message || 'שגיאה בטעינת הקבצים' });
-      } else {
-        setUploadStatus(buildFolderStatus(body));
-      }
-    } catch (err) {
-      setUploadStatus({ type: 'error', message: `שגיאת רשת: ${err.message}` });
-    } finally {
-      inputEl.value = '';
+  // Map central uploadState → the sidebar's old status-banner shape so
+  // existing banner CSS keeps working without rewrites.
+  const uploadStatus = useMemo(() => {
+    if (!uploadState) return null;
+    if (uploadState.kind === 'idle') return null;
+    if (uploadState.kind === 'success') return { type: 'success', message: uploadState.message || '' };
+    if (uploadState.kind === 'error')   return { type: 'error',   message: uploadState.message || '' };
+    if (uploadState.kind === 'loading' || uploadState.kind === 'stopping') {
+      return { type: 'loading', message: uploadState.message || '' };
     }
-  }, []);
+    return null;
+  }, [uploadState]);
 
   return {
     collapsed,
     toggleCollapse,
-    systemReports: SYSTEM_REPORTS,
-    manufacturedReports: MANUFACTURED_REPORTS,
+    systemReports,
+    manufacturedReports,
     openDropdownId,
     toggleDropdown,
     handleReportClick,

@@ -66,12 +66,19 @@ export function aggregate(rows, field, kind, fxConfig = null, fxRates = null) {
 export function checkThreshold(value, config) {
   if (typeof value !== 'number' || !config) return null;
   switch (config.operator) {
-    case '>':       return value > config.value1;
-    case '<':       return value < config.value1;
+    case '>':       return value >  config.value1;
+    case '<':       return value <  config.value1;
+    case '>=':      return value >= config.value1;
+    case '<=':      return value <= config.value1;
     case '==':      return value === config.value1;
     case 'between': return value >= config.value1 && value <= config.value2;
     default:        return null;
   }
+}
+
+/** Pure stat-qualifying computer for callers outside the pivot path. */
+export function computeStatQualifyingSet(cells, kind) {
+  return computeStatQualifying(cells, kind);
 }
 
 /** Given a list of {path, value} numerics, return the set qualifying for `kind`. */
@@ -157,7 +164,7 @@ export function computeValueCell(rows, item, deviations, regularValues, fxConver
 /* ===================================================================
    Hook
    =================================================================== */
-export function usePivotTableLogic({ data, config, fxRates }) {
+export function usePivotTableLogic({ data, config, fxRates, onExpandedChange }) {
   const { rows, columns: colDims, values, filters } = config;
   const fxConversions  = config.fxConversions  || {};
   const thresholds     = config.thresholds     || {};
@@ -202,40 +209,42 @@ export function usePivotTableLogic({ data, config, fxRates }) {
     [filteredData, rows]
   );
 
-  // ---- Expand / collapse state (with two-phase close for exit animation) ----
-  const [expanded, setExpanded] = useState(() => new Set());
+  // ---- Expand / collapse state ----
+  // The set of expanded paths is CONTROLLED by the report config (persisted
+  // as a draft, so it survives leaving + returning — parity with table
+  // mode). The transient `closing` set (exit animation) stays local.
+  const expanded = useMemo(
+    () => new Set(Array.isArray(config.expanded) ? config.expanded : []),
+    [config.expanded]
+  );
   const [closing, setClosing] = useState(() => new Set());
   const CLOSE_MS = 300;     // must match the CSS shrink animation duration
 
   const toggle = useCallback((path) => {
-    setExpanded((prev) => {
-      if (!prev.has(path)) {
-        // Open: synchronous add, children fade in via CSS
-        const next = new Set(prev);
-        next.add(path);
-        return next;
-      }
-      // Close: mark as closing, let animation play, then actually remove
+    const persist = (fn) => {
+      if (onExpandedChange) onExpandedChange(fn);
+    };
+    if (!expanded.has(path)) {
+      // Open: add to the persisted set; children fade in via CSS.
+      persist((arr) => (arr.includes(path) ? arr : [...arr, path]));
+      return;
+    }
+    // Close: mark as closing, let the animation play, then remove the path
+    // from the persisted set and clear the closing marker.
+    setClosing((c) => {
+      const n = new Set(c);
+      n.add(path);
+      return n;
+    });
+    setTimeout(() => {
+      persist((arr) => arr.filter((p) => p !== path));
       setClosing((c) => {
         const n = new Set(c);
-        n.add(path);
+        n.delete(path);
         return n;
       });
-      setTimeout(() => {
-        setExpanded((e) => {
-          const n = new Set(e);
-          n.delete(path);
-          return n;
-        });
-        setClosing((c) => {
-          const n = new Set(c);
-          n.delete(path);
-          return n;
-        });
-      }, CLOSE_MS);
-      return prev;
-    });
-  }, []);
+    }, CLOSE_MS);
+  }, [expanded, onExpandedChange]);
 
   const totalValueCols = values.length * Math.max(columnPaths.length, 1);
   const isEmpty = rows.length === 0 && values.length === 0;

@@ -59,3 +59,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ---- Disabled (report not viewable: missing file or missing dep) ---- */
+.dropdown-item.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  color: var(--text-muted);
+}
+.dropdown-item.is-disabled:hover {
+  background: transparent;
+  color: var(--text-muted);
+}

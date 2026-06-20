@@ -1,42 +1,47 @@
 from Reports.Report import Report
 from Headers import Headers
 from Constants import GROUP_LIST
+from LineageFrame.frame import LineageFrame
 
 
 class Deductions(Report):
-    def __init__(self, df):
+    """Raw deductions input wrapped as a Report + LineageFrame."""
+
+    def __init__(self, df, manager=None):
         super().__init__()
         self.id = "deductions"
         self.display_label = "ניכויי רשות"
         self.is_input = True
         self.dependencies = []
-        self.df = df
+        self.status = "error"
 
-        self.parse_preset()
+        if df is None:
+            self.status = "skipped"
+            return
 
-        if df is not None:
-            self.rows_count = len(df)
+        try:
+            self.rows_count    = len(df)
             self.columns_count = len(df.columns)
 
-    # ------------------------------------------------------------------
-    #  Aggregation
-    #  Moved verbatim from Functions.Aggregations.aggregate_deductions.
-    #  Not wired into __init__ yet — call site to be decided later.
-    # ------------------------------------------------------------------
+            if manager is not None:
+                self.lineageFrame = LineageFrame.from_pandas(
+                    df, self.id, manager
+                )
+            self.status = "loaded"
+
+        except Exception as e:
+            self.exceptions.append(f"{type(e).__name__}: {e}")
+
     @staticmethod
-    def aggregate_deductions(df):
-        deductionsFileHeaders = Headers.InputFiles.Deductions
-        df = Report.standarize_df(df)
-
-        agg_map = {
-            deductionsFileHeaders.total_sum: 'sum',
-            deductionsFileHeaders.component_code: 'count'
-        }
-        result = df.groupby(GROUP_LIST).agg(agg_map).reset_index()
-
-        result = result.rename(columns={
-            deductionsFileHeaders.total_sum: 'סה"כ ניכויי רשות',
-            deductionsFileHeaders.component_code: 'מספר רכיבים שונים'
+    def aggregate_deductions(frame):
+        ded_h = Headers.InputFiles.Deductions
+        std = Report.standardize_lineage(frame)
+        result = std.groupby(GROUP_LIST).agg({
+            ded_h.total_sum:      "sum",
+            ded_h.component_code: "count",
         })
-
+        result = result.rename(columns={
+            ded_h.total_sum:      'סה"כ ניכויי רשות',
+            ded_h.component_code: 'מספר רכיבים שונים',
+        })
         return result

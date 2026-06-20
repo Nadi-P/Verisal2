@@ -1,0 +1,157 @@
+/* ==========================================================================
+   CalculationInfoScreen — overrides specific to the trace UI, layered on
+   top of the shared field-config-* skeleton from FieldConfigScreen.css.
+
+   Font policy: everything inherits the app's font stack — NO monospace.
+   ========================================================================= */
+
+.calc-info-body {
+  gap: 14px;
+}
+
+.calc-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin: 0 14px;
+  margin-top: 6px;
+}
+
+.calc-info-section-title {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.calc-info-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--font-size-sm);
+}
+
+.calc-info-row-label {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  min-width: 45px;
+}
+
+.calc-info-row-value {
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.calc-info-row-idx {
+  color: var(--text-muted);
+  margin-inline-start: 6px;
+  font-size: var(--font-size-xs);
+}
+
+.calc-info-formula {
+  /* App font stack — no monospace */
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--accent);
+  background: var(--bg-elevated-1);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  word-break: break-word;
+  white-space: pre-wrap;
+  direction: ltr;
+}
+
+.calc-info-note {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.calc-info-refs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.calc-info-ref-report {
+  color: var(--trace-accent);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calc-info-ref-col {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calc-info-ref-value {
+  color: var(--text-primary);
+  text-align: end;
+}
+
+/* Clickable 4-row meta block — navigates back to the source cell's report. */
+.calc-info-meta-clickable {
+  cursor: pointer;
+  transition: background-color 120ms linear, border-color 120ms linear;
+  border: 1px solid transparent;
+  border-radius: 8px;
+}
+.calc-info-meta-clickable:hover {
+  background-color: var(--trace-glow);
+}
+.calc-info-meta-clickable:focus-visible {
+  outline: none;
+}
+
+
+.calc-info-refs-grid {
+  display: grid;
+  margin-top: 4px;
+  grid-template-columns: 1fr 1.4fr 4ch 1fr;
+  background: transparent;
+  border: none;
+  font-size: 12px;
+}
+.calc-info-refs-grid .calc-info-ref-row {
+  display: grid;
+  background: var(--bg-elevated-1);
+  grid-template-columns: subgrid;
+  padding: 4px 8px;
+  grid-column: 1 / -1;
+  cursor: pointer;
+  transition: background-color 120ms linear;
+}
+.calc-info-refs-grid .calc-info-ref-row:hover {
+  background-color: var(--trace-glow);
+}
+
+.calc-info-ref-row:first-child {
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
+}
+.calc-info-ref-row:last-child {
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+}
+
+.calc-info-refs-grid .calc-info-ref-row > span {
+  background: transparent;
+  padding: 7px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.calc-info-ref-row-idx {
+  color: var(--text-secondary);
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}

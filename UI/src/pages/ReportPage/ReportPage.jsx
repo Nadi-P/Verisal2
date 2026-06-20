@@ -7,19 +7,6 @@ import { TableView } from '../../components/table/index.js';
 import { IconReports } from '../../components/icons.jsx';
 import './ReportPage.css';
 
-const REPORT_TITLES = {
-  components:             'רכיבי שכר',
-  deductions:             'ניכויי רשות',
-  income:                 'הכנסות זקופות',
-  absences:               'היעדרויות',
-  providents:             'קופות גמל',
-  costing:                'תמחיר',
-  center:                 'מרכז שכר',
-  social_analysis:        'אנליזה סוציאלית',
-  months_comparison:      'השוואת חודשים',
-  reports_against_center: 'דוחות מול מרכז שכר',
-};
-
 export default function ReportPage({ reportId }) {
   const {
     loading,
@@ -50,9 +37,17 @@ export default function ReportPage({ reportId }) {
     uniqueValuesFor,
     toast,
     showToast,
+    // Phase 3 trace integration
+    hasRefsAtCoord,
+    onCellTrace,
+    focusCoord,
+    highlightSet,
   } = useReportPageLogic(reportId);
 
-  const title = REPORT_TITLES[reportId] || reportId;
+  // display_label flows off the Report object (delivered in metadata) — the
+  // local title map was retired with the UploadManager migration. Falling
+  // back to reportId when the report isn't loaded yet (initial render).
+  const title = metadata?.display_label || reportId;
 
   // ReportTopBar is FIXED in place. Only the body content swaps between
   // loading / error / placeholder / pivot / table. The metadata + title
@@ -81,7 +76,20 @@ export default function ReportPage({ reportId }) {
       );
     }
     if (displayMode === 'pivot') {
-      return <PivotTable data={data} columns={columns} config={config} fxRates={fxRates} />;
+      return (
+        <PivotTable
+          data={data}
+          columns={columns}
+          config={config}
+          onConfigChange={setConfig}
+          fxRates={fxRates}
+          onCellTrace={onCellTrace}
+          hasRefsAtCoord={hasRefsAtCoord}
+          focusCoord={focusCoord}
+          highlightSet={highlightSet}
+          reportId={reportId}
+        />
+      );
     }
     return (
       <TableView
@@ -92,6 +100,10 @@ export default function ReportPage({ reportId }) {
         fxRates={fxRates}
         zoom={tableZoom}
         setZoom={setTableZoom}
+        onCellTrace={onCellTrace}
+        hasRefsAtCoord={hasRefsAtCoord}
+        focusCoord={focusCoord}
+        highlightSet={highlightSet}
       />
     );
   };
@@ -129,6 +141,7 @@ export default function ReportPage({ reportId }) {
             isOpen={sidebarOpen}
             setIsOpen={setSidebarOpen}
             displayMode={displayMode}
+            currentReportId={reportId}
             allFields={columns}
             uniqueValuesFor={uniqueValuesFor}
             config={config}

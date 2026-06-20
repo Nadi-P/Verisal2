@@ -29,6 +29,7 @@ export default function ColumnList({
   labelFor,
   dragDisabled = false,
   onTogglePin,
+  onToggleVisible,   // (id) — flip hide/show; optional, no-op if absent
   onMoveItem,
   onMoveItemBy,
   onSetSortDirect,
@@ -184,8 +185,10 @@ export default function ColumnList({
               isDeviation={item.deviation}
               onMoveUp={()    => onMoveItemBy?.(item.id, -1)}
               onMoveDown={()  => onMoveItemBy?.(item.id, +1)}
-              onPinToggle={() => onTogglePin(item.id)}
-              onFilter={()    => onOpenFilter?.(item.id, ctxMenu.position)}
+              visible={!!item.visible}
+              onPinToggle={()  => onTogglePin(item.id)}
+              onHideToggle={() => onToggleVisible && onToggleVisible(item.id)}
+              onFilter={()     => onOpenFilter?.(item.id, ctxMenu.position)}
               onSortAsc={()    => onSetSortDirect?.(item.id, 'asc')}
               onSortDesc={()   => onSetSortDirect?.(item.id, 'desc')}
               onCancelSort={() => onSetSortDirect?.(item.id, null)}

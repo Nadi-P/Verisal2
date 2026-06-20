@@ -95,6 +95,26 @@ class TableCell:
     def value(self, new_value):
         self.self_ref.value = new_value
 
+    def contrib_refs(self):
+        """
+        The lineage-cells whose values entered THIS cell's value, ready
+        to be embedded in a downstream cell's `references` list.
+
+        - Attached cell (in a frame with a real report_idx): returns
+          `[self.self_ref]` — this cell IS the source.
+        - Unattached cell (intermediate from an op chain whose frame is
+          not yet a registered LineageFrame): returns the existing
+          `references` list, transitively bypassing the intermediate so
+          downstream refs never point at unresolvable (-1, -1) cells.
+
+        Plain TableCells have no `references`, so unattached TableCells
+        return [] — but that's fine; arithmetic helpers always produce
+        ReferencingTableCells, so this branch is only hit by raw inputs.
+        """
+        if self.self_ref.report_idx >= 0:
+            return [self.self_ref]
+        return list(getattr(self, "references", []) or [])
+
     # -- pretty-printing -------------------------------------------------
 
     def pretty(self) -> str:

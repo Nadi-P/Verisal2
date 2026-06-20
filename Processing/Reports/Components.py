@@ -1,5 +1,3 @@
-import pandas as pd
-
 from Reports.Report import Report
 from Headers import Headers, Masks
 from Constants import GROUP_LIST
@@ -7,11 +5,7 @@ from LineageFrame.frame import LineageFrame
 
 
 class Components(Report):
-    """
-    Raw components input. Wraps the parsed pandas DataFrame into a
-    LineageFrame whose cells carry no upstream references — they're
-    leaf cells of the ingest pipeline.
-    """
+    """Raw components input wrapped as a Report + LineageFrame."""
 
     def __init__(self, df, manager=None):
         super().__init__()
@@ -19,51 +13,74 @@ class Components(Report):
         self.display_label = "רכיבי שכר"
         self.is_input = True
         self.dependencies = []
-        self.status = "error"           # flipped to "loaded" once we wrap successfully
+        self.status = "error"
 
         if df is None:
             self.status = "skipped"
             return
 
         try:
-            self.df            = df                           # legacy field for transition
+            self.df            = df  # kept for legacy metadata extraction
             self.rows_count    = len(df)
             self.columns_count = len(df.columns)
-            self.aggregated    = self.aggregate_components(df)
 
-            # The LineageFrame mirrors the standardized form — the same
-            # shape downstream manufactured reports will reference. We
-            # build it from the standardized DF so refs land on the
-            # correct row indices.
             if manager is not None:
-                standardized = Report.standarize_df(df)
                 self.lineageFrame = LineageFrame.from_pandas(
-                    standardized, self.id, manager
+                    df, self.id, manager
                 )
             self.status = "loaded"
 
         except Exception as e:
             self.exceptions.append(f"{type(e).__name__}: {e}")
-            # status already set to 'error' above
 
+    # ------------------------------------------------------------------
     @staticmethod
-    def aggregate_components(df):
-        comp_h = Headers.InputFiles.Components
-        df = Report.standarize_df(df)
-        social_list = Masks.SocialAnalaysisComponentsMask.mask
+    def aggregate_components(frame):
+        """
+        Aggregate raw components into one row per (year, month, emp_id):
+          - total_amount  ← sum of all component rows in the group
+          - employee_name ← first matching cell
+          - social_total  ← sum of total_amount ONLY over rows whose
+                            component_name is in the social mask. Refs
+                            on the resulting cell are EXACTLY the
+                            mask-matching total_amount cells — group_by
+                            and mask-filter columns contribute no refs.
 
-        def calculate_social(row):
-            if row[comp_h.component_name] in social_list:
-                return pd.to_numeric(row[comp_h.total_amount], errors='coerce')
-            return 0
+        Returns a translucent LineageFrame.
+        """
+        comp_h     = Headers.InputFiles.Components
+        social_set = Masks.SocialAnalaysisComponentsMask.mask
 
-        df[comp_h.social_total] = df.apply(calculate_social, axis=1)
+        std = Report.standardize_lineage(frame)
 
-        agg_map = {
-            comp_h.total_amount: 'sum',
-            comp_h.social_total: 'sum',
-            comp_h.employee_name: 'first',
-        }
-        result = df.groupby(GROUP_LIST).agg(agg_map).reset_index()
+        # ------- total + name agg over EVERY row -------------------
+        total_agg = std.groupby(GROUP_LIST).agg({
+            comp_h.total_amount:  "sum",
+            comp_h.employee_name: "first",
+        })
+        total_agg.translucent = True
+        total_agg.report_id = f"{frame.report_id}.totalAgg"
 
-        return result
+        # ------- social_total: filter to mask rows, then group sum --
+        # The boolean mask Column is used for filtering — its cells do
+        # NOT enter the calculation, so they're NOT refs on the output.
+        # `_slice_rows` (called via boolean indexing) only carries
+        # source-cell refs per kept row.
+        mask_col   = std[comp_h.component_name].isin(social_set)
+        social_std = std[mask_col]
+        social_agg = social_std.groupby(GROUP_LIST).agg({
+            comp_h.total_amount: "sum",
+        })
+        social_agg.translucent = True
+        social_agg.report_id = f"{frame.report_id}.socialAgg"
+        social_agg = social_agg.rename(columns={
+            comp_h.total_amount: comp_h.social_total,
+        })
+
+        # ------- merge to align per (year, month, emp_id) ----------
+        merged = total_agg.merge(social_agg, on=GROUP_LIST, how="left")
+        merged.translucent = True
+        merged.report_id = f"{frame.report_id}.agg"
+        merged = merged.fillna(0)
+
+        return merged

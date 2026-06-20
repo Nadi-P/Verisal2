@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   IconPin, IconPinOff,
+  IconEye, IconEyeOff,
   IconSortAsc, IconSortDesc, IconSortNone,
   IconChevronDown, IconBack,
 } from '../../../../icons.jsx';
@@ -32,6 +33,7 @@ export default function ColumnListContextMenu({
   canMoveUp,
   canMoveDown,
   isDeviation,
+  visible,         // boolean — controls Hide/Show label
   onMoveUp,
   onMoveDown,
   onPinToggle,
@@ -39,6 +41,7 @@ export default function ColumnListContextMenu({
   onSortAsc,
   onSortDesc,
   onCancelSort,
+  onHideToggle,    // toggle column visibility
   onClose,
 }) {
   useEffect(() => {
@@ -81,6 +84,11 @@ export default function ColumnListContextMenu({
       </button>
 
       <div className="clcm-divider" />
+
+      <button className="clcm-item" onClick={() => { onHideToggle && onHideToggle(); onClose(); }}>
+        {visible ? <IconEyeOff size={14} /> : <IconEye size={14} />}
+        <span>{visible ? 'הסתר עמודה' : 'הצג עמודה'}</span>
+      </button>
 
       <button className="clcm-item" onClick={() => { onPinToggle(); onClose(); }}>
         {pinned ? <IconPinOff size={14} /> : <IconPin size={14} />}

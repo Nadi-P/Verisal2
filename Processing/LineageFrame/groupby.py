@@ -52,7 +52,7 @@ class GroupBy:
 
         # Build output frame, ungrouped first.
         out_id = f"{self.frame.report_id}.groupby({','.join(self.by)})"
-        out_frame = LineageFrame(out_id, self.frame.manager)
+        out_frame = LineageFrame(out_id, self.frame.manager, translucent=True)
 
         # Build columns in this order: keys first, then agg columns.
         agg_col_names = list(spec_dict.keys())
@@ -73,7 +73,7 @@ class GroupBy:
             for g_idx, key_tuple in enumerate(group_keys):
                 first_row = self._groups[key_tuple][0]
                 row_values.append(key_tuple[k_idx])
-                per_row_refs.append([src.cells[first_row].self_ref])
+                per_row_refs.append(src.cells[first_row].contrib_refs())
             out_frame[key_name] = src._make_unattached_column(
                 name=key_name, row_values=row_values, per_row_refs=per_row_refs,
             )
@@ -87,7 +87,9 @@ class GroupBy:
             for g_idx, key_tuple in enumerate(group_keys):
                 rows = self._groups[key_tuple]
                 values = [src.cells[r].value for r in rows]
-                refs   = [src.cells[r].self_ref for r in rows]
+                refs   = []
+                for r in rows:
+                    refs.extend(src.cells[r].contrib_refs())
                 row_values.append(self._reduce(values, kind))
                 per_row_refs.append(refs)
             out_frame[agg_name] = src._make_unattached_column(

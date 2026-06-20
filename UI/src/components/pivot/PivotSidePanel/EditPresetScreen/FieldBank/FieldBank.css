@@ -5,10 +5,10 @@
 .field-bank, .value-filter{
   display: flex;
   flex-direction: column;
-  flex: 1 1 40%;
+  flex: 1 0 40%;
   min-height: 0;
   max-height: 240px;
-  margin: 6px 14px 14px;
+  margin: 6px 14px 0;
   background: var(--bg-elevated-2);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);

@@ -176,14 +176,14 @@ class Column:
         return self._make_unattached_column(
             name=self.name,
             row_values=[c.value for c in self.cells],
-            per_row_refs=[[c.self_ref] for c in self.cells],
+            per_row_refs=[c.contrib_refs() for c in self.cells],
             source_columns=sources,
             calculate=(lambda srcs, i: srcs[0].cells[i].value) if src_ref else None,
         )
 
     def apply(self, fn: Callable, *, new_name: Optional[str] = None) -> "Column":
         out_values = [fn(c.value) for c in self.cells]
-        per_row_refs = [[c.self_ref] for c in self.cells]
+        per_row_refs = [c.contrib_refs() for c in self.cells]
         src_ref = self._self_source_ref()
         sources = [src_ref] if src_ref else []
         calculate = (lambda srcs, i: fn(srcs[0].cells[i].value)) if src_ref else None
@@ -201,13 +201,17 @@ class Column:
         out, refs  = [], []
         for i, cell in enumerate(self.cells):
             keep = bool(cond_vals[i])
-            out.append(cell.value if keep else other_vals[i])
-            r = [cell.self_ref]
-            if isinstance(condition, Column):
-                r.append(condition.cells[i].self_ref)
-            if isinstance(other, Column):
-                r.append(other.cells[i].self_ref)
-            refs.append(r)
+            if keep:
+                # Value came from self → ref the self cell only.
+                out.append(cell.value)
+                refs.append(cell.contrib_refs())
+            else:
+                # Value came from `other` → ref other's cell (if Column).
+                out.append(other_vals[i])
+                if isinstance(other, Column):
+                    refs.append(other.cells[i].contrib_refs())
+                else:
+                    refs.append([])
         sources = self._collect_sources(self, condition, other)
         return self._make_unattached_column(
             name=self.name, row_values=out, per_row_refs=refs,
@@ -220,7 +224,7 @@ class Column:
         src_ref = self._self_source_ref()
         return self._make_unattached_column(
             name=f"{self.name}.isin", row_values=out,
-            per_row_refs=[[c.self_ref] for c in self.cells],
+            per_row_refs=[c.contrib_refs() for c in self.cells],
             source_columns=[src_ref] if src_ref else [],
             calculate=(lambda srcs, i: srcs[0].cells[i].value in value_set) if src_ref else None,
         )
@@ -230,7 +234,7 @@ class Column:
         src_ref = self._self_source_ref()
         return self._make_unattached_column(
             name=f"{self.name}.notna", row_values=out,
-            per_row_refs=[[c.self_ref] for c in self.cells],
+            per_row_refs=[c.contrib_refs() for c in self.cells],
             source_columns=[src_ref] if src_ref else [],
             calculate=(lambda srcs, i: Column._is_not_na(srcs[0].cells[i].value)) if src_ref else None,
         )
@@ -240,7 +244,7 @@ class Column:
         src_ref = self._self_source_ref()
         return self._make_unattached_column(
             name=f"{self.name}.isna", row_values=out,
-            per_row_refs=[[c.self_ref] for c in self.cells],
+            per_row_refs=[c.contrib_refs() for c in self.cells],
             source_columns=[src_ref] if src_ref else [],
             calculate=(lambda srcs, i: not Column._is_not_na(srcs[0].cells[i].value)) if src_ref else None,
         )
@@ -250,7 +254,7 @@ class Column:
         src_ref = self._self_source_ref()
         return self._make_unattached_column(
             name=self.name, row_values=out,
-            per_row_refs=[[c.self_ref] for c in self.cells],
+            per_row_refs=[c.contrib_refs() for c in self.cells],
             source_columns=[src_ref] if src_ref else [],
             calculate=(lambda srcs, i, _v=value: _v if not Column._is_not_na(srcs[0].cells[i].value) else srcs[0].cells[i].value) if src_ref else None,
         )
@@ -267,7 +271,7 @@ class Column:
         src_ref = self._self_source_ref()
         return self._make_unattached_column(
             name=self.name, row_values=out,
-            per_row_refs=[[c.self_ref] for c in self.cells],
+            per_row_refs=[c.contrib_refs() for c in self.cells],
             source_columns=[src_ref] if src_ref else [],
             calculate=(lambda srcs, i: _cast(srcs[0].cells[i].value)) if src_ref else None,
         )
@@ -277,7 +281,7 @@ class Column:
         for cell in self.cells:
             if self._is_not_na(cell.value):
                 kept_values.append(cell.value)
-                kept_refs.append([cell.self_ref])
+                kept_refs.append(cell.contrib_refs())
         src_ref = self._self_source_ref()
         return self._make_unattached_column(
             name=self.name, row_values=kept_values, per_row_refs=kept_refs,
@@ -298,7 +302,7 @@ class Column:
         src_ref = self._self_source_ref()
         return self._make_unattached_column(
             name=self.name, row_values=out,
-            per_row_refs=[[c.self_ref] for c in self.cells],
+            per_row_refs=[c.contrib_refs() for c in self.cells],
             source_columns=[src_ref] if src_ref else [],
             calculate=(lambda srcs, i: _clip(srcs[0].cells[i].value)) if src_ref else None,
         )
@@ -335,7 +339,7 @@ class Column:
         src_ref = self._self_source_ref()
         return self._make_unattached_column(
             name=f"~{self.name}", row_values=out,
-            per_row_refs=[[c.self_ref] for c in self.cells],
+            per_row_refs=[c.contrib_refs() for c in self.cells],
             source_columns=[src_ref] if src_ref else [],
             calculate=(lambda srcs, i: not bool(srcs[0].cells[i].value)) if src_ref else None,
         )
@@ -458,9 +462,9 @@ class Column:
                 out.append(op(a, b))
             except (TypeError, ZeroDivisionError):
                 out.append(None)
-            r = [self.cells[i].self_ref]
+            r = list(self.cells[i].contrib_refs())
             if is_col:
-                r.append(other.cells[i].self_ref)
+                r.extend(other.cells[i].contrib_refs())
             refs.append(r)
 
         # Source columns + calculate (only when sources are attached).

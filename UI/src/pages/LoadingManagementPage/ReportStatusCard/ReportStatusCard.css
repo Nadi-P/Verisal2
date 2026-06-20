@@ -1,0 +1,166 @@
+/* ==========================================================================
+   Report Status Card — used by LoadingManagementPage to render per-Report
+   status info. Card border color tracks the status.
+   ========================================================================== */
+
+.report-status-card {
+  background: var(--bg-elevated-1);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  direction: rtl;
+  transition: border-color var(--transition-fast);
+
+  /* Staggered fade-in (matches the FX management cards). */
+  opacity: 0;
+  transform: translateY(8px);
+  animation: rsc-card-in 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(35ms * var(--i, 0));
+}
+
+@keyframes rsc-card-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Colour the frame by card_status. */
+.report-status-card.card-ok                 { border-color: var(--success); }
+.report-status-card.card-missing            { border-color: var(--error); }
+.report-status-card.card-missing_dependency { border-color: var(--error); }
+.report-status-card.card-inconsistent       { border-color: var(--warning); }
+
+.rsc-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rsc-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rsc-display-label {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rsc-id {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  font-family: 'Consolas', monospace;
+}
+
+.rsc-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.rsc-badge-ok                 { background: rgba(102, 187, 106, 0.18); color: var(--success); }
+.rsc-badge-missing            { background: rgba(239, 83, 80, 0.18);   color: var(--error);   }
+.rsc-badge-missing_dependency { background: rgba(239, 83, 80, 0.18);   color: var(--error);   }
+.rsc-badge-inconsistent       { background: rgba(255, 167, 38, 0.18);  color: var(--warning); }
+
+/* ---- Bottom note lines ------------------------------------------------ */
+.rsc-note {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 10px;
+  font-size: var(--font-size-sm);
+  margin-top: auto;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rsc-note-missing      { color: var(--error); }
+.rsc-note-inconsistent { color: var(--warning); }
+
+.rsc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rsc-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--font-size-sm);
+}
+
+.rsc-row-label {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.rsc-row-value {
+  color: var(--text-primary);
+}
+
+.rsc-row-sep {
+  color: var(--text-muted);
+  margin: 0 4px;
+}
+
+.rsc-row.rsc-warning .rsc-row-value {
+  color: var(--warning);
+}
+
+.rsc-exceptions {
+  margin-top: 4px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 10px;
+}
+
+.rsc-exceptions-toggle {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+  font-family: inherit;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.rsc-exceptions-toggle:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.rsc-exceptions-list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rsc-exceptions-item {
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: var(--font-size-xs);
+  font-family: 'Consolas', monospace;
+  color: var(--error);
+  word-break: break-word;
+  white-space: pre-wrap;
+}

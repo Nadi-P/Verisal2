@@ -93,5 +93,5 @@ class StringAccessor:
         return col._make_unattached_column(
             name=f"{col.name}.str.cat()",
             row_values=out_cells,
-            per_row_refs=[[cell.self_ref] for cell in col.cells],
+            per_row_refs=[cell.contrib_refs() for cell in col.cells],
         )

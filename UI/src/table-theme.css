@@ -40,13 +40,20 @@
   /* ---- Motion ------------------------------------------------------- */
   --transition-speed: var(--transition-med);
 
-  --cell-bg-deviation-soft: hsla(211, 74%, 26%, 0.25);
-  --cell-bg-deviation-dark: hsla(211, 74%, 16%, 0.35);
+  /* --cell-bg-deviation-soft: hsla(211, 74%, 26%, 0.25);
+  --cell-bg-deviation-dark: hsla(211, 74%, 16%, 0.35); */
+  --cell-bg-deviation-soft: var(--accent-soft);
+  --cell-bg-deviation-dark: var(--accent-glow);
   --cell-bg-pinned-soft: var(--bg-elevated-3);
   --cell-bg-pinned-dark: var(--bg-elevated-2);
   --cell-bg-soft: hsl(0, 0%, 10%);
   --cell-bg-dark: hsl(0, 0%, 15%);
+  --border-dark: var(--sidebar-bg);
 
-
-
+  /* ---- Trace UI (lineage walk) ------------------------------------- */
+  /* Purple, intentionally distinct from --accent (blue) so trace highlights
+     never get confused with normal selection or deviation tinting. */
+  --trace-accent: hsl(280, 65%, 65%);
+  --trace-soft:   hsla(280, 65%, 65%, 0.16);
+  --trace-glow:   hsla(280, 65%, 65%, 0.32);
 }

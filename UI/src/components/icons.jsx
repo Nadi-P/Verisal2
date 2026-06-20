@@ -201,11 +201,12 @@ export function IconBack({ size, color, className } = defaultProps) {
 }
 
 export function IconDots({ size, color, className } = defaultProps) {
+  // Vertical kebab-style three-dot menu glyph.
   return (
     <svg className={className} width={size || 10} height={size || 10} viewBox="0 0 24 24" fill={color || 'currentColor'} stroke="none">
-      <circle cx="5"  cy="12" r="1.7" />
+      <circle cx="12" cy="5"  r="1.7" />
       <circle cx="12" cy="12" r="1.7" />
-      <circle cx="19" cy="12" r="1.7" />
+      <circle cx="12" cy="19" r="1.7" />
     </svg>
   );
 }
@@ -316,6 +317,53 @@ export function IconGrip({ size, color, className } = defaultProps) {
       <circle cx="15" cy="12" r="1.5" />
       <circle cx="9" cy="18" r="1.5" />
       <circle cx="15" cy="18" r="1.5" />
+    </svg>
+  );
+}
+
+/* FX management — currency-exchange double arrow */
+export function IconFxManagement({ size, color, className } = defaultProps) {
+  return (
+    <svg className={className} width={size || 20} height={size || 20} viewBox="0 0 24 24" fill="none" stroke={color || 'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="17 1 21 5 17 9" />
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+      <polyline points="7 23 3 19 7 15" />
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+    </svg>
+  );
+}
+
+/* History — clock with backwards arrow */
+export function IconHistory({ size, color, className } = defaultProps) {
+  return (
+    <svg className={className} width={size || 20} height={size || 20} viewBox="0 0 24 24" fill="none" stroke={color || 'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12a9 9 0 1 0 3-6.7" />
+      <polyline points="3 4 3 10 9 10" />
+      <polyline points="12 7 12 12 15 14" />
+    </svg>
+  );
+}
+
+/* Footsteps — re-open the most-recent traceback screen. */
+export function IconFootsteps({ size, color, className } = defaultProps) {
+  return (
+    <svg className={className} width={size || 20} height={size || 20} viewBox="0 0 24 24" fill="none" stroke={color || 'currentColor'} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <ellipse cx="7"  cy="6"  rx="2.2" ry="2.6" />
+      <path d="M5 9.5c-.8 1 -.7 2.2 .2 3.1 c1.0 1.0 1.2 1.7 1.0 3.0" />
+      <ellipse cx="16" cy="11" rx="2.2" ry="2.6" />
+      <path d="M14 14.5c-.8 1 -.7 2.2 .2 3.1 c1.0 1.0 1.2 1.7 1.0 3.0" />
+    </svg>
+  );
+}
+
+/* IconSwap — double-arrow used by the FX direction toggle. */
+export function IconSwap({ size, color, className } = defaultProps) {
+  return (
+    <svg className={className} width={size || 20} height={size || 20} viewBox="0 0 24 24" fill="none" stroke={color || 'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="17 1 21 5 17 9" />
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+      <polyline points="7 23 3 19 7 15" />
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
     </svg>
   );
 }

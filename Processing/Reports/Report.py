@@ -1,53 +1,54 @@
 import pandas as pd
 
-from Headers import Helpers, PayrollCodes
+from Headers import Helpers
+from Axiology import Axiology
 from Constants import JOIN_KEY
 
 
 class Report:
     def __init__(self):
-        # ---- Identity + classification ----
-        self.id = None                  # str — stable wire id (e.g. "components")
-        self.display_label = None       # str — Hebrew friendly title
-        self.is_input = None            # bool — True for raw inputs, False for manufactured
-        self.dependencies = []          # list[str] — report_ids this one needs
+        self.id = None
+        self.display_label = None
+        self.is_input = None
+        self.dependencies = []
 
-        # ---- Metadata extracted from input data ----
         self.company_name = None
         self.min_month = None
         self.min_year = None
         self.max_month = None
         self.max_year = None
 
-        # ---- Shape ----
         self.rows_count = 0
         self.columns_count = 0
 
-        # ---- Build status / processing telemetry ----
-        self.exceptions = []            # list[str] — error messages from this report's build
-        self.status = None              # 'loaded' | 'skipped' | 'error'
-        self.missing_dependencies = []  # list[str] — dep ids that weren't ready
-        self.skipped_steps = []         # list[str] — named sub-steps that were skipped
+        self.exceptions = []
+        self.status = None
+        self.missing_dependencies = []
+        self.skipped_steps = []
+        self.lineageFrame = None
 
-        # ---- THE data ----
-        self.lineageFrame = None        # LineageFrame | None — the table itself
+        # ---- Card / consistency fields (computed by UploadManager) ----
+        # disabled        : report cannot be viewed (missing file or a
+        #                   missing/disabled dependency). Greyed + unclickable.
+        # card_status     : "ok" | "missing" | "missing_dependency" | "inconsistent"
+        # inconsistency_reasons        : Hebrew lines describing each mismatch
+        # dependencies_display         : dep display names (not ids)
+        # missing_dependencies_display : missing-dep display names (not ids)
+        self.disabled = False
+        self.card_status = "ok"
+        self.inconsistency_reasons = []
+        self.dependencies_display = []
+        self.missing_dependencies_display = []
 
-        # ---- Legacy fields kept for transition (will be removed in phase 2) ----
+        # Legacy fields kept for callers that haven't migrated.
         self.tracebacks_map = {}
         self.df = None
         self.aggregated = None
 
     # ------------------------------------------------------------------
-    #  Serialization
+    #  Serialization (metadata block — consumed by UploadManager.to_wire)
     # ------------------------------------------------------------------
-
     def to_dict(self) -> dict:
-        """
-        Return the metadata-only block — everything except the LineageFrame.
-        The LineageFrame is serialized separately by UploadManager.to_wire()
-        because it's the heavy payload and may be omitted for skipped /
-        errored reports.
-        """
         return {
             "id":                   self.id,
             "display_label":        self.display_label,
@@ -64,6 +65,11 @@ class Report:
             "status":               self.status,
             "missing_dependencies": list(self.missing_dependencies or []),
             "skipped_steps":        list(self.skipped_steps or []),
+            "disabled":                     bool(self.disabled),
+            "card_status":                  self.card_status,
+            "inconsistency_reasons":        list(self.inconsistency_reasons or []),
+            "dependencies_display":         list(self.dependencies_display or []),
+            "missing_dependencies_display": list(self.missing_dependencies_display or []),
         }
 
     # ------------------------------------------------------------------
@@ -87,10 +93,59 @@ class Report:
             return None
 
     @staticmethod
+    def standardize_lineage(frame, is_center: bool = False):
+        """
+        LineageFrame-native standardize: builds a translucent intermediate
+        with (a) the work_month column replaced by its extracted-month
+        form, (b) a JOIN_KEY column added (`"<id>-<month>-<year>"`), and
+        (c) fillna(0) applied. Numeric ids are normalized so `1.0` and
+        `1` form the same join key.
+        """
+        from LineageFrame.frame import LineageFrame
+        id_col    = Helpers.SystemReportsBase.employee_id if not is_center else Axiology.code("employee_id")
+        month_col = Helpers.SystemReportsBase.work_month  if not is_center else Axiology.code("work_month")
+        year_col  = Helpers.SystemReportsBase.work_year   if not is_center else Axiology.code("work_year")
+
+        out = LineageFrame(f"{frame.report_id}.std", frame.manager, translucent=True)
+
+        for col in frame.columns:
+            if col.name == month_col:
+                out[col.name] = col.apply(Report.extract_month)
+            else:
+                out[col.name] = col.copy()
+
+        def _norm(v):
+            if v is None:
+                return ""
+            if isinstance(v, float):
+                if v != v:
+                    return ""
+                if v.is_integer():
+                    return str(int(v))
+                return str(v).strip()
+            if isinstance(v, int):
+                return str(v)
+            s = str(v).strip()
+            try:
+                f = float(s)
+                if f.is_integer():
+                    return str(int(f))
+            except (TypeError, ValueError):
+                pass
+            return s
+
+        ids    = frame[id_col].apply(_norm)
+        months = out[month_col].apply(_norm)
+        years  = frame[year_col].apply(_norm)
+        out[JOIN_KEY] = ids + "-" + months + "-" + years
+
+        return out.fillna(0)
+
+    @staticmethod
     def standarize_df(df, is_center=False):
-        id_col    = Helpers.SystemReportsBase.employee_id if not is_center else PayrollCodes.employee_id
-        month_col = Helpers.SystemReportsBase.work_month  if not is_center else PayrollCodes.work_month
-        year_col  = Helpers.SystemReportsBase.work_year   if not is_center else PayrollCodes.work_year
+        id_col    = Helpers.SystemReportsBase.employee_id if not is_center else Axiology.code("employee_id")
+        month_col = Helpers.SystemReportsBase.work_month  if not is_center else Axiology.code("work_month")
+        year_col  = Helpers.SystemReportsBase.work_year   if not is_center else Axiology.code("work_year")
         df = df.copy()
 
         df[month_col] = df[month_col].apply(Report.extract_month)

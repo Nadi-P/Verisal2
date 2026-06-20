@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
+import { useUploadManager } from '../../contexts/UploadManagerContext.jsx';
+import { useTrace }         from '../../contexts/TraceContext.jsx';
+import { lineageFrameToRowMajor } from '../../lib/uploadManager.js';
+
 // Empty base = relative URLs → Vite dev server proxies /api/* to uvicorn.
 const API_BASE = '';
 
@@ -20,6 +24,9 @@ const EMPTY_CONFIG = {
   thresholds: {},
   statHighlights: {},
   deviations: [],
+  // Pivot-mode expansion state — paths of expanded row groups. Persisted
+  // (like table-mode state) so leaving + returning restores the exact tree.
+  expanded: [],
   // Table-mode (new — added alongside the flat pivot fields)
   table: { ...EMPTY_TABLE },
 };
@@ -36,20 +43,43 @@ const EMPTY_CONFIG = {
  *   (each step requires the name to actually exist in savedPresets)
  */
 export function useReportPageLogic(reportId) {
+  const { payload, hydrating, getReport } = useUploadManager();
+  const trace = useTrace();
+
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
   const [dataLoaded, setDataLoaded] = useState(false);
 
-  const [columns, setColumns] = useState([]);
-  const [data, setData]       = useState([]);
-  const [metadata, setMetadata] = useState(null);   // { company_name, min/max month+year }
+  const [columns, setColumns]   = useState([]);
+  const [data, setData]         = useState([]);
+  const [metadata, setMetadata] = useState(null);   // { company_name, min/max month+year, display_label }
+  const [report, setReport]     = useState(null);   // raw Report block (carries status, exceptions, etc.)
+  // Cell-references side-channel — used by the Phase 3 trace UI to look up
+  // the references for a cell at (colIdx, rowIdx) in O(1).
+  const [refsByCoord, setRefsByCoord] = useState(new Map());
+  const [columnFormulas, setColumnFormulas] = useState({});
 
   const [savedPresets, setSavedPresets] = useState({});
   const [defaultName, setDefaultName]   = useState(null);
   const [appliedName, setAppliedName]   = useState(null);
   const [config, setConfig]             = useState(EMPTY_CONFIG);
+  // Skip the very first draft-save after a fresh load — the config we
+  // just set IS what came back from the server, no need to round-trip.
+  const skipNextDraftSave = useRef(true);
 
   const [fxRates, setFxRates] = useState({});
+
+  // Listen for external FX-rate updates so changes anywhere (FX
+  // management page, side-panel rate dialog, etc.) cascade into the
+  // current report's display IMMEDIATELY — without this, columns that
+  // depend on a newly-added rate would silently keep their stale value.
+  useEffect(() => {
+    const onUpdate = (e) => {
+      if (e.detail && typeof e.detail === 'object') setFxRates(e.detail);
+    };
+    window.addEventListener('fx-rates-updated', onUpdate);
+    return () => window.removeEventListener('fx-rates-updated', onUpdate);
+  }, []);
 
   // Sidebar open/closed — lifted here so the report top bar can toggle it.
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -121,28 +151,65 @@ export function useReportPageLogic(reportId) {
     return null;
   }, [defaultName, savedPresets]);
 
-  /* ---- Load data + presets + fx rates ---- */
+  /* ---- Hydrate from the UploadManager context + fetch presets / fx ----
+     Data no longer comes from /api/reports/{id}/data — the Report+frame
+     live in the UploadManagerContext payload. Presets + FX remain remote
+     because they're per-user persistent state, not per-upload state.    */
   useEffect(() => {
     let cancelled = false;
     async function load() {
       setLoading(true);
       setError(null);
+
+      // While the global UploadManager is still hydrating from the backend,
+      // wait — we'll re-run when payload becomes available.
+      if (hydrating) return;
+
       try {
-        const [dataRes, presetRes, fxRes] = await Promise.all([
-          fetch(`${API_BASE}/api/reports/${reportId}/data?page=0&size=10000`),
+        const reportBlock = getReport(reportId);
+        setReport(reportBlock);
+
+        const isRenderable = !!reportBlock
+          && reportBlock.status === 'loaded'
+          && reportBlock.lineageFrame;
+
+        if (isRenderable) {
+          const view = lineageFrameToRowMajor(reportBlock.lineageFrame);
+          setColumns(view.columns);
+          setData(view.data);
+          setRefsByCoord(view.refsByCoord);
+          setColumnFormulas(view.formulas);
+          setDataLoaded(true);
+          setMetadata({
+            company_name:  reportBlock.company_name,
+            min_month:     reportBlock.min_month,
+            min_year:      reportBlock.min_year,
+            max_month:     reportBlock.max_month,
+            max_year:      reportBlock.max_year,
+            display_label: reportBlock.display_label,
+          });
+        } else {
+          setColumns([]);
+          setData([]);
+          setRefsByCoord(new Map());
+          setColumnFormulas({});
+          setDataLoaded(false);
+          setMetadata(null);
+        }
+
+        // Presets + DRAFT + FX in parallel. The DRAFT is the user's
+        // live state — pins, FX conversions, etc. survive across
+        // navigations. We fall back to the default preset only when no
+        // draft has been saved yet.
+        const [presetRes, draftRes, fxRes] = await Promise.all([
           fetch(`${API_BASE}/api/table-presets/${reportId}`),
+          fetch(`${API_BASE}/api/table-presets/${reportId}/draft`),
           fetch(`${API_BASE}/api/config/fx`),
         ]);
-        if (!dataRes.ok) throw new Error(`HTTP ${dataRes.status}`);
-        const dataBody   = await dataRes.json();
-        const presetBody = await presetRes.json();
-        const fxBody     = fxRes.ok ? await fxRes.json() : {};
-
+        const presetBody = presetRes.ok ? await presetRes.json() : {};
+        const draftBody  = draftRes.ok  ? await draftRes.json()  : {};
+        const fxBody     = fxRes.ok     ? await fxRes.json()     : {};
         if (cancelled) return;
-        setColumns(dataBody.columns || []);
-        setData(dataBody.rows || []);
-        setDataLoaded(Boolean(dataBody.loaded));
-        setMetadata(dataBody.metadata || null);
 
         const saved   = presetBody.saved || {};
         const defName = presetBody.defaultName || null;
@@ -150,19 +217,56 @@ export function useReportPageLogic(reportId) {
 
         setSavedPresets(saved);
         setDefaultName(defName);
-        setAppliedName(null);  // null falls back to defaultName via resolved
-        setConfig(startName ? normalizeConfig(saved[startName]) : { ...EMPTY_CONFIG });
+        setAppliedName(null);
 
+        // Draft wins if it has any content. Empty draft → default preset
+        // → empty config.
+        const hasDraft = draftBody && typeof draftBody === 'object'
+          && Object.keys(draftBody).length > 0;
+        if (hasDraft) {
+          setConfig(normalizeConfig(draftBody));
+        } else if (startName) {
+          setConfig(normalizeConfig(saved[startName]));
+        } else {
+          setConfig({ ...EMPTY_CONFIG });
+        }
         setFxRates(fxBody || {});
+
       } catch (e) {
         if (!cancelled) setError(e.message || String(e));
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
+    skipNextDraftSave.current = true;  // load just set config from server
     load();
     return () => { cancelled = true; };
-  }, [reportId]);
+  }, [reportId, payload, hydrating, getReport]);
+
+  /* ---- Draft persistence -------------------------------------------
+     Every config edit is debounced-saved as the report's DRAFT, so
+     leaving the report and coming back picks up exactly where the
+     user left off (pinned columns, FX conversions, etc.). The very
+     first save after a fresh load is skipped — the config we have
+     IS what the server just gave us. */
+  useEffect(() => {
+    if (loading || !reportId) return;
+    if (skipNextDraftSave.current) {
+      skipNextDraftSave.current = false;
+      return;
+    }
+    const t = setTimeout(() => {
+      fetch(`${API_BASE}/api/table-presets/${reportId}/draft`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      }).then(() => {
+        // Tell the FX management page (if open) to refresh its list.
+        window.dispatchEvent(new CustomEvent('fx-appliances-updated'));
+      }).catch(() => { /* non-fatal */ });
+    }, 400);
+    return () => clearTimeout(t);
+  }, [config, reportId, loading]);
 
   /* ---- Unique values per field (for filter pickers) ---- */
   const uniqueValuesFor = useCallback((field) => {
@@ -353,6 +457,141 @@ export function useReportPageLogic(reportId) {
     }
   }, [savedPresets, persistDefaultName, showToast]);
 
+  /* ================================================================
+     Phase 3 — lineage-trace integration
+     ================================================================ */
+
+  // True iff the cell at (rowIndex, colIndex) carries an upstream-references
+  // list. Used by AuditTable + PivotTable to: (a) light up the "this cell is
+  // traceable" indicator, (b) gate the double-right-click trigger.
+  const hasRefsAtCoord = useCallback((rowIndex, colIndex) => {
+    if (!refsByCoord) return false;
+    const refs = refsByCoord.get(`${colIndex},${rowIndex}`);
+    return !!refs && refs.length > 0;
+  }, [refsByCoord]);
+
+  // Cell trace trigger — wires the AuditTable/PivotTable double-right-click
+  // gesture into the global TraceContext. Re-triggering on the SAME
+  // already-active cell DESELECTS (closes the trace screen and clears
+  // the highlight), so a double-right-click also acts as "exit" in
+  // table mode.
+  const onCellTrace = useCallback((rowIndex, colIndex) => {
+    const t = trace.panelTarget;
+    if (t && t.reportId === reportId
+        && t.columnIdx === colIndex
+        && t.rowIdx === rowIndex) {
+      trace.closeTrace();
+      trace.clearFocus();
+      return;
+    }
+    trace.openTraceFor({
+      reportId,
+      columnIdx: colIndex,
+      rowIdx:    rowIndex,
+    });
+  }, [reportId, trace]);
+
+  // Translate TraceContext.focusTarget into the (rowIndex, colIndex) shape
+  // the tables expect, but only when the target lives in THIS report.
+  const focusCoord = useMemo(() => {
+    if (!trace.focusTarget) return null;
+    if (trace.focusTarget.reportId !== reportId) return null;
+    return {
+      rowIndex: trace.focusTarget.rowIdx,
+      colIndex: trace.focusTarget.columnIdx,
+    };
+  }, [trace.focusTarget, reportId]);
+
+  // Set of `"rowIndex,colIndex"` cell keys that should be purple-marked
+  // in THIS report. While the trace screen is open, both the panel
+  // target itself AND every cell it references (that lives in this
+  // report) are highlighted — matching the side-panel reference list.
+  const highlightSet = useMemo(() => {
+    const out = new Set();
+    if (!trace.panelTarget || !payload || !payload.reports) return out;
+    const t = trace.panelTarget;
+    if (t.reportId === reportId) out.add(`${t.rowIdx},${t.columnIdx}`);
+    const tgtReport = payload.reports[t.reportId];
+    if (!tgtReport || !tgtReport.lineageFrame) return out;
+    const col = tgtReport.lineageFrame.columns[t.columnIdx];
+    const cell = col && col.cells && col.cells[t.rowIdx];
+    const refs = (cell && cell.references) || [];
+    for (const ref of refs) {
+      const entry = payload.registry && payload.registry[String(ref.r)];
+      if (entry && entry.id === reportId) {
+        out.add(`${ref.i},${ref.c}`);
+      }
+    }
+    return out;
+  }, [trace.panelTarget, payload, reportId]);
+
+  // Permanent visibility fix — when the focused cell is in THIS report but
+  // is currently hidden (column hidden / value filtered out / not in any
+  // pivot zone), mutate the live config so it's visible. The change goes
+  // through the standard setConfig path which preserves preset semantics.
+  useEffect(() => {
+    if (!focusCoord) return;
+    if (!Array.isArray(columns) || columns.length === 0) return;
+    const colName = columns[focusCoord.colIndex];
+    if (!colName) return;
+    const row = (data || [])[focusCoord.rowIndex];
+    const cellValue = row ? row[colName] : undefined;
+
+    setConfig((prev) => {
+      let next = prev;
+
+      // 1. Table mode: unhide the column if hidden.
+      if (displayMode === 'table'
+          && next.table
+          && Array.isArray(next.table.hidden)
+          && next.table.hidden.includes(colName)) {
+        next = {
+          ...next,
+          table: {
+            ...next.table,
+            hidden: next.table.hidden.filter((c) => c !== colName),
+          },
+        };
+      }
+
+      // 2. Pivot mode: ensure the column is in some zone (default: values).
+      if (displayMode === 'pivot') {
+        const inRows    = (next.rows    || []).includes(colName);
+        const inColumns = (next.columns || []).includes(colName);
+        const inValues  = (next.values  || []).some((v) => v.field === colName);
+        if (!inRows && !inColumns && !inValues) {
+          next = {
+            ...next,
+            values: [...(next.values || []), { field: colName, aggregation: 'sum' }],
+          };
+        }
+      }
+
+      // 3. BOTH modes: if the cell value is in the column's excluded filter
+      //    set, drop it so the row becomes visible. config.filters[col] is
+      //    the pivot's "allowed values" array — add the missing value to it.
+      const allowed = next.filters && next.filters[colName];
+      if (Array.isArray(allowed)) {
+        const asStr = cellValue == null ? '' : String(cellValue);
+        if (!allowed.map(String).includes(asStr)) {
+          next = {
+            ...next,
+            filters: {
+              ...next.filters,
+              [colName]: [...allowed, cellValue],
+            },
+          };
+        }
+      }
+
+      return next;
+    });
+  }, [focusCoord, columns, data, displayMode, setConfig]);
+
+  // (Auto-fade removed — the purple highlight now persists until the
+  // user explicitly closes the trace screen or, in table mode, double-
+  // right-clicks the same cell to deselect it.)
+
   return {
     loading,
     error,
@@ -360,6 +599,9 @@ export function useReportPageLogic(reportId) {
     columns,
     data,
     metadata,
+    report,                         // raw Report block (status, exceptions, dependencies, etc.)
+    refsByCoord,                    // Map<`colIdx,rowIdx`, references[]>
+    columnFormulas,                 // { [colName]: formulaString }
     fxRates,
     config,
     setConfig,
@@ -381,7 +623,11 @@ export function useReportPageLogic(reportId) {
     // Sidebar + display mode + table-mode zoom (UI state — global, persisted server-side)
     sidebarOpen,
     setSidebarOpen,
-    displayMode,
+    // While the trace context forces a display mode (during ref-navigation
+    // it pins to 'table'), that takes precedence — but the user's own
+    // preferred mode is preserved underneath, and restored as soon as the
+    // force clears.
+    displayMode: trace.forcedDisplayMode || displayMode,
     setDisplayMode: setDisplayModePersisted,
     tableZoom,
     setTableZoom:   setTableZoomPersisted,
@@ -389,6 +635,12 @@ export function useReportPageLogic(reportId) {
     uniqueValuesFor,
     toast,
     showToast,
+
+    // Phase 3 — lineage-trace integration
+    hasRefsAtCoord,    // (rowIndex, colIndex) → bool
+    onCellTrace,       // (rowIndex, colIndex) — fired on cell double-right-click
+    focusCoord,        // { rowIndex, colIndex } | null — primary trace target
+    highlightSet,      // Set<`rowIdx,colIdx`> — all cells to mark purple
   };
 }
 
@@ -404,6 +656,7 @@ function normalizeConfig(preset) {
     thresholds:     preset.thresholds     && typeof preset.thresholds     === 'object' ? { ...preset.thresholds     } : {},
     statHighlights: preset.statHighlights && typeof preset.statHighlights === 'object' ? { ...preset.statHighlights } : {},
     deviations:     Array.isArray(preset.deviations) ? preset.deviations.map((d) => ({ ...d })) : [],
+    expanded:       Array.isArray(preset.expanded) ? [...preset.expanded] : [],
     table: {
       columnOrder: Array.isArray(t.columnOrder) ? [...t.columnOrder] : [],
       hidden:      Array.isArray(t.hidden)      ? [...t.hidden]      : [],

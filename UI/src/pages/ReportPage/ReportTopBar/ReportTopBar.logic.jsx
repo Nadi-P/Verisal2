@@ -1,19 +1,12 @@
 import { useMemo } from 'react';
 
 /**
- * Format mm/yyyy with zero-padded month; returns the placeholder when either
- * piece is missing. The date range string returns the placeholder if BOTH
- * sides are missing, otherwise it shows whatever is available.
+ * Format M/YYYY using a single digit for the month when applicable
+ * (per spec). Returns null when either piece is missing.
  */
-function pad2(n) {
-  if (typeof n !== 'number') return null;
-  return String(n).padStart(2, '0');
-}
-
 function fmtMonthYear(month, year) {
-  const m = pad2(month);
-  if (!m || !year) return null;
-  return `${m}/${year}`;
+  if (typeof month !== 'number' || typeof year !== 'number') return null;
+  return `${month}/${year}`;
 }
 
 export function useReportTopBarLogic({ metadata }) {

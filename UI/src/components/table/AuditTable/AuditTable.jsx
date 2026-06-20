@@ -33,6 +33,16 @@ function AuditTable({
   onFilterApply,
   zoom, setZoom, onSelectionStats,
   checkupData,
+  /** Lineage trace integration (Phase 3). All optional — when omitted
+   *  the table behaves exactly as before. */
+  onCellTrace,                       // (rowIndex, colIndex) — fired on
+                                     //   double-right-click of a cell that
+                                     //   has lineage refs
+  hasRefsAtCoord,                    // (rowIndex, colIndex) → bool
+  focusCoord,                        // { rowIndex, colIndex } | null —
+  highlightSet,                      // Set<`r,c`> | null — all cells to mark purple
+                                     //   purple highlight target
+  cellHighlightClass,                // (r, c) → 'is-threshold-pass' | 'is-threshold-fail' | 'is-stat-pass' | ''
 }) {
   const {
     tableContainerRef,
@@ -71,6 +81,37 @@ function AuditTable({
     (col) => !!checkupData && Object.prototype.hasOwnProperty.call(checkupData, col),
     [checkupData],
   );
+
+  // ----------------------------------------------------------------------
+  // Double-right-click detection for lineage-trace
+  //
+  // Two right-clicks on the SAME cell within `DOUBLE_RIGHT_CLICK_MS` fires
+  // `onCellTrace`. Single right-clicks on cells do nothing visible (we still
+  // preventDefault to suppress the browser menu). The cell must have lineage
+  // refs (`hasRefsAtCoord` returns true) — otherwise the gesture is silently
+  // ignored, per the user spec.
+  // ----------------------------------------------------------------------
+  const DOUBLE_RIGHT_CLICK_MS = 400;
+  const lastRightClickRef = React.useRef({ time: 0, key: '' });
+
+  const handleCellContextMenu = useCallback((e, rowIndex, colIndex) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!onCellTrace) return;
+    const key = `${rowIndex},${colIndex}`;
+    const now = Date.now();
+    const wasDouble =
+      now - lastRightClickRef.current.time < DOUBLE_RIGHT_CLICK_MS
+      && lastRightClickRef.current.key === key;
+    if (wasDouble) {
+      lastRightClickRef.current = { time: 0, key: '' };
+      if (hasRefsAtCoord && hasRefsAtCoord(rowIndex, colIndex)) {
+        onCellTrace(rowIndex, colIndex);
+      }
+    } else {
+      lastRightClickRef.current = { time: now, key };
+    }
+  }, [onCellTrace, hasRefsAtCoord]);
 
   /* ------------------------------------------------------------------
    *  Virtualizer
@@ -220,6 +261,46 @@ function AuditTable({
   }, [selectionEnd, rowVirtualizer]);
 
   /* ------------------------------------------------------------------
+   *  Scroll-to-cell for the lineage-trace focus target.
+   *  Same two-phase pattern as selection scroll-into-view, but driven by
+   *  the focusCoord prop instead of the internal selectionEnd state.
+   * ------------------------------------------------------------------ */
+  useLayoutEffect(() => {
+    if (!focusCoord) return;
+    const container = tableContainerRef.current;
+    if (!container) return;
+
+    try { rowVirtualizer.scrollToIndex(focusCoord.rowIndex, { align: 'center' }); }
+    catch { /* defensive — virtualizer may not be ready yet */ }
+
+    const raf = requestAnimationFrame(() => {
+      const cell = container.querySelector(
+        `td[data-r="${focusCoord.rowIndex}"][data-c="${focusCoord.colIndex}"]`
+      );
+      if (!cell) return;
+      const cRect = container.getBoundingClientRect();
+      const tRect = cell.getBoundingClientRect();
+      const headerH =
+        container.querySelector('thead')?.getBoundingClientRect().height ?? 0;
+      let pinnedW = 0;
+      if (!cell.classList.contains('pinned')) {
+        container.querySelectorAll('thead th.pinned').forEach((el) => {
+          pinnedW += el.getBoundingClientRect().width;
+        });
+      }
+      let dy = 0;
+      if (tRect.top < cRect.top + headerH) dy = tRect.top - (cRect.top + headerH);
+      else if (tRect.bottom > cRect.bottom) dy = tRect.bottom - cRect.bottom;
+      let dx = 0;
+      const visibleRight = cRect.right - pinnedW;
+      if (tRect.right > visibleRight) dx = tRect.right - visibleRight;
+      else if (tRect.left < cRect.left) dx = tRect.left - cRect.left;
+      if (dx !== 0 || dy !== 0) container.scrollBy({ top: dy, left: dx });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [focusCoord, rowVirtualizer]);
+
+  /* ------------------------------------------------------------------
    *  Header context-menu + filter-menu state (component-owned)
    * ------------------------------------------------------------------ */
   const [ctxMenu,    setCtxMenu]    = useState(null);
@@ -327,16 +408,34 @@ function AuditTable({
                   const sortedCol     = isColumnSorted(col)   ? 'sorted-col'   : '';
                   const devCol        = isDeviationCol(col)   ? 'is-deviation' : '';
                   const value         = row[col];
-                  const formatted     = formatCellValue(value, col);
+                  let formatted       = formatCellValue(value, col);
+                  // Percent-deviation columns ship plain numeric values
+                  // (e.g. 12.5 meaning 12.5%). Append "%" so the cell
+                  // renders the same way as the column header (which
+                  // already has " %" in its display name).
+                  if (devCol && typeof col === 'string' && col.endsWith(' %')
+                      && formatted && !formatted.endsWith('%')) {
+                    formatted = `${formatted}%`;
+                  }
                   const dir           = getTextDirection(formatted);
                   const arrow         = getCellArrow(row, col);
+
+                  const hasRefs = hasRefsAtCoord ? hasRefsAtCoord(rowIndex, colIndex) : false;
+                  const isFocus =
+                    (focusCoord
+                      && focusCoord.rowIndex === rowIndex
+                      && focusCoord.colIndex === colIndex)
+                    || (highlightSet && highlightSet.has(`${rowIndex},${colIndex}`));
+                  const condClass = cellHighlightClass
+                    ? cellHighlightClass(rowIndex, colIndex)
+                    : '';
 
                   return (
                     <td
                       key={col}
                       data-r={rowIndex}
                       data-c={colIndex}
-                      className={`table-cell ${selected ? 'selected' : ''} ${borderClasses} ${pinned ? 'pinned' : ''} ${filteredCol} ${sortedCol} ${devCol}`}
+                      className={`table-cell ${selected ? 'selected' : ''} ${borderClasses} ${pinned ? 'pinned' : ''} ${filteredCol} ${sortedCol} ${devCol} ${hasRefs ? 'has-refs' : ''} ${isFocus ? 'is-trace-target' : ''} ${condClass}`}
                       style={{
                         ...getCellStyle(),
                         direction: dir,
@@ -345,6 +444,7 @@ function AuditTable({
                       }}
                       onMouseDown={(e) => handleMouseDown(rowIndex, colIndex, e)}
                       onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
+                      onContextMenu={(e) => handleCellContextMenu(e, rowIndex, colIndex)}
                     >
                       {formatted}
                       {arrow && (

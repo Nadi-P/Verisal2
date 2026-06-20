@@ -20,6 +20,7 @@ export default function Dropdown({ label, icon, items, activeItemId, onItemClick
               id={item.id}
               label={item.label}
               isActive={activeItemId === item.id}
+              disabled={item.disabled}
               onClick={onItemClick}
             />
           ))}

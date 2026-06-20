@@ -1,6 +1,6 @@
 {
     "components": {
-        "defaultName": "comparison",
+        "defaultName": "deafult",
         "saved": {
             "deafult": {
                 "rows": [
@@ -27,7 +27,8 @@
                         "aggregation": "sum"
                     }
                 ],
-                "filters": {}
+                "filters": {},
+                "fxConversions": {}
             },
             "new": {
                 "rows": [
@@ -146,46 +147,552 @@
                     "sortBy": null
                 }
             }
+        },
+        "draft": {
+            "rows": [
+                "חודש עבודה",
+                "שם עובד",
+                "שם רכיב"
+            ],
+            "columns": [],
+            "values": [
+                {
+                    "field": "סה\"כ",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "כמות",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "תעריף",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "ה. קבע",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "__dev_dev_1780141487999_257_percent",
+                    "deviation": true,
+                    "kind": "percent",
+                    "deviationId": "dev_1780141487999_257",
+                    "name": "high"
+                },
+                {
+                    "field": "__dev_dev_1780141487999_257_diff",
+                    "deviation": true,
+                    "kind": "diff",
+                    "deviationId": "dev_1780141487999_257",
+                    "name": "high"
+                }
+            ],
+            "filters": {},
+            "fxConversions": {},
+            "thresholds": {},
+            "statHighlights": {},
+            "deviations": [
+                {
+                    "id": "dev_1780141487999_257",
+                    "sourceA": "סה\"כ",
+                    "sourceB": "תעריף",
+                    "name": "high",
+                    "showDiff": true,
+                    "showPercent": true
+                }
+            ],
+            "expanded": [
+                "\u00012025/05\u0001גיטליץ  עידן "
+            ],
+            "table": {
+                "columnOrder": [
+                    "שנת עבודה",
+                    "מספר עובד",
+                    "שם רכיב",
+                    "שם עובד",
+                    "__dev_dev_1780141487999_257_percent",
+                    "__dev_dev_1780141487999_257_diff",
+                    "שם מחלקה",
+                    "חודש עבודה",
+                    "קוד רכיב",
+                    "תעריף",
+                    "כמות",
+                    "סה\"כ",
+                    "ה. קבע",
+                    "רבעון",
+                    "חצי שנה",
+                    "שם תת מחלקה",
+                    "מספר זהות",
+                    "שם חברה"
+                ],
+                "hidden": [],
+                "pinned": [],
+                "sortBy": {
+                    "columnId": "חודש עבודה",
+                    "direction": "asc"
+                }
+            }
         }
     },
     "deductions": {
         "defaultName": null,
-        "saved": {}
+        "saved": {},
+        "draft": {
+            "rows": [],
+            "columns": [],
+            "values": [],
+            "filters": {},
+            "fxConversions": {},
+            "thresholds": {},
+            "statHighlights": {},
+            "deviations": [],
+            "expanded": [],
+            "table": {
+                "columnOrder": [],
+                "hidden": [],
+                "pinned": [],
+                "sortBy": null
+            }
+        }
     },
     "income": {
         "defaultName": null,
-        "saved": {}
+        "saved": {},
+        "draft": {
+            "rows": [],
+            "columns": [],
+            "values": [],
+            "filters": {},
+            "fxConversions": {},
+            "thresholds": {},
+            "statHighlights": {},
+            "deviations": [],
+            "expanded": [],
+            "table": {
+                "columnOrder": [],
+                "hidden": [],
+                "pinned": [],
+                "sortBy": null
+            }
+        }
     },
     "absences": {
-        "defaultName": null,
-        "saved": {}
+        "defaultName": "Default",
+        "saved": {
+            "Default": {
+                "rows": [],
+                "columns": [],
+                "values": [],
+                "filters": {},
+                "fxConversions": {},
+                "thresholds": {},
+                "statHighlights": {},
+                "deviations": [],
+                "table": {}
+            }
+        },
+        "draft": {
+            "rows": [],
+            "columns": [],
+            "values": [],
+            "filters": {},
+            "fxConversions": {},
+            "thresholds": {},
+            "statHighlights": {},
+            "deviations": [],
+            "table": {
+                "columnOrder": [],
+                "hidden": [],
+                "pinned": [],
+                "sortBy": null
+            }
+        }
     },
     "providents": {
         "defaultName": null,
-        "saved": {}
+        "saved": {},
+        "draft": {
+            "rows": [],
+            "columns": [],
+            "values": [],
+            "filters": {},
+            "fxConversions": {},
+            "thresholds": {},
+            "statHighlights": {},
+            "deviations": [],
+            "table": {
+                "columnOrder": [],
+                "hidden": [],
+                "pinned": [],
+                "sortBy": null
+            }
+        }
     },
     "costing": {
-        "defaultName": null,
-        "saved": {}
+        "defaultName": "Default",
+        "saved": {
+            "Default": {
+                "rows": [],
+                "columns": [],
+                "values": [],
+                "filters": {},
+                "fxConversions": {},
+                "thresholds": {},
+                "statHighlights": {},
+                "deviations": [],
+                "table": {}
+            }
+        },
+        "draft": {
+            "rows": [],
+            "columns": [],
+            "values": [],
+            "filters": {},
+            "fxConversions": {},
+            "thresholds": {},
+            "statHighlights": {},
+            "deviations": [],
+            "expanded": [],
+            "table": {
+                "columnOrder": [],
+                "hidden": [],
+                "pinned": [],
+                "sortBy": null
+            }
+        }
     },
     "center": {
         "defaultName": null,
-        "saved": {}
+        "saved": {},
+        "draft": {
+            "rows": [],
+            "columns": [],
+            "values": [],
+            "filters": {},
+            "fxConversions": {},
+            "thresholds": {},
+            "statHighlights": {},
+            "deviations": [],
+            "table": {
+                "columnOrder": [],
+                "hidden": [],
+                "pinned": [],
+                "sortBy": null
+            }
+        }
     },
     "social_analysis": {
-        "defaultName": null,
-        "saved": {}
+        "defaultName": "deafult",
+        "saved": {
+            "deafult": {
+                "rows": [
+                    "חודש עבודה",
+                    "שם עובד"
+                ],
+                "columns": [],
+                "values": [
+                    {
+                        "field": "סהכ_רכיבים_לסוציאליות",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "קופות_סה\"כ גמל עובד",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "קופות_סה\"כ גמל מעסיק",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "קופות_סה\"כ פיצויים",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "קופות_סה\"כ קה\"ל מעסיק",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "גמל עובד %",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "גמל מעסיק %",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "בסיס קהל נגזר",
+                        "aggregation": "sum"
+                    }
+                ],
+                "filters": {},
+                "deviations": []
+            }
+        },
+        "draft": {
+            "rows": [
+                "חודש עבודה",
+                "שם עובד"
+            ],
+            "columns": [],
+            "values": [
+                {
+                    "field": "סהכ_רכיבים_לסוציאליות",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "קופות_סה\"כ גמל עובד",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "קופות_סה\"כ גמל מעסיק",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "קופות_סה\"כ פיצויים",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "קופות_סה\"כ קה\"ל מעסיק",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "גמל עובד %",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "גמל מעסיק %",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "בסיס קהל נגזר",
+                    "aggregation": "sum"
+                }
+            ],
+            "filters": {},
+            "fxConversions": {},
+            "thresholds": {},
+            "statHighlights": {},
+            "deviations": [],
+            "expanded": [],
+            "table": {
+                "columnOrder": [],
+                "hidden": [],
+                "pinned": [],
+                "sortBy": null
+            }
+        }
     },
     "months_comparison": {
         "defaultName": null,
-        "saved": {}
+        "saved": {},
+        "draft": {
+            "rows": [
+                "בדיקה",
+                "שם עובד"
+            ],
+            "columns": [],
+            "values": [
+                {
+                    "field": "01/2025",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "02/2025",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "03/2025",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "04/2025",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "05/2025",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "06/2025",
+                    "aggregation": "sum"
+                }
+            ],
+            "filters": {},
+            "fxConversions": {},
+            "thresholds": {},
+            "statHighlights": {},
+            "deviations": [],
+            "expanded": [
+                "\u0001ניכויי רשות"
+            ],
+            "table": {
+                "columnOrder": [],
+                "hidden": [],
+                "pinned": [],
+                "sortBy": null
+            }
+        }
     },
     "reports_against_center": {
-        "defaultName": null,
-        "saved": {}
+        "defaultName": "nigga",
+        "saved": {
+            "nigga": {
+                "rows": [
+                    "שם עובד",
+                    "בדיקה"
+                ],
+                "columns": [],
+                "values": [
+                    {
+                        "field": "קלט (מרכז שכר)",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "פלט (דוחות חיצוניים)",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "__dev_dev_1781460315857_57_diff",
+                        "deviation": true,
+                        "kind": "diff",
+                        "deviationId": "dev_1781460315857_57",
+                        "name": "קלט מול פלט"
+                    },
+                    {
+                        "field": "__dev_dev_1781460315857_57_percent",
+                        "deviation": true,
+                        "kind": "percent",
+                        "deviationId": "dev_1781460315857_57",
+                        "name": "קלט מול פלט"
+                    }
+                ],
+                "filters": {},
+                "deviations": [
+                    {
+                        "id": "dev_1781460315857_57",
+                        "sourceA": "קלט (מרכז שכר)",
+                        "sourceB": "פלט (דוחות חיצוניים)",
+                        "name": "קלט מול פלט",
+                        "showDiff": true,
+                        "showPercent": true
+                    }
+                ]
+            }
+        },
+        "draft": {
+            "rows": [
+                "שם עובד",
+                "בדיקה"
+            ],
+            "columns": [],
+            "values": [
+                {
+                    "field": "קלט (מרכז שכר)",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "פלט (דוחות חיצוניים)",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "__dev_dev_1781460315857_57_diff",
+                    "deviation": true,
+                    "kind": "diff",
+                    "deviationId": "dev_1781460315857_57",
+                    "name": "קלט מול פלט"
+                },
+                {
+                    "field": "__dev_dev_1781460315857_57_percent",
+                    "deviation": true,
+                    "kind": "percent",
+                    "deviationId": "dev_1781460315857_57",
+                    "name": "קלט מול פלט"
+                }
+            ],
+            "filters": {},
+            "fxConversions": {},
+            "thresholds": {},
+            "statHighlights": {},
+            "deviations": [
+                {
+                    "id": "dev_1781460315857_57",
+                    "sourceA": "קלט (מרכז שכר)",
+                    "sourceB": "פלט (דוחות חיצוניים)",
+                    "name": "קלט מול פלט",
+                    "showDiff": true,
+                    "showPercent": true
+                }
+            ],
+            "expanded": [],
+            "table": {
+                "columnOrder": [],
+                "hidden": [],
+                "pinned": [],
+                "sortBy": null
+            }
+        }
     },
     "loading_table": {
         "defaultName": null,
-        "saved": {}
+        "saved": {},
+        "draft": {
+            "rows": [
+                "מספר עובד",
+                "סוג רשומה"
+            ],
+            "columns": [],
+            "values": [
+                {
+                    "field": "תעריף",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "כמות",
+                    "aggregation": "sum"
+                }
+            ],
+            "filters": {},
+            "deviations": []
+        }
+    },
+    "loading-vs-center": {
+        "defaultName": null,
+        "saved": {},
+        "draft": {
+            "rows": [],
+            "columns": [],
+            "values": [],
+            "filters": {},
+            "fxConversions": {},
+            "thresholds": {},
+            "statHighlights": {},
+            "deviations": [],
+            "table": {
+                "columnOrder": [],
+                "hidden": [],
+                "pinned": [],
+                "sortBy": null
+            }
+        }
+    },
+    "loading-table": {
+        "defaultName": null,
+        "saved": {},
+        "draft": {
+            "rows": [],
+            "columns": [],
+            "values": [],
+            "filters": {},
+            "fxConversions": {},
+            "thresholds": {},
+            "statHighlights": {},
+            "deviations": [],
+            "table": {
+                "columnOrder": [],
+                "hidden": [],
+                "pinned": [],
+                "sortBy": null
+            }
+        }
     }
 }

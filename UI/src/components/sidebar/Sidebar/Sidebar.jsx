@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSidebarLogic, PAGE_IDS, DROPDOWN_IDS } from './Sidebar.logic.jsx';
+import { useUploadManager } from '../../../contexts/UploadManagerContext.jsx';
 import Logo from '../../ui/Logo/Logo.jsx';
 import Dropdown from '../../ui/Dropdown/Dropdown.jsx';
 import SidebarButton from '../../ui/SidebarButton/SidebarButton.jsx';
@@ -7,10 +8,9 @@ import SectionDivider from '../../ui/SectionDivider/SectionDivider.jsx';
 import {
   IconReports,
   IconManufactured,
-  IconCreateReport,
   IconLoading,
-  IconConfig,
-  IconAnomalies,
+  IconFxManagement,
+  IconHistory,
   IconUpload,
   IconCollapse,
   IconExpand,
@@ -31,10 +31,22 @@ export default function Sidebar({ activePage, onNavigate }) {
     handleUploadClick,
     handleFilesSelected,
     fileInputRef,
-    uploadStatus,
   } = useSidebarLogic({ activePage, onNavigate });
+  const { uploadState, stopUpload, payload } = useUploadManager();
 
   const activeId = activePage?.id;
+
+  // A report-backed loading item is disabled once a payload exists and the
+  // backing report is missing or flagged disabled (missing file / dep).
+  const hasPayload = !!(payload && payload.reports);
+  const reportDisabled = (id) => {
+    if (!hasPayload) return false;
+    const r = payload.reports[id];
+    return !r || !!r.disabled;
+  };
+  const isBusy =
+    uploadState && (uploadState.kind === 'loading' || uploadState.kind === 'stopping');
+  const isCanceling = uploadState && uploadState.kind === 'stopping';
 
   return (
     <nav className={`sidebar ${collapsed ? 'is-collapsed' : ''}`}>
@@ -76,36 +88,50 @@ export default function Sidebar({ activePage, onNavigate }) {
           />
         </div>
 
+        {/* ---- Loading Table dropdown (2 reports + axiology page) ---- */}
+        <div className="sidebar-section">
+          <Dropdown
+            label="ניהול טעינה"
+            icon={<IconLoading size={18} />}
+            items={[
+              { id: PAGE_IDS.LOADING_TABLE,     label: 'טבלת טעינה',            disabled: reportDisabled(PAGE_IDS.LOADING_TABLE) },
+              { id: PAGE_IDS.LOADING_VS_CENTER, label: 'טבלת טעינה מול מרכז שכר', disabled: reportDisabled(PAGE_IDS.LOADING_VS_CENTER) },
+              { id: PAGE_IDS.AXIOLOGY,          label: 'אקסיולוגיה' },
+            ]}
+            activeItemId={activeId}
+            onItemClick={(id) => {
+              // Axiology is a PAGE; the other two are manufactured REPORTS.
+              if (id === PAGE_IDS.AXIOLOGY) handlePageClick(id);
+              else                          handleReportClick(id);
+            }}
+            isOpen={openDropdownId === DROPDOWN_IDS.LOADING}
+            onToggle={() => toggleDropdown(DROPDOWN_IDS.LOADING)}
+          />
+        </div>
+
         <SectionDivider />
 
         {/* ---- Action Buttons ---- */}
         <div className="sidebar-section">
           <SidebarButton
-            id={PAGE_IDS.CREATE_REPORT}
-            label="יצירת דוח חדש"
-            icon={<IconCreateReport size={18} />}
-            isActive={activeId === PAGE_IDS.CREATE_REPORT}
-            onClick={handlePageClick}
-          />
-          <SidebarButton
-            id={PAGE_IDS.ANOMALIES}
-            label="ניהול חריגות"
-            icon={<IconAnomalies size={18} />}
-            isActive={activeId === PAGE_IDS.ANOMALIES}
-            onClick={handlePageClick}
-          />
-          <SidebarButton
             id={PAGE_IDS.LOADING_MANAGEMENT}
-            label="ניהול טעינה"
+            label="ניהול העלאות"
             icon={<IconLoading size={18} />}
             isActive={activeId === PAGE_IDS.LOADING_MANAGEMENT}
             onClick={handlePageClick}
           />
           <SidebarButton
-            id={PAGE_IDS.CONFIGURATION}
-            label="הגדרות"
-            icon={<IconConfig size={18} />}
-            isActive={activeId === PAGE_IDS.CONFIGURATION}
+            id={PAGE_IDS.FX_MANAGEMENT}
+            label='ניהול שערי מט"ח'
+            icon={<IconFxManagement size={18} />}
+            isActive={activeId === PAGE_IDS.FX_MANAGEMENT}
+            onClick={handlePageClick}
+          />
+          <SidebarButton
+            id={PAGE_IDS.HISTORY}
+            label="היסטוריה"
+            icon={<IconHistory size={18} />}
+            isActive={activeId === PAGE_IDS.HISTORY}
             onClick={handlePageClick}
           />
         </div>
@@ -113,17 +139,25 @@ export default function Sidebar({ activePage, onNavigate }) {
         {/* ---- Spacer pushes upload to bottom ---- */}
         <div className="sidebar-spacer" />
 
-        {/* ---- Upload Files (pinned bottom) ---- */}
-        <button className="sidebar-upload-button" onClick={handleUploadClick}>
-          <span className="sidebar-upload-button-icon">
-            <IconUpload size={18} />
-          </span>
-          העלאת קבצים
-        </button>
-        {uploadStatus && (
-          <div className={`sidebar-upload-status sidebar-upload-status-${uploadStatus.type}`}>
-            {uploadStatus.message}
-          </div>
+        {/* ---- Upload / Cancel (pinned bottom) ---- */}
+        {isBusy ? (
+          <button
+            className="sidebar-upload-button sidebar-upload-button-cancel"
+            onClick={stopUpload}
+            disabled={isCanceling}
+          >
+            <span className="sidebar-upload-button-icon">
+              <span className="sidebar-upload-spinner" aria-hidden="true" />
+            </span>
+            {isCanceling ? 'מבטל...' : 'בטל טעינה'}
+          </button>
+        ) : (
+          <button className="sidebar-upload-button" onClick={handleUploadClick}>
+            <span className="sidebar-upload-button-icon">
+              <IconUpload size={18} />
+            </span>
+            העלאת קבצים
+          </button>
         )}
         <input
           ref={fileInputRef}

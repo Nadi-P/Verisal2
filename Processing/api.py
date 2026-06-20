@@ -24,6 +24,43 @@ from UploadManager import UploadManager
 
 JSON_DIR = Path(__file__).parent / "JSON"
 FX_PATH = JSON_DIR / "fx_conversions.json"
+AXIOLOGY_PATH = JSON_DIR / "axiology.json"
+
+
+# ----------------------------------------------------------------------
+# FX migration helpers
+# ----------------------------------------------------------------------
+def _is_legacy_fx_shape(data) -> bool:
+    """
+    Detect the old `{fx_xxx: {currency, year, month, rate}}` shape so we
+    can transparently migrate it. The new shape's top-level keys are ISO
+    currency codes whose values are dicts of dicts of numbers.
+    """
+    if not isinstance(data, dict) or not data:
+        return False
+    for v in data.values():
+        if isinstance(v, dict) and "currency" in v and "rate" in v:
+            return True
+    return False
+
+
+def _migrate_fx_legacy(flat: dict) -> dict:
+    """Reshape `{id: {currency, year, month, rate}}` → nested form."""
+    out: dict = {}
+    for entry in flat.values():
+        if not isinstance(entry, dict):
+            continue
+        code = str(entry.get("currency", "")).upper().strip()
+        try:
+            year  = int(entry["year"])
+            month = int(entry["month"])
+            rate  = float(entry["rate"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if not code or not year or month < 1 or month > 12:
+            continue
+        out.setdefault(code, {}).setdefault(str(year), {})[str(month)] = rate
+    return out
 PRESETS_PATH = JSON_DIR / "presets.json"
 TABLE_PRESETS_PATH = JSON_DIR / "tables_presets.json"
 DISPLAY_SETTINGS_PATH = JSON_DIR / "display_settings.json"
@@ -98,6 +135,15 @@ class Api:
         # FX configuration
         r.add_api_route("/api/config/fx", self.get_fx, methods=["GET"])
         r.add_api_route("/api/config/fx", self.save_fx, methods=["POST"])
+        # FX appliances (which columns in which reports' default presets
+        # currently carry an FX conversion).
+        r.add_api_route("/api/fx-appliances", self.list_fx_appliances, methods=["GET"])
+        r.add_api_route("/api/fx-appliances", self.upsert_fx_appliance, methods=["POST"])
+        r.add_api_route("/api/fx-appliances/{report_id}/{field}", self.delete_fx_appliance, methods=["DELETE"])
+        # Axiology — component-code catalog (record_type, code, name).
+        r.add_api_route("/api/axiology", self.get_axiology, methods=["GET"])
+        r.add_api_route("/api/axiology", self.upsert_axiology, methods=["POST"])
+        r.add_api_route("/api/axiology/{record_type}/{code}", self.delete_axiology, methods=["DELETE"])
 
         # Display settings (global mode + zoom — persisted across app sessions)
         r.add_api_route("/api/config/display-settings", self.get_display_settings, methods=["GET"])
@@ -105,6 +151,12 @@ class Api:
 
         # Table presets
         r.add_api_route("/api/table-presets/{report_id}", self.get_table_presets, methods=["GET"])
+        # Per-report "draft" — the live state the user is currently
+        # editing. Persists across navigations so leaving a report
+        # doesn't lose their unsaved edits.
+        r.add_api_route("/api/table-presets/{report_id}/draft", self.get_draft_table_preset, methods=["GET"])
+        r.add_api_route("/api/table-presets/{report_id}/draft", self.save_draft_table_preset, methods=["POST"])
+        r.add_api_route("/api/table-presets/{report_id}/draft", self.delete_draft_table_preset, methods=["DELETE"])
         r.add_api_route("/api/table-presets/{report_id}/default", self.save_default_table_preset, methods=["POST"])
         r.add_api_route("/api/table-presets/{report_id}/save", self.save_named_table_preset, methods=["POST"])
         r.add_api_route("/api/table-presets/{report_id}/saved/{preset_name}", self.delete_named_table_preset, methods=["DELETE"])
@@ -416,7 +468,7 @@ class Api:
         # Center has its own loader (returns two DFs)
         if "center" in file_map:
             try:
-                Files.centerDF, Files.center_df_coded = _load_center_sheets(file_map["center"])
+                Files.centerDF, Files.center_df_coded, _code_map = _load_center_sheets(file_map["center"])
                 loaded.append("center")
             except Exception as e:
                 errors["center"] = str(e)
@@ -471,12 +523,168 @@ class Api:
     # ------------------------------------------------------------------
     # FX configuration
     # ------------------------------------------------------------------
+    # The persisted shape is nested:
+    #     { "<CODE>": { "<year>": { "<month>": <rate> } } }
+    # Older versions stored a flat {id: {currency, year, month, rate}} map.
+    # `get_fx` auto-migrates legacy files on read and rewrites them in the
+    # new shape, so the frontend never has to deal with the old form.
     def get_fx(self):
-        return self._read_json(FX_PATH)
+        data = self._read_json(FX_PATH) or {}
+        if _is_legacy_fx_shape(data):
+            data = _migrate_fx_legacy(data)
+            try:
+                self._write_json(FX_PATH, data)
+            except Exception:
+                pass    # best-effort migration; non-fatal
+        return data
 
     def save_fx(self, payload: dict):
-        self._write_json(FX_PATH, payload)
+        self._write_json(FX_PATH, payload or {})
         return {"status": "success"}
+
+    # ------------------------------------------------------------------
+    # FX appliances — every (report, column) pair that currently carries
+    # an FX conversion in the LIVE state. Live = draft if present, else
+    # the default preset. Reads + writes use the same draft surface so
+    # changes made in the side panel show up here and vice versa.
+    # ------------------------------------------------------------------
+    def list_fx_appliances(self):
+        all_presets = self._load_table_presets() or {}
+        out = []
+        for report_id in all_presets.keys():
+            preset = self._live_report_config(all_presets, report_id)
+            fx_map = preset.get("fxConversions") or {}
+            for field, fx in fx_map.items():
+                if not isinstance(fx, dict): continue
+                out.append({
+                    "reportId":  report_id,
+                    "field":     field,
+                    "fxConfig":  fx,
+                })
+        return out
+
+    def upsert_fx_appliance(self, payload: dict):
+        """
+        Write an FX-conversion entry into the report's DRAFT (the live
+        state). Bootstraps an empty draft when none exists yet. Payload:
+        `{ reportId, field, fxConfig }`.
+        """
+        report_id = (payload or {}).get("reportId")
+        field     = (payload or {}).get("field")
+        fx        = (payload or {}).get("fxConfig")
+        if not report_id or not field or not isinstance(fx, dict):
+            raise HTTPException(status_code=400, detail="reportId, field, fxConfig required")
+
+        all_presets = self._load_table_presets() or {}
+        block = all_presets.setdefault(report_id, self._empty_report_presets())
+        # Seed the draft from the currently-LIVE config so we don't
+        # accidentally drop the user's other tweaks.
+        if not isinstance(block.get("draft"), dict):
+            block["draft"] = dict(self._live_report_config(all_presets, report_id))
+        draft = block["draft"]
+        fxc = draft.setdefault("fxConversions", {})
+        fxc[field] = fx
+        self._save_table_presets(all_presets)
+        return {"status": "success"}
+
+    def delete_fx_appliance(self, report_id: str, field: str):
+        all_presets = self._load_table_presets() or {}
+        block = all_presets.setdefault(report_id, self._empty_report_presets())
+        if not isinstance(block.get("draft"), dict):
+            block["draft"] = dict(self._live_report_config(all_presets, report_id))
+        draft = block["draft"]
+        fxc = draft.get("fxConversions") or {}
+        if field in fxc:
+            fxc.pop(field, None)
+            draft["fxConversions"] = fxc
+        self._save_table_presets(all_presets)
+        return {"status": "success"}
+
+    # ------------------------------------------------------------------
+    # Axiology — component-code catalog. Persisted as:
+    #   {
+    #     "recordTypes": { "<recordType>": "<Hebrew label>", ... },
+    #     "codes": { "<recordType>": [{ "code": N, "name": "..." }, ...] }
+    #   }
+    # Uniqueness is enforced on (recordType, code) — same code may exist
+    # in two different record types and refer to different things.
+    # ------------------------------------------------------------------
+    def _load_axiology(self) -> dict:
+        data = self._read_json(AXIOLOGY_PATH) or {}
+        if not isinstance(data.get("recordTypes"), dict): data["recordTypes"] = {}
+        if not isinstance(data.get("codes"), dict):       data["codes"] = {}
+        return data
+
+    def _save_axiology(self, data: dict) -> None:
+        self._write_json(AXIOLOGY_PATH, data)
+
+    def get_axiology(self):
+        return self._load_axiology()
+
+    def upsert_axiology(self, payload: dict):
+        """
+        Add a new code or rename / renumber an existing one.
+
+        Payload (add):
+            { recordType: "1", code: 5, name: "..." }
+        Payload (edit):
+            { recordType: "1", oldCode: 5, code: 7, name: "..." }
+
+        Rejects payloads that would create a (recordType, code) collision.
+        """
+        if not isinstance(payload, dict):
+            raise HTTPException(status_code=400, detail="payload must be an object")
+        rt = str(payload.get("recordType") or "").strip()
+        name = (payload.get("name") or "").strip()
+        try:
+            code = int(payload.get("code"))
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="code must be a positive integer")
+        if not rt or not name or code <= 0:
+            raise HTTPException(status_code=400, detail="recordType, code (>0), name required")
+
+        data = self._load_axiology()
+        if rt not in data["recordTypes"]:
+            raise HTTPException(status_code=400, detail=f"unknown recordType '{rt}'")
+
+        entries = data["codes"].setdefault(rt, [])
+        old_code = payload.get("oldCode")
+        if old_code is not None:
+            try: old_code = int(old_code)
+            except (TypeError, ValueError): old_code = None
+
+        # Uniqueness — the target (rt, code) is free EXCEPT when it's the
+        # row currently being edited.
+        for e in entries:
+            if int(e["code"]) == code and e["code"] != old_code:
+                raise HTTPException(status_code=409, detail=f"code {code} already exists in record type {rt}")
+
+        if old_code is None:
+            entries.append({"code": code, "name": name})
+        else:
+            for e in entries:
+                if int(e["code"]) == old_code:
+                    e["code"] = code
+                    e["name"] = name
+                    break
+            else:
+                entries.append({"code": code, "name": name})
+
+        entries.sort(key=lambda e: int(e["code"]))
+        self._save_axiology(data)
+        return {"status": "success"}
+
+    def delete_axiology(self, record_type: str, code: str):
+        try:
+            code_int = int(code)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="code must be an integer")
+        data = self._load_axiology()
+        entries = data["codes"].get(record_type) or []
+        next_entries = [e for e in entries if int(e["code"]) != code_int]
+        data["codes"][record_type] = next_entries
+        self._save_axiology(data)
+        return {"status": "success", "removed": len(entries) - len(next_entries)}
 
     # ------------------------------------------------------------------
     # Display settings (global, persisted to JSON across app sessions)
@@ -538,6 +746,53 @@ class Api:
     def get_table_presets(self, report_id: str):
         all_presets = self._load_table_presets()
         return all_presets.get(report_id, self._empty_report_presets())
+
+    # ------------------------------------------------------------------
+    # Per-report DRAFT — the live state the user is editing. Survives
+    # page navigation so leaving a report doesn't reset their pins,
+    # FX conversions, etc. Distinct from saved presets.
+    # ------------------------------------------------------------------
+    def get_draft_table_preset(self, report_id: str):
+        all_presets = self._load_table_presets()
+        block = all_presets.get(report_id) or {}
+        draft = block.get("draft")
+        # Returning {} when no draft yet — caller falls back to the
+        # default preset.
+        return draft if isinstance(draft, dict) else {}
+
+    def save_draft_table_preset(self, report_id: str, payload: dict):
+        all_presets = self._load_table_presets()
+        block = all_presets.setdefault(report_id, self._empty_report_presets())
+        block["draft"] = payload if isinstance(payload, dict) else {}
+        self._save_table_presets(all_presets)
+        return {"status": "success"}
+
+    def delete_draft_table_preset(self, report_id: str):
+        all_presets = self._load_table_presets()
+        block = all_presets.get(report_id) or {}
+        block.pop("draft", None)
+        if report_id in all_presets:
+            all_presets[report_id] = block
+            self._save_table_presets(all_presets)
+        return {"status": "success"}
+
+    def _live_report_config(self, all_presets: dict, report_id: str) -> dict:
+        """
+        Return the currently-LIVE config for a report:
+          1. its draft if it has one
+          2. else its default preset
+          3. else {} (empty)
+        Used by `list/upsert/delete_fx_appliance` so management-page
+        edits and side-panel edits operate on the same surface.
+        """
+        block = all_presets.get(report_id) or {}
+        draft = block.get("draft")
+        if isinstance(draft, dict) and draft:
+            return draft
+        default_name = block.get("defaultName")
+        saved = block.get("saved") or {}
+        preset = saved.get(default_name) if default_name else None
+        return preset if isinstance(preset, dict) else {}
 
     def save_default_table_preset(self, report_id: str, payload: dict):
         """

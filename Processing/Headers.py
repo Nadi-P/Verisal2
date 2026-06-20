@@ -276,168 +276,6 @@ class Headers:
 
             total = r'סהכ_זקיפות'
 
-class PayrollCodes:
-
-    # --- Group 1: Earnings, Benefits, and Allowances ---
-    base_salary = 11                             # שכר יסוד
-    cost_of_living = 12                          # תוספת יוקר
-    travel = 13                                  # נסיעות
-    convalescence = 14                           # הבראה
-    phone_allowance = 15                         # אחזקת טלפון
-    car_allowance = 16                           # אחזקת רכב
-    vacation_redemption = 17                     # פדיון חופש
-    vacation_pay = 18                            # תמורת חופשה
-    early_notice_pay = 19                        # אי הודעה מוקדמת
-    retirement_grant = 110                       # מענק פרישה
-    death_grant = 111                            # מענק מוות
-    severance_pay = 112                          # פיצויי פיטורין
-    expense_reimbursement_eshel = 113            # החזר הוצאות אש"ל
-    gross_up_periods = 114                       # גילום תקופות
-    gross_up_deductions = 115                    # גילום ניכויים
-    gross_up_costs = 116                         # גילום עלויות
-    index_linkage = 117                          # הצמדה למדד
-    dollar_linkage = 118                         # הצמדה לדולר
-    gross_up_extra_periods = 119                 # גילום תקופות ת. נוסף
-    lecturer_salary = 125                        # שכר מרצים
-    vat_lecturers = 126                          # מע"מ מרצים
-    vat_self_invoice = 127                       # מע"מ חשבונית עצמית
-    global_overtime = 131                        # שעות נוספות גלובליות
-    non_compete_compensation = 132               # פיצוי אי תחרות
-    additional_monthly_compensation = 133        # פיצוי חודשי נוסף
-    global_overtime_125 = 134                    # ש.נ. גלובליות 125%
-    global_overtime_150 = 135                    # ש.נ. גלובליות 150%
-    overtime_125 = 136                           # שעות נוספות 125%
-    overtime_150 = 137                           # שעות נוספות 150%
-    base_salary_rate_2 = 138                     # שכר יסוד תעריף 2
-    global_overtime_rate_2 = 139                 # ש.נ גלובליות תעריף 2
-    car_maintenance_km = 140                     # אחזקת רכב (ק"מ)
-    car_maintenance_grossed_up = 141             # אחזקת רכב מגולם
-    phone_maintenance = 142                      # אחזקת טלפון
-    phone_maintenance_grossed_up = 143           # אחזקת טלפון מגולם
-    fixed_expense_reimbursement = 144            # החזר הוצאות קבועות
-    medical_insurance_reimbursement = 145        # החזר ביטוח רפואי
-    meal_reimbursement = 146                     # החזר ארוחות
-    meal_reimbursement_grossed_up = 147          # החזר ארוחות מגולם
-    housing_expense_reimbursement = 148          # החזר הוצאות מגורים
-    holiday_gift = 149                           # מתנה לחג
-    holiday_gift_grossed_up = 150                # מתנה לחג מגולם
-    absence_deduction = 151                      # קיזוז היעדרויות
-    hourly_sick_pay = 152                        # מחלה שעתי
-    hourly_holiday_pay = 153                     # חגים שעתי
-    hourly_vacation_pay = 154                    # חופש שעתי
-    hourly_reserve_pay = 155                     # מילואים שעתי
-    election_day = 156                           # יום בחירות
-    vacation_cost = 157                          # חופשה - עלות
-    sick_cost = 158                              # מחלה - עלות
-    reserve_cost = 159                           # מילואים - עלות
-    salary_differentials = 160                   # הפרשי שכר
-    reserve_service_benefits = 161               # תגמולי מילואים
-    reserve_service_differentials = 162          # הפרשי מילואים
-    travel_differentials = 163                   # הפרשי נסיעות
-    bonus_differentials = 164                    # הפרשי בונוס
-    compensation_instead_of_socials = 165        # פיצוי במקום סוציאליות
-    compensation_instead_of_study_fund = 166     # פיצוי במקום קה"ל
-    taxable_early_notice = 167                   # חלף הודעה מוקדמת חייב
-    exempt_early_notice = 168                    # חלף הודעה מוקדמת פטור
-    early_notice_notification = 169              # הודעה מוקדמת
-    bonus = 170                                  # בונוס
-    referral_bonus = 171                         # בונוס חבר מביא חבר
-    social_benefits_bonus = 172                  # בונוס לסוציאליות
-    quarterly_commission = 173                   # עמלה רבעונית
-    monthly_commission = 174                     # עמלה חודשית
-    signing_bonus = 175                          # מענק חתימה
-    adjustment_grant = 176                       # מענק הסתגלות
-    social_benefits_on_bonus = 177               # סוציאליות בגין בונוס
-    hourly_election_day_salary = 178             # שכר שעתי יום בחירות
-    global_election_polling_worker = 179         # שכר גלובלי עובדי קלפיות
-    election_worker_expense_reimbursement = 180  # החזר הוצאות עובדי בחירות
-    car_running_deduction = 181                  # קיזוז רכב רן
-    quarterly_commission_for_socials = 182       # עמלה רבעונית לסוציאליות
-    quarterly_bonus_for_social = 189             # בונוס רבעוני לסוציאליות
-
-    # --- Group 2: Benefits and Notional Values (Shovi) ---
-    shovi_car = 21                               # שווי שימוש ברכב
-    shovi_meals = 22                             # שווי ארוחות
-    shovi_interest = 23                          # שווי ריבית
-    shovi_study_fund = 24                        # שווי קרן השתלמות
-    shovi_pension = 26                           # שווי קצבה
-    shovi_disability_insurance = 27              # שווי א.כושר
-    car_value_differentials = 28                 # הפרשי שווי רכב
-    shovi_mobile_phone = 29                      # שווי טלפון נייד
-    shovi_severance = 210                        # שווי פיצויים
-    shovi_gifts = 221                            # שווי מתנות
-    shovi_meals_value = 222                      # שווי ארוחות
-    shovi_gifts_grossed_up = 223                 # שווי מתנות מגולם
-    shovi_holiday_gift = 224                     # שווי מתנות לחג
-    shovi_holiday_gift_grossed_up = 225          # שווי מתנות לחג מגולם
-    shovi_gift_correction = 226                  # תיקון שווי מתנות
-    shovi_meals_grossed_up = 227                 # שווי ארוחות מגולם
-    shovi_meals_correction = 228                 # תיקון שווי ארוחות
-    shovi_mobile_phone_grossed_up = 229          # שווי טלפון מגולם
-    shovi_health_insurance = 230                 # שווי ביטוח בריאות
-
-    # --- Group 3: Deductions, Loans, and Technical ---
-    advance_payment_1 = 31                       # מקדמה
-    advance_payment_2 = 32                       # מקדמה 2
-    repayment = 33                               # מפרעה
-    loan = 34                                    # הלוואה
-    linked_loan = 35                             # הלוואה צמודה
-    loan_interest = 36                           # ריבית על הלוואה
-    vat_on_interest = 37                         # מע"מ על הריבית
-    meal_participation = 38                      # השתתפות בארוחות
-    vat_on_meals = 39                            # מע"מ על ארוחות
-    unpaid_leave_health_insurance = 310          # חל"ת - ד. בריאות
-    unpaid_leave_national_insurance = 311        # חל"ת - ד. ביטוח
-    negative_net = 313                           # נטו שלילי
-    expense_reimbursement = 321                  # החזר הוצאות
-    abroad_expense_reimbursement = 322           # החזר הוצאות חו"ל
-    expense_reimbursement_charge = 323           # חיוב החזרי הוצאות
-    abroad_expense_reimbursement_charge = 324    # חיוב החזר הוצאות חו"ל
-    paystub_correction_previous_month = 325      # החזר עקב תיקון תלוש קודם
-    phone_reimbursement = 326                    # החזר טלפון
-    study_fund_deduction_kahal = 327             # קיזוז קופ"ג חל"ד
-    paystub_correction = 328                     # תיקון תלוש שכר
-    pension_fund_payment = 329                   # תשלום לקופות גמל
-    option_exercise = 330                        # מימוש אופציות
-    equipment_purchase_offset = 331              # קיזוז רכישת ציוד
-    election_worker_expense_reimbursement_offset = 332 # החזר הוצאות עובדי בחירות
-
-    # --- Group 4: Quantities and Days ---
-    vacation_usage = 41                          # ניצול חופשה
-    sick_usage = 42                              # ניצול מחלה
-    reserve_days = 43                            # ימי מילואים
-    paid_work_days = 44                          # ימי עבודה משולמים
-    work_hours = 45                              # שעות עבודה
-    daily_worker_days = 46                       # ימים רק לעובד יומי
-    actual_work_days = 47                        # ימי עבודה בפועל
-    paid_work_hours = 48                         # שעות עבודה משולמות
-
-    # --- Group 91: Employer Side / Costs ---
-    travel_er = 913                              # נסיעות
-    convalescence_er = 914                       # הבראה
-    vacation_redemption_er = 917                 # פדיון חופש
-    vacation_pay_er = 918                        # תמורת חופשה
-    overtime_125_er = 9136                       # שעות נוספות 125%
-    overtime_150_er = 9137                       # שעות נוספות 150%
-    car_maintenance_km_er = 9140                 # אחזקת רכב (ק"מ)
-    absence_deduction_er = 9151                  # קיזוז היעדרויות
-    hourly_sick_pay_er = 9152                    # מחלה שעתי
-    hourly_holiday_pay_er = 9153                 # חגים שעתי
-    hourly_vacation_pay_er = 9154                # חופש שעתי
-    hourly_reserve_pay_er = 9155                 # מילואים שעתי
-    election_day_er = 9156                       # יום בחירות
-    vacation_cost_er = 9157                      # חופשה - עלות
-    sick_cost_er = 9158                          # מחלה - עלות
-    reserve_cost_er = 9159                       # מילואים - עלות
-
-    employee_id = -1
-    id_number = -2
-    employee_name = -3
-    is_study_fund_exist = -4
-    work_year = -5                               # שנת עבודה (synthesized in aggregate_center)
-    work_month = -6                              # חודש עבודה (synthesized in aggregate_center)
-    total_salary = -7                            # סהכ ברוטו קלט (synthesized in aggregate_center)
-
 class Masks:
     class SocialAnalaysisComponentsMask:
         base_salary = r'שכר יסוד'
@@ -470,21 +308,16 @@ class Masks:
         ]
 
     class TotalSalaryCenterMask:
-        base_salary = PayrollCodes.base_salary
-        global_overtime = PayrollCodes.global_overtime
-        travel = PayrollCodes.travel
-        bonus = PayrollCodes.bonus
-        quarterly_bonus_for_social = PayrollCodes.quarterly_bonus_for_social
-        quarterly_commission_for_socials = PayrollCodes.quarterly_commission_for_socials
-        reserve_service_differentials = PayrollCodes.reserve_service_differentials
-
-        mask = [
-            base_salary,
-            global_overtime,
-            travel,
-            bonus,
-            quarterly_bonus_for_social,
-            quarterly_commission_for_socials,
-            reserve_service_differentials
+        # Stable axiology keys (resolved to CONCAT codes at runtime via
+        # Axiology.codes(...)) — the components that sum into the center's
+        # total-salary column. No hardcoded codes live here anymore.
+        keys = [
+            "base_salary",
+            "global_overtime",
+            "travel",
+            "bonus",
+            "quarterly_bonus_for_social",
+            "quarterly_commission_for_socials",
+            "reserve_service_differentials",
         ]
 

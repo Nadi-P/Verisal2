@@ -1,0 +1,383 @@
+/* ===================================================================
+   AxiologyPage — component-code catalog
+   =================================================================== */
+.ax-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 32px 40px 40px;
+  box-sizing: border-box;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  overflow-y: auto;
+}
+
+.ax-loading {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%;
+  color: var(--text-secondary);
+  font-size: var(--font-size-md);
+}
+
+/* ===================== Header ====================================== */
+.ax-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+.ax-title-block { display: flex; flex-direction: column; gap: 4px; }
+.ax-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  margin: 0;
+}
+.ax-subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-md);
+}
+.ax-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Search bar */
+.ax-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-elevated-1);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  width: 280px;
+  color: var(--text-secondary);
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.ax-search:focus-within {
+  border-color: var(--accent);
+  background: var(--bg-elevated-2);
+}
+.ax-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-md);
+}
+.ax-search-clear {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+}
+.ax-search-clear:hover { color: var(--text-primary); }
+
+/* Buttons */
+.ax-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: var(--font-size-md);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: filter 140ms ease, background 140ms ease, border-color 140ms ease;
+}
+.ax-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+.ax-btn-primary {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
+}
+.ax-btn-primary:hover:not(:disabled) { filter: brightness(1.05); }
+.ax-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border-primary);
+}
+.ax-btn-ghost:hover:not(:disabled) {
+  background: var(--bg-elevated-1);
+  color: var(--text-primary);
+}
+
+/* ===================== Tabs (underline style) ====================== */
+/* No boxes — text + count sit on a single baseline, with a 1px hairline
+   under the whole strip. A single .ax-tabs-underline animates its
+   `left` and `width` to track the active tab. */
+.ax-tabs {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 22px;
+  margin-bottom: 16px;
+  padding: 0 4px 6px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+.ax-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 2px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: color 140ms ease;
+}
+/* Slightly brighter on hover — matches the spec. */
+.ax-tab:hover { color: var(--text-primary); }
+.ax-tab.is-active { color: var(--accent); }
+.ax-tab.is-active:hover { color: var(--accent); }
+
+.ax-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  background: var(--bg-elevated-3);
+  color: var(--text-secondary);
+  transition: background 140ms ease, color 140ms ease;
+}
+.ax-tab.is-active .ax-tab-count {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* The single sliding indicator under the active tab. */
+.ax-tabs-underline {
+  position: absolute;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  transition: left 240ms cubic-bezier(0.16, 1, 0.3, 1),
+              width 240ms cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 160ms ease;
+  pointer-events: none;
+}
+
+/* ===================== List ======================================== */
+.ax-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg-elevated-1);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: 8px;
+}
+.ax-empty {
+  padding: 28px;
+  color: var(--text-secondary);
+  text-align: center;
+  background: var(--bg-elevated-2);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.ax-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 78px 1fr 36px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: border-color 140ms ease;
+}
+.ax-row:hover { border-color: var(--accent); }
+.ax-row-code {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+.ax-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.ax-row-name {
+  font-weight: 500;
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ax-row-rt {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+/* 3-dot menu */
+.ax-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  transition: background 140ms ease, color 140ms ease;
+}
+.ax-icon-btn:hover {
+  background: var(--bg-elevated-3);
+  color: var(--text-primary);
+}
+.ax-row-menu-anchor { position: relative; }
+.ax-row-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  inset-inline-end: 0;
+  z-index: 20;
+  min-width: 130px;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.40);
+  overflow: hidden;
+}
+.ax-row-menu-item {
+  display: block;
+  width: 100%;
+  text-align: start;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.ax-row-menu-item:hover { background: var(--bg-elevated-3); }
+.ax-row-menu-item-danger { color: var(--error); }
+.ax-row-menu-item-danger:hover { background: rgba(239,83,80,0.10); }
+
+/* ===================== Dialog ====================================== */
+.ax-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: ax-overlay-in 160ms ease-out;
+}
+@keyframes ax-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+
+.ax-dialog {
+  width: min(420px, calc(100vw - 32px));
+  background: var(--bg-elevated-1);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+  display: flex;
+  flex-direction: column;
+  animation: ax-dialog-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes ax-dialog-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ax-dialog-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.ax-dialog-title {
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+}
+.ax-dialog-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ax-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+.ax-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ax-field-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+.ax-field-error {
+  font-size: var(--font-size-xs);
+  color: var(--error);
+  margin-top: 2px;
+}
+.ax-input {
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-md);
+  outline: none;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.ax-input:focus {
+  border-color: var(--accent);
+  background: var(--bg-elevated-3);
+}
+.ax-input.is-invalid { border-color: var(--error); }
+
+/* ===================== Toast (reuses ReportPage classes) =========== */
+.report-page-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 24px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.45);
+  z-index: 250;
+  animation: ax-toast-in 200ms ease;
+}
+.report-page-toast-success { background: var(--success); color: #111; }
+.report-page-toast-error   { background: var(--error);   color: #fff; }
+@keyframes ax-toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconReset, IconBars, IconTag, IconX, IconBack } from '../../../icons.jsx';
+import { IconReset, IconBars, IconTag, IconX, IconBack, IconFootsteps } from '../../../icons.jsx';
 import { useTopBarLogic } from './TopBar.logic.jsx';
 import './TopBar.css';
 
@@ -21,6 +21,8 @@ export default function TopBar({
   onSave,
   onReset,
   onBack,
+  onReopenLastTrace,
+  hasLastTrace  = false,
   showBack      = false,
   resetDisabled = false,
   saveDisabled  = false,
@@ -52,6 +54,17 @@ export default function TopBar({
       )}
 
       <div className="pivot-topbar-spacer" />
+
+      <button
+        type="button"
+        className="pivot-topbar-btn"
+        onClick={onReopenLastTrace}
+        disabled={!hasLastTrace}
+        title="פתיחה מחדש של המעקב האחרון"
+        aria-label="פתיחה מחדש של המעקב האחרון"
+      >
+        <IconFootsteps size={16} />
+      </button>
 
       <button
         type="button"

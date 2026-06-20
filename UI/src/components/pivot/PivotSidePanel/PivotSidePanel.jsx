@@ -10,6 +10,8 @@ import TableFieldConfigScreen  from './TableFieldConfigScreen/TableFieldConfigSc
 import ConfirmDialog           from './ConfirmDialog/ConfirmDialog.jsx';
 import SaveDialog              from './SaveDialog/SaveDialog.jsx';
 import RenameDialog            from './RenameDialog/RenameDialog.jsx';
+import CalculationInfoScreen   from './CalculationInfoScreen/CalculationInfoScreen.jsx';
+import { useTrace }            from '../../../contexts/TraceContext.jsx';
 import './PivotSidePanel.css';
 
 /**
@@ -22,6 +24,7 @@ import './PivotSidePanel.css';
  * table — TopBar stays outside the overlay and remains interactive.
  */
 export default function PivotSidePanel(props) {
+  const trace = useTrace();
   const {
     // Open/closed state (lifted to parent)
     isOpen,
@@ -30,6 +33,8 @@ export default function PivotSidePanel(props) {
     // screens to their pivot- or table-mode variants. ManagePresetsScreen is
     // shared as-is.
     displayMode = 'pivot',
+    // Current report id — used by CalculationInfoScreen for navigation context.
+    currentReportId,
     // Data + config
     allFields,
     uniqueValuesFor,
@@ -71,6 +76,21 @@ export default function PivotSidePanel(props) {
   // SAME props it would otherwise. FieldConfig may animate out after its
   // editingField is gone — we guard for that to avoid a render crash.
   const renderScreen = (screenName) => {
+    // Trace-mode override comes FIRST: when the user double-right-clicks
+    // a referencing cell, the side panel takes over regardless of which
+    // preset-editor screen would otherwise show. Placed before the EDIT
+    // branch (the default screen) on purpose — otherwise EDIT wins.
+    if (trace.panelTarget) {
+      return (
+        <div key={`trace-${trace.panelTarget.reportId}-${trace.panelTarget.columnIdx}-${trace.panelTarget.rowIdx}`}
+             className="pivot-side-panel-mode-frame">
+          <CalculationInfoScreen
+            currentReportId={currentReportId}
+            displayMode={displayMode}
+          />
+        </div>
+      );
+    }
     if (screenName === L.SCREENS.EDIT) {
       // The mode-keyed wrapper triggers a CSS fade-in-from-right animation
       // whenever `displayMode` flips, so the EDIT screen feels like a
@@ -149,6 +169,35 @@ export default function PivotSidePanel(props) {
     ? document.querySelector('.report-page-main')
     : null;
 
+  // Auto-open the panel as soon as a trace target lands.
+  React.useEffect(() => {
+    if (trace.panelTarget && !L.isOpen) setIsOpen(true);
+  }, [trace.panelTarget, L.isOpen, setIsOpen]);
+
+  // Back button: in trace mode it clears the trace target AND the
+  // highlight (since the user explicitly closed the trace screen);
+  // otherwise the existing screen-stack `goBack` handles it.
+  const handleBack = () => {
+    if (trace.panelTarget) {
+      trace.closeTrace();
+      trace.clearFocus();
+    } else {
+      L.goBack();
+    }
+  };
+  const showBack = !!trace.panelTarget || L.screen !== L.SCREENS.EDIT;
+
+  // X (close) — when a trace screen is up, closing also clears the
+  // trace target + highlight (mirrors the back button semantics so the
+  // purple cell highlights don't leak past the trace screen).
+  const handleClose = () => {
+    if (trace.panelTarget) {
+      trace.closeTrace();
+      trace.clearFocus();
+    }
+    L.handleClose();
+  };
+
   return (
     <>
       <aside
@@ -157,13 +206,15 @@ export default function PivotSidePanel(props) {
       >
         <div className="pivot-side-panel-body">
           <TopBar
-            onClose={L.handleClose}
+            onClose={handleClose}
             onReset={L.handleReset}
             onSave={L.handleSave}
             onManage={L.handleManage}
-            onBack={L.goBack}
-            showBack={L.screen !== L.SCREENS.EDIT}
+            onBack={handleBack}
+            showBack={showBack}
             resetDisabled={!L.isModified}
+            onReopenLastTrace={trace.reopenLastTrace}
+            hasLastTrace={!!trace.lastTrace}
           />
 
           {/* Screen stage — during a transition we render both the outgoing

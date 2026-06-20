@@ -125,6 +125,7 @@ export default function TableEditScreen({
           labelFor={labelFor}
           dragDisabled={isSearching}
           onTogglePin={L.togglePin}
+          onToggleVisible={L.toggleVisible}
           onMoveItem={L.moveItem}
           onMoveItemBy={L.moveItemBy}
           onSetSortDirect={L.setSortDirect}

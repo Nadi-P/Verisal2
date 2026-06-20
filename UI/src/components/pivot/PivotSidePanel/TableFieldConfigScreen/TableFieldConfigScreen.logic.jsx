@@ -22,8 +22,10 @@ export function useTableFieldConfigScreenLogic({ field, config, onConfigChange }
   const pinned  =  (table.pinned || []).includes(field);
   const sortDir = table.sortBy && table.sortBy.columnId === field ? table.sortBy.direction : null;
 
-  const filter = (config.filters       || {})[field];
-  const fx     = (config.fxConversions || {})[field];
+  const filter        = (config.filters       || {})[field];
+  const fx            = (config.fxConversions || {})[field];
+  const threshold     = (config.thresholds    || {})[field];
+  const statHighlight = (config.statHighlights|| {})[field];
 
   const updateTable = useCallback((partial) => {
     onConfigChange({ ...config, table: { ...table, ...partial } });
@@ -103,11 +105,36 @@ export function useTableFieldConfigScreenLogic({ field, config, onConfigChange }
     onConfigChange(next);
   }, [cloneShared, field, onConfigChange]);
 
+  const setThreshold = useCallback((nextThreshold) => {
+    const next = cloneShared();
+    if (nextThreshold === null) delete next.thresholds[field];
+    else next.thresholds[field] = nextThreshold;
+    onConfigChange(next);
+  }, [cloneShared, field, onConfigChange]);
+
+  const setStatHighlight = useCallback((nextStat) => {
+    const next = cloneShared();
+    if (nextStat === null) delete next.statHighlights[field];
+    else next.statHighlights[field] = nextStat;
+    onConfigChange(next);
+  }, [cloneShared, field, onConfigChange]);
+
+  // Clear both at once — see the FieldConfigScreen.logic comment.
+  const clearConditional = useCallback(() => {
+    const next = cloneShared();
+    delete next.thresholds[field];
+    delete next.statHighlights[field];
+    onConfigChange(next);
+  }, [cloneShared, field, onConfigChange]);
+
   return {
     isDeviation,
     visible, pinned, sortDir,
     toggleVisible, togglePin, cycleSort,
     filter, setFilter,
     fx, setFx,
+    threshold, setThreshold,
+    statHighlight, setStatHighlight,
+    clearConditional,
   };
 }

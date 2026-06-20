@@ -53,7 +53,7 @@ def concat(frames: List, axis: int = 0, ignore_index: bool = True, sort: bool = 
                 src = f[col_name]
                 for cell in src.cells:
                     row_values.append(cell.value)
-                    per_row_refs.append([cell.self_ref])
+                    per_row_refs.append(cell.contrib_refs())
             else:
                 # column absent in this frame → emit Nones for its row count
                 pad = f.row_count()
@@ -103,7 +103,7 @@ def to_numeric(column: Column, errors: str = "raise") -> Column:
     out_values = [_conv(c.value) for c in column.cells]
     return column._make_unattached_column(
         name=column.name, row_values=out_values,
-        per_row_refs=[[c.self_ref] for c in column.cells],
+        per_row_refs=[c.contrib_refs() for c in column.cells],
     )
 
 
@@ -125,18 +125,15 @@ def where(condition: Column, true_val, false_val) -> Column:
     f_vals = false_val.values() if is_f_col else [false_val] * n
     out, refs = [], []
     for i in range(n):
-        cond_cell = condition.cells[i]
-        if bool(cond_cell.value):
+        # Condition cells are NOT refs — they determine which BRANCH the
+        # value comes from, they don't contribute to the value itself.
+        if bool(condition.cells[i].value):
             out.append(t_vals[i])
-            r = [cond_cell.self_ref]
-            if is_t_col:
-                r.append(true_val.cells[i].self_ref)
+            r = list(true_val.cells[i].contrib_refs()) if is_t_col else []
             refs.append(r)
         else:
             out.append(f_vals[i])
-            r = [cond_cell.self_ref]
-            if is_f_col:
-                r.append(false_val.cells[i].self_ref)
+            r = list(false_val.cells[i].contrib_refs()) if is_f_col else []
             refs.append(r)
     return condition._make_unattached_column(
         name=f"where({condition.name})", row_values=out, per_row_refs=refs,
