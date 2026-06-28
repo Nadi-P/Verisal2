@@ -1,9 +1,9 @@
 {
   "name": "verisal",
   "type": "module",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Verisal Data Processing",
-  "main": "main.js",
+  "main": "Config/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,7 +12,8 @@
   "build": {
     "appId": "com.verisal.app",
     "productName": "Verisal",
-    "asar": false,
+    "asar": true,
+    "msiProjectCreated": "Config/fix-msi.cjs",
     "directories": {
       "output": "dist_electron"
     },

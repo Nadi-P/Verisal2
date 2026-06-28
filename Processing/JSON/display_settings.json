@@ -1,4 +1,5 @@
 {
     "mode": "pivot",
-    "zoom": 90
+    "zoom": 100,
+    "exportFormat": "ask"
 }

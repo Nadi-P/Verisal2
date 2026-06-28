@@ -1,77 +1,8 @@
 {
     "components": {
-        "defaultName": "deafult",
+        "defaultName": "default",
         "saved": {
-            "deafult": {
-                "rows": [
-                    "חודש עבודה",
-                    "שם מחלקה",
-                    "שם רכיב"
-                ],
-                "columns": [],
-                "values": [
-                    {
-                        "field": "סה\"כ",
-                        "aggregation": "sum"
-                    },
-                    {
-                        "field": "כמות",
-                        "aggregation": "sum"
-                    },
-                    {
-                        "field": "תעריף",
-                        "aggregation": "sum"
-                    },
-                    {
-                        "field": "ה. קבע",
-                        "aggregation": "sum"
-                    }
-                ],
-                "filters": {},
-                "fxConversions": {}
-            },
-            "new": {
-                "rows": [
-                    "חודש עבודה",
-                    "שם מחלקה",
-                    "שם רכיב"
-                ],
-                "columns": [],
-                "values": [
-                    {
-                        "field": "סה\"כ",
-                        "aggregation": "sum"
-                    },
-                    {
-                        "field": "כמות",
-                        "aggregation": "sum"
-                    },
-                    {
-                        "field": "תעריף",
-                        "aggregation": "sum"
-                    },
-                    {
-                        "field": "ה. קבע",
-                        "aggregation": "sum"
-                    },
-                    {
-                        "field": "קוד רכיב",
-                        "aggregation": "sum"
-                    }
-                ],
-                "filters": {},
-                "fxConversions": {
-                    "כמות": {
-                        "currency": "",
-                        "direction": "toIls",
-                        "month": 5,
-                        "year": 2026
-                    }
-                },
-                "thresholds": {},
-                "statHighlights": {}
-            },
-            "comparison": {
+            "default": {
                 "rows": [
                     "חודש עבודה",
                     "שם עובד",
@@ -94,58 +25,10 @@
                     {
                         "field": "ה. קבע",
                         "aggregation": "sum"
-                    },
-                    {
-                        "field": "__dev_dev_1780141487999_257_percent",
-                        "deviation": true,
-                        "kind": "percent",
-                        "deviationId": "dev_1780141487999_257",
-                        "name": "high"
-                    },
-                    {
-                        "field": "__dev_dev_1780141487999_257_diff",
-                        "deviation": true,
-                        "kind": "diff",
-                        "deviationId": "dev_1780141487999_257",
-                        "name": "high"
                     }
                 ],
                 "filters": {},
-                "deviations": [
-                    {
-                        "id": "dev_1780141487999_257",
-                        "sourceA": "סה\"כ",
-                        "sourceB": "תעריף",
-                        "name": "high",
-                        "showDiff": true,
-                        "showPercent": true
-                    }
-                ],
-                "table": {
-                    "columnOrder": [
-                        "שנת עבודה",
-                        "מספר עובד",
-                        "שם עובד",
-                        "__dev_dev_1780141487999_257_percent",
-                        "__dev_dev_1780141487999_257_diff",
-                        "שם מחלקה",
-                        "חודש עבודה",
-                        "קוד רכיב",
-                        "שם רכיב",
-                        "תעריף",
-                        "כמות",
-                        "סה\"כ",
-                        "ה. קבע",
-                        "רבעון",
-                        "חצי שנה",
-                        "שם תת מחלקה",
-                        "מספר זהות",
-                        "שם חברה"
-                    ],
-                    "hidden": [],
-                    "pinned": [],
-                    "sortBy": null
-                }
+                "deviations": []
             }
         },
         "draft": {
@@ -171,50 +54,23 @@
                 {
                     "field": "ה. קבע",
                     "aggregation": "sum"
-                },
-                {
-                    "field": "__dev_dev_1780141487999_257_percent",
-                    "deviation": true,
-                    "kind": "percent",
-                    "deviationId": "dev_1780141487999_257",
-                    "name": "high"
-                },
-                {
-                    "field": "__dev_dev_1780141487999_257_diff",
-                    "deviation": true,
-                    "kind": "diff",
-                    "deviationId": "dev_1780141487999_257",
-                    "name": "high"
                 }
             ],
             "filters": {},
             "fxConversions": {},
             "thresholds": {},
             "statHighlights": {},
-            "deviations": [
-                {
-                    "id": "dev_1780141487999_257",
-                    "sourceA": "סה\"כ",
-                    "sourceB": "תעריף",
-                    "name": "high",
-                    "showDiff": true,
-                    "showPercent": true
-                }
-            ],
-            "expanded": [
-                "\u00012025/05\u0001גיטליץ  עידן "
-            ],
+            "deviations": [],
+            "expanded": [],
             "table": {
                 "columnOrder": [
-                    "שנת עבודה",
                     "מספר עובד",
-                    "שם רכיב",
+                    "שנת עבודה",
                     "שם עובד",
-                    "__dev_dev_1780141487999_257_percent",
-                    "__dev_dev_1780141487999_257_diff",
                     "שם מחלקה",
                     "חודש עבודה",
                     "קוד רכיב",
+                    "שם רכיב",
                     "תעריף",
                     "כמות",
                     "סה\"כ",
@@ -227,20 +83,67 @@
                 ],
                 "hidden": [],
                 "pinned": [],
-                "sortBy": {
-                    "columnId": "חודש עבודה",
-                    "direction": "asc"
-                }
+                "sortBy": null
             }
         }
     },
     "deductions": {
-        "defaultName": null,
-        "saved": {},
+        "defaultName": "default",
+        "saved": {
+            "default": {
+                "rows": [
+                    "חודש עבודה",
+                    "שם עובד",
+                    "שם רכיב"
+                ],
+                "columns": [],
+                "values": [
+                    {
+                        "field": "תעריף",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "כמות",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "סה\"כ",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "ה. קבע",
+                        "aggregation": "sum"
+                    }
+                ],
+                "filters": {},
+                "deviations": []
+            }
+        },
         "draft": {
-            "rows": [],
+            "rows": [
+                "חודש עבודה",
+                "שם עובד",
+                "שם רכיב"
+            ],
             "columns": [],
-            "values": [],
+            "values": [
+                {
+                    "field": "תעריף",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "כמות",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "סה\"כ",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "ה. קבע",
+                    "aggregation": "sum"
+                }
+            ],
             "filters": {},
             "fxConversions": {},
             "thresholds": {},
@@ -248,7 +151,24 @@
             "deviations": [],
             "expanded": [],
             "table": {
-                "columnOrder": [],
+                "columnOrder": [
+                    "שם עובד",
+                    "שנת עבודה",
+                    "מספר עובד",
+                    "שם מחלקה",
+                    "חודש עבודה",
+                    "קוד רכיב",
+                    "שם רכיב",
+                    "תעריף",
+                    "כמות",
+                    "סה\"כ",
+                    "ה. קבע",
+                    "רבעון",
+                    "חצי שנה",
+                    "שם תת מחלקה",
+                    "מספר זהות",
+                    "שם חברה"
+                ],
                 "hidden": [],
                 "pinned": [],
                 "sortBy": null
@@ -256,12 +176,62 @@
         }
     },
     "income": {
-        "defaultName": null,
-        "saved": {},
+        "defaultName": "default",
+        "saved": {
+            "default": {
+                "rows": [
+                    "חודש עבודה",
+                    "שם עובד",
+                    "שם רכיב"
+                ],
+                "columns": [],
+                "values": [
+                    {
+                        "field": "תעריף",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "כמות",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "סה\"כ",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "ה. קבע",
+                        "aggregation": "sum"
+                    }
+                ],
+                "filters": {},
+                "deviations": []
+            }
+        },
         "draft": {
-            "rows": [],
+            "rows": [
+                "חודש עבודה",
+                "שם עובד",
+                "שם רכיב"
+            ],
             "columns": [],
-            "values": [],
+            "values": [
+                {
+                    "field": "תעריף",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "כמות",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "סה\"כ",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "ה. קבע",
+                    "aggregation": "sum"
+                }
+            ],
             "filters": {},
             "fxConversions": {},
             "thresholds": {},
@@ -277,29 +247,91 @@
         }
     },
     "absences": {
-        "defaultName": "Default",
+        "defaultName": "default",
         "saved": {
-            "Default": {
-                "rows": [],
+            "default": {
+                "rows": [
+                    "חודש עבודה",
+                    "שם עובד"
+                ],
                 "columns": [],
-                "values": [],
+                "values": [
+                    {
+                        "field": "שם חופש",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "חופש - ניצול חודשי",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "שם מחלה",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "מחלה - ניצול חודשי",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "שם הבראה",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "הבראה - ניצול חודשי",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "מילואים - ניצול חודשי",
+                        "aggregation": "sum"
+                    }
+                ],
                 "filters": {},
-                "fxConversions": {},
-                "thresholds": {},
-                "statHighlights": {},
                 "deviations": [],
-                "table": {}
+                "expanded": []
             }
         },
         "draft": {
-            "rows": [],
+            "rows": [
+                "חודש עבודה",
+                "שם עובד"
+            ],
             "columns": [],
-            "values": [],
+            "values": [
+                {
+                    "field": "שם חופש",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "חופש - ניצול חודשי",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "שם מחלה",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "מחלה - ניצול חודשי",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "שם הבראה",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "הבראה - ניצול חודשי",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "מילואים - ניצול חודשי",
+                    "aggregation": "sum"
+                }
+            ],
             "filters": {},
             "fxConversions": {},
             "thresholds": {},
             "statHighlights": {},
             "deviations": [],
+            "expanded": [],
             "table": {
                 "columnOrder": [],
                 "hidden": [],
@@ -309,17 +341,76 @@
         }
     },
     "providents": {
-        "defaultName": null,
-        "saved": {},
+        "defaultName": "default",
+        "saved": {
+            "default": {
+                "rows": [
+                    "חודש עבודה",
+                    "שם עובד",
+                    "שם קופה"
+                ],
+                "columns": [],
+                "values": [
+                    {
+                        "field": "גמל עובד",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "סה\"כ עובד",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "גמל מעסיק",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "פיצויים",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "סה\"כ מעסיק",
+                        "aggregation": "sum"
+                    }
+                ],
+                "filters": {},
+                "deviations": []
+            }
+        },
         "draft": {
-            "rows": [],
+            "rows": [
+                "חודש עבודה",
+                "שם עובד",
+                "שם קופה"
+            ],
             "columns": [],
-            "values": [],
+            "values": [
+                {
+                    "field": "גמל עובד",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "סה\"כ עובד",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "גמל מעסיק",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "פיצויים",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "סה\"כ מעסיק",
+                    "aggregation": "sum"
+                }
+            ],
             "filters": {},
             "fxConversions": {},
             "thresholds": {},
             "statHighlights": {},
             "deviations": [],
+            "expanded": [],
             "table": {
                 "columnOrder": [],
                 "hidden": [],
@@ -329,24 +420,76 @@
         }
     },
     "costing": {
-        "defaultName": "Default",
+        "defaultName": "default",
         "saved": {
-            "Default": {
-                "rows": [],
+            "default": {
+                "rows": [
+                    "חודש עבודה",
+                    "שם עובד"
+                ],
                 "columns": [],
-                "values": [],
+                "values": [
+                    {
+                        "field": "עלות מעסיק",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "נטו לתשלום",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "ברוטו",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "מס הכנסה",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "ניכויי רשות",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "גמל + קה\"ל מעסיק",
+                        "aggregation": "sum"
+                    }
+                ],
                 "filters": {},
-                "fxConversions": {},
-                "thresholds": {},
-                "statHighlights": {},
-                "deviations": [],
-                "table": {}
+                "deviations": []
             }
         },
         "draft": {
-            "rows": [],
+            "rows": [
+                "חודש עבודה",
+                "שם עובד"
+            ],
             "columns": [],
-            "values": [],
+            "values": [
+                {
+                    "field": "עלות מעסיק",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "נטו לתשלום",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "ברוטו",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "מס הכנסה",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "ניכויי רשות",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "גמל + קה\"ל מעסיק",
+                    "aggregation": "sum"
+                }
+            ],
             "filters": {},
             "fxConversions": {},
             "thresholds": {},
@@ -362,17 +505,90 @@
         }
     },
     "center": {
-        "defaultName": null,
-        "saved": {},
+        "defaultName": "default",
+        "saved": {
+            "default": {
+                "rows": [
+                    "שם העובד"
+                ],
+                "columns": [],
+                "values": [
+                    {
+                        "field": "ימי עבודה לתשלום",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "שעות עבודה משולמות",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "שעות עבודה בפועל",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "שכר יסוד",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "שווי ארוחות",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "שווי מתנות",
+                        "aggregation": "sum"
+                    }
+                ],
+                "filters": {},
+                "fxConversions": {},
+                "thresholds": {},
+                "statHighlights": {},
+                "deviations": [],
+                "expanded": [],
+                "table": {
+                    "columnOrder": [],
+                    "hidden": [],
+                    "pinned": [],
+                    "sortBy": null
+                }
+            }
+        },
         "draft": {
-            "rows": [],
+            "rows": [
+                "שם העובד"
+            ],
             "columns": [],
-            "values": [],
+            "values": [
+                {
+                    "field": "ימי עבודה לתשלום",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "שעות עבודה משולמות",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "שעות עבודה בפועל",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "שכר יסוד",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "שווי ארוחות",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "שווי מתנות",
+                    "aggregation": "sum"
+                }
+            ],
             "filters": {},
             "fxConversions": {},
             "thresholds": {},
             "statHighlights": {},
             "deviations": [],
+            "expanded": [],
             "table": {
                 "columnOrder": [],
                 "hidden": [],
@@ -382,9 +598,9 @@
         }
     },
     "social_analysis": {
-        "defaultName": "deafult",
+        "defaultName": "default",
         "saved": {
-            "deafult": {
+            "default": {
                 "rows": [
                     "חודש עבודה",
                     "שם עובד"
@@ -430,8 +646,8 @@
         },
         "draft": {
             "rows": [
-                "חודש עבודה",
-                "שם עובד"
+                "שם עובד",
+                "חודש עבודה"
             ],
             "columns": [],
             "values": [
@@ -473,7 +689,10 @@
             "thresholds": {},
             "statHighlights": {},
             "deviations": [],
-            "expanded": [],
+            "expanded": [
+                "\u0001גיטליץ  עידן ",
+                "\u0001בולס  ערן "
+            ],
             "table": {
                 "columnOrder": [],
                 "hidden": [],
@@ -487,8 +706,8 @@
         "saved": {},
         "draft": {
             "rows": [
-                "בדיקה",
-                "שם עובד"
+                "שם עובד",
+                "רכיב"
             ],
             "columns": [],
             "values": [
@@ -515,6 +734,18 @@
                 {
                     "field": "06/2025",
                     "aggregation": "sum"
+                },
+                {
+                    "field": "07/2025",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "08/2025",
+                    "aggregation": "sum"
+                },
+                {
+                    "field": "סיכום חודשים",
+                    "aggregation": "sum"
                 }
             ],
             "filters": {},
@@ -523,7 +754,8 @@
             "statHighlights": {},
             "deviations": [],
             "expanded": [
-                "\u0001ניכויי רשות"
+                "\u0001בן עמי  הילה ",
+                "\u0001בולס  ערן "
             ],
             "table": {
                 "columnOrder": [],
@@ -534,9 +766,9 @@
         }
     },
     "reports_against_center": {
-        "defaultName": "nigga",
+        "defaultName": "default",
         "saved": {
-            "nigga": {
+            "default": {
                 "rows": [
                     "שם עובד",
                     "בדיקה"
@@ -633,8 +865,38 @@
         }
     },
     "loading_table": {
-        "defaultName": null,
-        "saved": {},
+        "defaultName": "default",
+        "saved": {
+            "default": {
+                "rows": [
+                    "מספר עובד",
+                    "סוג רשומה"
+                ],
+                "columns": [],
+                "values": [
+                    {
+                        "field": "תעריף",
+                        "aggregation": "sum"
+                    },
+                    {
+                        "field": "כמות",
+                        "aggregation": "sum"
+                    }
+                ],
+                "filters": {},
+                "fxConversions": {},
+                "thresholds": {},
+                "statHighlights": {},
+                "deviations": [],
+                "expanded": [],
+                "table": {
+                    "columnOrder": [],
+                    "hidden": [],
+                    "pinned": [],
+                    "sortBy": null
+                }
+            }
+        },
         "draft": {
             "rows": [
                 "מספר עובד",
@@ -652,7 +914,19 @@
                 }
             ],
             "filters": {},
-            "deviations": []
+            "fxConversions": {},
+            "thresholds": {},
+            "statHighlights": {},
+            "deviations": [],
+            "expanded": [
+                "\u000120"
+            ],
+            "table": {
+                "columnOrder": [],
+                "hidden": [],
+                "pinned": [],
+                "sortBy": null
+            }
         }
     },
     "loading-vs-center": {

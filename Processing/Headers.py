@@ -212,6 +212,8 @@ class Headers:
         work_month = r"חודש עבודה"
         employee_id = r"מספר עובד"
         employee_name = r"שם עובד"
+        line_item = r"רכיב"
+        months_total = r"סיכום חודשים"
         category = r"סיווג"
         check = r"בדיקה"
         current_month = r"נוכחי"

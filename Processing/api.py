@@ -20,9 +20,9 @@ from Files import Files
 from Loading import InitializeFromFiles, GetFileFromObject, _load_center_sheets
 from Constants import KEYWORDS
 from UploadManager import UploadManager
+from paths import JSON_DIR
 
 
-JSON_DIR = Path(__file__).parent / "JSON"
 FX_PATH = JSON_DIR / "fx_conversions.json"
 AXIOLOGY_PATH = JSON_DIR / "axiology.json"
 
@@ -61,10 +61,10 @@ def _migrate_fx_legacy(flat: dict) -> dict:
             continue
         out.setdefault(code, {}).setdefault(str(year), {})[str(month)] = rate
     return out
-PRESETS_PATH = JSON_DIR / "presets.json"
 TABLE_PRESETS_PATH = JSON_DIR / "tables_presets.json"
 DISPLAY_SETTINGS_PATH = JSON_DIR / "display_settings.json"
-DISPLAY_SETTINGS_DEFAULT = {"mode": "pivot", "zoom": 100}
+DISPLAY_SETTINGS_DEFAULT = {"mode": "pivot", "zoom": 100, "exportFormat": "ask"}
+EXPORT_FORMATS = ("ask", "custom", "original")
 
 
 # ---- Pydantic request bodies ----
@@ -706,6 +706,8 @@ class Api:
         except (TypeError, ValueError):
             zoom = 100
         merged["zoom"] = max(50, min(200, zoom))
+        if merged.get("exportFormat") not in EXPORT_FORMATS:
+            merged["exportFormat"] = "ask"
         return merged
 
     def save_display_settings(self, payload: dict):
@@ -727,6 +729,10 @@ class Api:
             except (TypeError, ValueError):
                 raise HTTPException(status_code=400, detail="zoom must be an integer")
             current["zoom"] = max(50, min(200, z))
+        if "exportFormat" in payload:
+            if payload["exportFormat"] not in EXPORT_FORMATS:
+                raise HTTPException(status_code=400, detail="exportFormat must be 'ask', 'custom', or 'original'")
+            current["exportFormat"] = payload["exportFormat"]
         self._write_json(DISPLAY_SETTINGS_PATH, current)
         return {"status": "success", **current}
 

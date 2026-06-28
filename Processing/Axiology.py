@@ -26,9 +26,10 @@ key raises KeyError, but callers that build masks should use `codes(...)`
 which silently skips unknown keys.
 """
 import json
-from pathlib import Path
 
-_AXIOLOGY_PATH = Path(__file__).parent / "JSON" / "axiology.json"
+from paths import JSON_DIR
+
+_AXIOLOGY_PATH = JSON_DIR / "axiology.json"
 
 
 class _AxiologyData:

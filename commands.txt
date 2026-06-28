@@ -9,7 +9,3 @@ python -m uvicorn main:app --reload
 TODOS:
 - fix banches - no need for duplication brancehes, show branching from 
 source, remove vertical branch from top and bottom.
-- implement loading table section - both audit report and the table 
-itself as new reports in their own section
-- implement fx conversions fully.
-add a currently used section in the fx mangement page.

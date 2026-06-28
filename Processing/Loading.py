@@ -75,6 +75,34 @@ def _find_center_signature_row(raw_df):
             return i
     return None
 
+def _filter_center_employee_rows(center_df):
+    """
+    Keep only real employee rows. The center sheet's first three columns
+    (anchored by the signature row) are employee number, ID number, and
+    employee name. Padding / totals / stray rows are dropped by requiring
+    ALL THREE identifiers to be present and non-blank — so a row missing
+    e.g. the employee name never leaks into the report.
+    """
+    if center_df is None or center_df.shape[1] < 3:
+        return center_df
+
+    def _valid(v):
+        if v is None:
+            return False
+        try:
+            if pd.isna(v):
+                return False
+        except (TypeError, ValueError):
+            pass
+        s = str(v).strip()
+        return s != "" and s.lower() != "nan"
+
+    keep = center_df.apply(
+        lambda r: _valid(r.iloc[0]) and _valid(r.iloc[1]) and _valid(r.iloc[2]),
+        axis=1,
+    )
+    return center_df[keep].reset_index(drop=True)
+
 def _build_center_coded_df(raw_df, header_row, data_df):
     """
     Build the "coded" projection of the center DF.
@@ -226,6 +254,10 @@ def _load_center_sheets(file_obj):
 
             center_df = pd.read_excel(xls, sheet_name=target_sheet, header=signature_row)
             center_df.columns = center_df.columns.astype(str).str.strip()
+
+            # Drop padding / totals / partial rows — keep only rows that carry
+            # a valid employee number, ID number, AND name.
+            center_df = _filter_center_employee_rows(center_df)
 
             center_df_coded, code_map = _build_center_coded_df(raw_df, signature_row, center_df)
 

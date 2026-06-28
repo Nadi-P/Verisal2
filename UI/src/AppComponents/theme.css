@@ -1,0 +1,202 @@
+:root {
+  /* ---- Backgrounds ---- */
+  --bg-primary:       #212121;
+  --bg-sidebar:       #191919;
+  --bg-elevated-1:    #2a2a2a;
+  --bg-elevated-2:    #333333;
+  --bg-elevated-3:    #3a3a3a;
+  --bg-hover:         rgba(255, 255, 255, 0.04);
+  --bg-active:        rgba(144, 190, 240, 0.08);
+
+  /* ---- Accent ---- */
+  --accent:           #90BEF0;
+  --accent-dim:       #6a9fd4;
+  --accent-soft:      rgba(144, 190, 240, 0.12);
+  --accent-glow:      rgba(144, 190, 240, 0.18);
+
+  /* ---- Text ---- */
+  --text-primary:     #e8e8e8;
+  --text-secondary:   #a0a0a0;
+  --text-muted:       #666666;
+  --text-on-accent:   #121212;
+
+  /* ---- Borders ---- */
+  --border-primary:   #3a3a3a;
+  --border-subtle:    #2e2e2e;
+  --border-accent:    rgba(144, 190, 240, 0.3);
+
+  /* ---- Semantic ---- */
+  --success:          #66bb6a;
+  --warning:          #ffa726;
+  --error:            #ef5350;
+  --info:             #42a5f5;
+
+  /* ---- Sizing ---- */
+  --sidebar-width:    280px;
+  --sidebar-collapsed: 64px;
+  --radius-sm:        6px;
+  --radius-md:        10px;
+  --radius-lg:        14px;
+
+  /* ---- Typography ---- */
+  --font-family:      "Segoe UI", "Rubik", "Assistant", system-ui, sans-serif;
+  --font-size-xs:     11px;
+  --font-size-sm:     12px;
+  --font-size-md:     13px;
+  --font-size-lg:     15px;
+  --font-size-xl:     18px;
+  --font-size-2xl:    24px;
+  --font-size-3xl:    32px;
+
+  /* ---- Motion ---- */
+  --transition-fast:  120ms ease;
+  --transition-med:   200ms ease;
+  --transition-slow:  320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* ---- Shadows ---- */
+  --shadow-sm:        0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md:        0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg:        0 8px 24px rgba(0, 0, 0, 0.5);
+
+  /* ---- Table backgrounds ---- */
+  --bg-dark:        var(--bg-primary);
+  --header-bg:      var(--bg-elevated-1);
+  --panel-bg:       var(--bg-elevated-1);
+  --sidebar-bg:     var(--bg-sidebar);
+  --hover-bg:       var(--bg-hover);
+  --elevated-bg2:   var(--bg-elevated-2);
+  --cell-bg-pinned: var(--bg-elevated-2);
+
+  /* ---- Table borders ---- */
+  --border-color:   var(--border-primary);
+
+  /* ---- Table text ---- */
+  --text-main:      var(--text-primary);
+
+  /* ---- Table accent ---- */
+  --accent-blue:    var(--accent);
+
+  /* ---- Table motion ---- */
+  --transition-speed: var(--transition-med);
+
+  /* ---- Cell tints ---- */
+  --cell-bg-deviation-soft: var(--accent-soft);
+  --cell-bg-deviation-dark: var(--accent-glow);
+  --cell-bg-pinned-soft: var(--bg-elevated-3);
+  --cell-bg-pinned-dark: var(--bg-elevated-2);
+  --cell-bg-soft: hsl(0, 0%, 10%);
+  --cell-bg-dark: hsl(0, 0%, 15%);
+  --border-dark: var(--sidebar-bg);
+
+  /* ---- Trace UI ---- */
+  --trace-accent: hsl(280, 65%, 65%);
+  --trace-soft:   hsla(280, 65%, 65%, 0.16);
+  --trace-glow:   hsla(280, 65%, 65%, 0.32);
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  direction: rtl;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  direction: rtl;
+  font-family: var(--font-family);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  outline: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--text-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}

@@ -5,7 +5,17 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: './',
+  // The app lives in src/AppComponents (index.html + source). public/ and the
+  // build output stay at the UI root; lib/ and assets/ live in src/, so the
+  // dev server must be allowed to serve files above the root.
+  root: 'src/AppComponents',
+  publicDir: '../../public',
+  build: {
+    outDir: '../../dist',
+    emptyOutDir: true,
+  },
   server: {
+    fs: { allow: ['../..'] },
     // Proxy /api/* to the uvicorn backend so the browser sees same-origin
     // requests (sidesteps CORS + Chrome's Private Network Access checks).
     proxy: {

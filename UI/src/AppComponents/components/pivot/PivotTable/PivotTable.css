@@ -1,0 +1,456 @@
+/* ==========================================================================
+   Pivot Table
+   ========================================================================== */
+
+.pivot-table-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+/* .pivot-table-wrap::-webkit-scrollbar{
+  display: none;
+}  */
+
+.pivot-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  height: auto;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+/* ---- Header ---- */
+.pivot-th {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  background: var(--bg-elevated-2);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-align: start;
+  padding: 8px 12px;
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+}
+
+.pivot-th-corner {
+  background: var(--bg-elevated-1);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.pivot-th-col {
+  text-align: start;
+}
+
+.pivot-th-value {
+  text-align: start;
+  background: var(--bg-elevated-1);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* ---- Body rows ---- */
+.pivot-row {
+  transition: background var(--transition-fast),
+              color var(--transition-fast);
+}
+
+.pivot-row.is-toggleable {
+  cursor: pointer;
+}
+
+.pivot-row:hover {
+  background: var(--bg-hover);
+}
+
+/* Subtle accent highlight while the row is expanded (cleared at the moment
+   the user clicks to close — driven by the !closing.has(path) check). */
+.pivot-row.is-expanded {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.pivot-row.is-expanded .pivot-td-label,
+.pivot-row.is-expanded .pivot-td-value {
+  color: var(--accent);
+}
+
+.pivot-row.is-expanded .pivot-expand-icon {
+  color: var(--accent);
+}
+
+.pivot-row.is-expanded:hover {
+  background: var(--accent-glow);
+}
+
+/* Cell text colors should also fade smoothly when the highlight toggles. */
+.pivot-td-label,
+.pivot-td-value {
+  transition: color var(--transition-fast);
+}
+
+/* Pivot value cells that have lineage refs — subtle purple underline so the
+   user knows they're traceable. */
+.pivot-td-value.has-refs .pivot-cell-content {
+  position: relative;
+}
+.pivot-td-value.has-refs .pivot-cell-content::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  inset-inline-start: 6px;
+  inset-inline-end: 6px;
+  height: 1px;
+  background: var(--trace-accent);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* Active trace target — purple highlight matching the table-mode treatment. */
+.pivot-td-value.is-trace-target {
+  color: var(--trace-accent) !important;
+}
+
+/* Traceable cell — show pointer on hover. */
+.pivot-td-value.has-refs { cursor: pointer; }
+
+/* Currently-expanded leaf cell — persistent purple wash so the user can see
+   which cell's drill-down they're looking at. */
+.pivot-td-value.is-refs-expanded {
+  color: var(--trace-accent) !important;
+}
+
+/* In-pivot reference rows — behave EXACTLY like any other expanded child row
+   (same grow/shrink/fade animation via the standard .pivot-cell-inner /
+   .pivot-cell-content wrappers, and they collapse together with their section
+   via parentClosing). They differ only in: NO tree branch, a purplish row
+   background, and purple text. */
+.pivot-ref-row {
+  cursor: pointer;
+  background: hsla(280, 65%, 65%, 0.10);
+}
+.pivot-ref-row:hover {
+  background: hsla(280, 65%, 65%, 0.16);
+}
+.pivot-ref-row .pivot-ref-label {
+  color: var(--trace-accent);
+  font-weight: 500;
+}
+.pivot-ref-row .pivot-ref-name { font-weight: 600; }
+.pivot-ref-row .pivot-ref-sep  { opacity: 0.7; }
+.pivot-ref-row .pivot-ref-val  { font-weight: 600; }
+
+/* The leading pad's content carries an invisible nbsp so the row has a normal
+   line height (the text itself is absolutely positioned, contributing no
+   height). It still collapses to 0 via the shared cell animations. */
+.pivot-ref-row .pivot-ref-pad { background: transparent; }
+.pivot-ref-row .pivot-ref-pad .pivot-cell-content::before { content: '\00a0'; }
+
+/* Ref text sits under the target value column without widening it: absolutely
+   positioned (no intrinsic width), single line. */
+.pivot-ref-row .pivot-ref-cell { position: relative; }
+.pivot-ref-row .pivot-ref-text {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 12px;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
+/* Slide + fade in for newly mounted rows. Row opacity fades while each cell's
+   inner wrapper grows from 0fr to 1fr — pushes subsequent rows down smoothly. */
+.pivot-row[data-anim="in"] {
+  animation: pivot-row-fade-in 100ms linear both;
+}
+
+.pivot-row[data-anim="out"] {
+  animation: pivot-row-fade-out 100ms linear forwards;
+}
+
+.pivot-row[data-anim="in"] .pivot-cell-inner {
+  animation: pivot-cell-grow 150ms linear both;
+}
+
+.pivot-row[data-anim="out"] .pivot-cell-inner {
+  animation: pivot-cell-shrink 150ms linear forwards;
+}
+
+.pivot-row[data-anim="in"] .pivot-cell-content {
+  animation: pivot-cell-padding-grow 150ms linear both;
+}
+
+.pivot-row[data-anim="out"] .pivot-cell-content {
+  animation: pivot-cell-padding-shrink 150ms linear forwards;
+}
+
+.pivot-row[data-anim="in"] .pivot-tree-connector.pivot-tree-connector.is-branch::after {
+  animation: pivot-cell-brnach-connector-grow 150ms linear both;
+}
+
+.pivot-row[data-anim="out"] .pivot-tree-connector.pivot-tree-connector.is-branch::after {
+  animation: pivot-cell-brnach-connector-shrink 150ms ease-in forwards;
+}
+
+
+
+@keyframes pivot-row-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pivot-row-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes pivot-cell-grow {
+  from {
+    grid-template-rows: 0fr;
+  }
+  to {
+    grid-template-rows: 1fr;
+  }
+}
+
+@keyframes pivot-cell-shrink {
+  from {
+    grid-template-rows: 1fr;
+  }
+  to {
+    grid-template-rows: 0fr;
+  }
+}
+
+@keyframes pivot-cell-padding-grow {
+  from {
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 0;
+  }
+  to {
+    height: auto;
+  }
+}
+
+@keyframes pivot-cell-padding-shrink {
+  from {
+    height: auto;
+  }
+  to {
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 0;
+  }
+}
+
+@keyframes pivot-cell-brnach-connector-grow {
+  from {
+    height: 0;
+  }
+  to {
+  }
+}
+
+@keyframes pivot-cell-brnach-connector-shrink {
+  from {
+  }
+  to {
+    height: 0;
+  }
+}
+
+
+/* ---- Body cells ----
+   The <td> has NO padding or border of its own. Everything that contributes
+   vertical space lives on .pivot-cell-content, so when it shrinks to 0
+   the row truly collapses to 0 height (no padding ghost, no border line). */
+.pivot-td {
+  padding: 0;
+  white-space: nowrap;
+}
+
+/* Wrapper that drives the slide animation. */
+.pivot-cell-inner {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.pivot-cell-content {
+  min-height: 0;
+  overflow: hidden;
+  padding: 7px 12px;
+}
+
+.pivot-td-label {
+  position: relative;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.pivot-row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;     /* sits above the connectors */
+  z-index: 1;
+}
+
+/* ---- Expand chevron (no longer a button) ---- */
+.pivot-expand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  width: 14px;
+  height: 14px;
+}
+
+.pivot-row:hover .pivot-expand-icon {
+  color: var(--accent);
+}
+
+/* ---- Tree connector (depth >= 1) ----
+   One branch per row at its own depth (no ancestor trunks). Vertical line
+   via ::before, horizontal segment via ::after. The last sibling clips the
+   vertical below the horizontal midpoint to form an └ corner. */
+.pivot-tree-connector {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Vertical line. */
+.pivot-tree-connector.is-branch::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 2px;
+  background: var(--text-secondary);
+}
+
+/* Last sibling → clip the vertical below the horizontal (└ corner). */
+.pivot-tree-connector.is-branch.is-last::before {
+  bottom: 50%;
+}
+
+/* Horizontal segment reaching toward the label text (inline-start). */
+.pivot-tree-connector.is-branch::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: calc(100%-2px);     /* anchor to the left edge of the vertical in RTL */
+  width: 10px;
+  height: 2px;
+  background: var(--text-secondary);
+}
+
+/* Expanded row: tint its own branch (vertical + horizontal) accent, matching
+   the row's accent text. */
+.pivot-row.is-expanded .pivot-tree-connector.is-branch::before,
+.pivot-row.is-expanded .pivot-tree-connector.is-branch::after {
+  background: var(--accent);
+}
+
+/* ---- Value cells ---- */
+.pivot-td-value {
+  text-align: start;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+/* Deviation column header tint */
+.pivot-th-value.is-deviation {
+  color: var(--text-secondary);
+}
+
+/* Deviation cell value text — accent color, arrow sits to its right */
+/* .pivot-td-value.is-deviation .pivot-cell-text {
+  color: var(--accent);
+} */
+
+/* Cell content row: value text + sign arrow side-by-side */
+.pivot-cell-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pivot-cell-text {
+  /* No flex grow — pack tightly with the arrow at the start side */
+  min-width: 0;
+}
+
+.pivot-cell-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pivot-cell-arrow.is-up   { color: var(--success); }
+.pivot-cell-arrow.is-down { color: var(--error); }
+
+/* Per-cell highlights driven by per-field configs (FieldConfigScreen).
+   Applied to <td> so the colored background covers the cell. */
+.pivot-td-value.is-threshold-pass .pivot-cell-content {
+  background: rgba(102, 187, 106, 0.18);
+  color: var(--success);
+}
+.pivot-td-value.is-threshold-fail .pivot-cell-content {
+  background: rgba(239, 83, 80, 0.18);
+  color: var(--error);
+}
+.pivot-td-value.is-stat-pass .pivot-cell-content {
+  background: rgba(102, 187, 106, 0.22);
+  color: var(--success);
+}
+/* Threshold pass + stat pass: stat is the stronger green */
+.pivot-td-value.is-threshold-pass.is-stat-pass .pivot-cell-content {
+  background: rgba(102, 187, 106, 0.3);
+}
+
+/* ---- Empty states ---- */
+.pivot-table-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: var(--font-size-md);
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.pivot-empty-row {
+  padding: 40px 20px !important;
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* ---- Depth-based weight emphasis on top-level groups ---- */
+.pivot-row-depth-0 {
+  background: var(--bg-elevated-2);
+}
+.pivot-row-depth-0 .pivot-td-label {
+  font-weight: 600;
+}

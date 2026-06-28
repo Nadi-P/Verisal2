@@ -1,0 +1,19 @@
+{
+    "users" : [
+    {"password": "1639", "username": "Hen Lazimi"},
+    {"password": "9201", "username": "Iris Greenberg"},
+    {"password": "1349", "username": "Darya Hazan"},
+    {"password": "2845", "username": "Nimrod Dagan"},
+    {"password": "0805", "username": "Evgeniya Gabudinov"},
+    {"password": "9564", "username": "Liel Hai"},
+    {"password": "8544", "username": "Netta Sharvit"},
+    {"password": "0613", "username": "Anna Binyamini"},
+    {"password": "2308", "username": "Enbal Halabi"},
+    {"password": "3861", "username": "Eyal Khalaily"},
+    {"password": "4995", "username": "Amit Perry"},
+    {"password": "6648", "username": "Moriya Biton"},
+    {"password": "0534", "username": "Elinor Rosenfeld"},
+    {"password": "8453", "username": "Anat Abergel"},
+    {"password": "3458", "username": "Merav Green"}
+    ]
+}

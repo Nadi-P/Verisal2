@@ -1,0 +1,232 @@
+/* ==========================================================================
+   Report Top Bar
+   ========================================================================== */
+
+.report-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+/* ---- Title block (3 stacked lines) ---- */
+.report-topbar-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.report-topbar-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Subtitle row: date range + company name on the same line.
+   In RTL, the date renders on the right and the company on its left. */
+.report-topbar-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.report-topbar-dates {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  white-space: nowrap;
+}
+
+.report-topbar-company {
+  font-size: var(--font-size-sm);
+  color: var(--accent);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Controls cluster ---- */
+.report-topbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  direction: ltr;
+  flex-shrink: 0;
+}
+
+/* Base button shape (icon + label) */
+.report-topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-primary);
+  background: var(--bg-elevated-2);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-slow),
+              color var(--transition-slow),
+              border-color var(--transition-slow),
+              transform var(--transition-slow);
+  white-space: nowrap;
+}
+
+.report-topbar-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.report-topbar-btn:active {
+  transform: translateY(1px);
+}
+
+/* Edit-menu button — neutral with subtle accent on hover */
+.report-topbar-btn-edit:hover {
+  color: var(--accent);
+}
+
+/* Excel export — green, modern */
+.report-topbar-btn-excel {
+  background: hsla(122, 39%, 30%, 1);
+  color: var(--text-primary);
+}
+
+.report-topbar-btn-excel:hover {
+  background: rgba(76, 175, 80, 0.28);
+  color: #81c784;
+}
+
+.report-topbar-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.report-topbar-btn:disabled:hover {
+  background: var(--bg-elevated-2);
+  color: var(--text-secondary);
+}
+
+/* ---- Export format context menu (right-click) ---- */
+.export-format-menu {
+  position: fixed;
+  z-index: 400;
+  min-width: 180px;
+  padding: 4px;
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  direction: rtl;
+}
+.export-format-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.export-format-menu-item:hover {
+  background: var(--bg-hover);
+}
+.export-format-menu-item.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.export-format-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+.export-format-menu-item.is-active .export-format-menu-icon {
+  color: var(--accent);
+}
+
+/* ---- Export format chooser popup (left-click when format = 'ask') ---- */
+.export-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  animation: export-overlay-in 140ms ease-out;
+}
+@keyframes export-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+
+.export-dialog {
+  direction: rtl;
+  width: 420px;
+  max-width: calc(100vw - 48px);
+  padding: 22px;
+  background: var(--bg-elevated-1);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg, 0 20px 50px rgba(0,0,0,0.5));
+  animation: export-dialog-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes export-dialog-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.export-dialog-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  text-align: center;
+}
+.export-dialog-options {
+  display: flex;
+  gap: 12px;
+}
+.export-dialog-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary);
+  background: var(--bg-elevated-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color var(--transition-fast),
+              background var(--transition-fast),
+              color var(--transition-fast),
+              transform var(--transition-fast);
+}
+.export-dialog-option:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+.export-dialog-option:disabled { opacity: 0.6; cursor: not-allowed; }
+.export-dialog-option-label {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+.export-dialog-option-hint {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
